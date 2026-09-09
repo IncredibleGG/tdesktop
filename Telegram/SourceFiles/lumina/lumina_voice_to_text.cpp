@@ -20,6 +20,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_session.h"
 #include "history/history.h"
 #include "history/history_item.h"
+#include "history/view/history_view_element.h"
 #include "spellcheck/spellcheck_types.h"
 #include "lang/lang_keys.h"
 #include "lumina/lumina_locale.h"
@@ -86,18 +87,93 @@ const auto kKeyAutoTranslate = u"sttAutoTranslate"_q;
 	return stored.isEmpty() ? InterfaceLanguageCode() : stored;
 }
 
-// The spoken-language hint for Apple's recogniser (mac). Apple cannot detect
-// the audio language, so it must be told one. Use the APP's own UI language -
-// the user's language - exactly like the working reference Swiftgram does
-// (LocalAudioTranscription.swift transcribes with , not the device
-// locale). NOT the device/system locale (this user's Mac resolves it to
-// English/Malay from a zh + Malaysia-region + Malay-in-list setup), and NOT the
-// chat's detected language (unreliable - it came back Malay for a Chinese
-// group), and NEVER the translate target. whisper (Win/Linux) ignores this and
-// auto-detects.
+// Detect the language actually spoken in a voice / round note, so we can tell
+// Apple's recogniser (mac) which locale to use. Apple cannot auto-detect and
+// silently falls back to the system / device language (English on this user's
+// Mac) when told nothing, or transcribes as the wrong language when told the
+// wrong one - that was every past bug here. The audio carries no language until
+// it is transcribed, so we read the language of the surrounding TEXT: first
+// what THIS author has written (what he actually speaks), then, failing that,
+// the whole chat. That is exactly the "predicted chat language" signal
+// Telegram / Swiftgram feed their recogniser, computed locally here with
+// NLLanguageRecognizer (Platform::Language::Recognize, accurate on mac).
+[[nodiscard]] LanguageId DetectSpeechLanguage(not_null<HistoryItem*> item) {
+	const auto history = item->history();
+	const auto author = item->from().get();
+	constexpr auto kMaxScan = 40;
+	constexpr auto kMaxChars = 4000;
+	const auto scan = [&](bool sameAuthorOnly) -> LanguageId {
+		auto buffer = QString();
+		auto scanned = 0;
+		for (auto b = history->blocks.rbegin()
+			; b != history->blocks.rend()
+				&& scanned < kMaxScan
+				&& buffer.size() < kMaxChars
+			; ++b) {
+			const auto &messages = (*b)->messages;
+			for (auto m = messages.rbegin()
+				; m != messages.rend()
+					&& scanned < kMaxScan
+					&& buffer.size() < kMaxChars
+				; ++m) {
+				const auto other = (*m)->data();
+				if (other->isService()
+					|| !other->isRegular()
+					|| other->isOnlyEmojiAndSpaces()) {
+					continue;
+				}
+				if (sameAuthorOnly && other->from().get() != author) {
+					continue;
+				}
+				const auto &text = other->originalText().text;
+				if (text.size() < 2) {
+					continue;
+				}
+				buffer.append(text).append(QChar(' '));
+				++scanned;
+			}
+		}
+		if (buffer.isEmpty()) {
+			return {};
+		}
+		const auto id = Platform::Language::Recognize(buffer);
+		return (id.known() && id.value != QLocale::C) ? id : LanguageId();
+	};
+	if (const auto sameAuthor = scan(true)) {
+		return sameAuthor;
+	}
+	return scan(false);
+}
+
+// The spoken-language hint handed to the recogniser. Prefer the language
+// detected from the conversation above; when the chat has no usable text yet,
+// fall back to the app UI language (Swiftgram's appLocale fallback). Apple's
+// SFSpeechRecognizer accepts the bare two-letter code we return here ("zh" ->
+// zh-CN, "ru" -> ru-RU, verified against supportedLocales). When the detected
+// language is the user's own, keep the interface's fuller regional variant so a
+// zh-TW user gets Traditional output instead of the bare zh -> zh-CN default.
+// whisper (Win / Linux) ignores this hint and auto-detects anyway.
 [[nodiscard]] QString LangHintForItem(HistoryItem *item) {
-	(void)item;
-	return InterfaceLanguageCode();
+	const auto fallback = InterfaceLanguageCode();
+	if (!item) {
+		return fallback;
+	}
+	const auto detected = DetectSpeechLanguage(item);
+	if (!detected) {
+		return fallback;
+	}
+	const auto code = detected.twoLetterCode();
+	if (code.isEmpty()) {
+		return fallback;
+	}
+	const auto baseOf = [](const QString &c) {
+		const auto i = c.indexOf(QChar('-'));
+		return (i < 0) ? c.toLower() : c.left(i).toLower();
+	};
+	if (!fallback.isEmpty() && baseOf(fallback) == baseOf(code)) {
+		return fallback;
+	}
+	return code;
 }
 
 struct State {
