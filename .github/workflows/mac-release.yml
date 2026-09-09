@@ -329,3 +329,5 @@ jobs:
           # Already compressed - do not spend minutes on it again.
           compression-level: 0
           path: artifact/
+
+# re-register 2026-09-09T14:07:04Z
