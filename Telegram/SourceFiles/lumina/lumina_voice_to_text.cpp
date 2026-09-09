@@ -94,15 +94,18 @@ const auto kKeyAutoTranslate = u"sttAutoTranslate"_q;
 // wrong one - that was every past bug here. The audio carries no language until
 // it is transcribed, so we read the language of the surrounding TEXT: first
 // what THIS author has written (what he actually speaks), then, failing that,
-// the whole chat. That is exactly the "predicted chat language" signal
+// others on the SAME side of the chat (never the opposite side, so a peer's
+// voice is never hinted with the local user's own writing). That is exactly the
+// "predicted chat language" signal
 // Telegram / Swiftgram feed their recogniser, computed locally here with
 // NLLanguageRecognizer (Platform::Language::Recognize, accurate on mac).
 [[nodiscard]] LanguageId DetectSpeechLanguage(not_null<HistoryItem*> item) {
 	const auto history = item->history();
 	const auto author = item->from().get();
+	const auto outgoing = item->out();
 	constexpr auto kMaxScan = 40;
 	constexpr auto kMaxChars = 4000;
-	const auto scan = [&](bool sameAuthorOnly) -> LanguageId {
+	const auto scan = [&](bool authorOnly) -> LanguageId {
 		auto buffer = QString();
 		auto scanned = 0;
 		for (auto b = history->blocks.rbegin()
@@ -122,7 +125,11 @@ const auto kKeyAutoTranslate = u"sttAutoTranslate"_q;
 					|| other->isOnlyEmojiAndSpaces()) {
 					continue;
 				}
-				if (sameAuthorOnly && other->from().get() != author) {
+				if (authorOnly) {
+					if (other->from().get() != author) {
+						continue;
+					}
+				} else if (other->out() != outgoing) {
 					continue;
 				}
 				const auto &text = other->originalText().text;
