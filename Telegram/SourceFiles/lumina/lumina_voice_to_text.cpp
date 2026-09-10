@@ -222,15 +222,28 @@ struct State {
 	return result;
 }
 
+// The language a transcript should be translated into, if any. Voice follows
+// the CHAT: when this chat is being translated (the very state that translates
+// its text messages), the transcript is translated to that same target, so a
+// voice note reads consistently with the rest of the chat. Only when the chat is
+// NOT being translated does the standalone STT auto-translate setting apply
+// (default off) - which is what keeps a chat the user never asked to translate
+// from sprouting a surprise translation under its voice notes.
+[[nodiscard]] QString TranslationTargetForItem(HistoryItem *item) {
+	if (item) {
+		if (const auto to = item->history()->translatedTo()) {
+			return to.twoLetterCode();
+		}
+	}
+	return VoiceToTextAutoTranslate() ? ReadingLanguage() : QString();
+}
+
 void StartTranslation(
 		not_null<Ui::GenericBox*> box,
 		not_null<Main::Session*> session,
 		not_null<State*> state,
-		const QString &transcript) {
-	if (!VoiceToTextAutoTranslate()) {
-		return;
-	}
-	const auto target = ReadingLanguage();
+		const QString &transcript,
+		const QString &target) {
 	if (target.isEmpty()) {
 		return;
 	}
@@ -277,7 +290,8 @@ void StartTranscription(
 		not_null<Main::Session*> session,
 		not_null<State*> state,
 		not_null<DocumentData*> document,
-		const QString &langHint) {
+		const QString &langHint,
+		const QString &translateTarget) {
 	auto content = ReadContent(document, state->media);
 	if (content.isEmpty()) {
 		state->status = ErrorText(TranscribeError::Unavailable);
@@ -305,7 +319,7 @@ void StartTranscription(
 
 			// Published first and unconditionally - see the header.
 			state->transcript = transcript;
-			StartTranslation(box, session, state, transcript);
+			StartTranslation(box, session, state, transcript, translateTarget);
 		}
 
 		// This runs inside the engine's own network reply, so dropping the
@@ -330,7 +344,7 @@ void StartWhenLoaded(
 		state->status = ErrorText(TranscribeError::Unavailable);
 		return;
 	}
-	StartTranscription(box, session, state, document, LangHintForItem(item));
+	StartTranscription(box, session, state, document, LangHintForItem(item), TranslationTargetForItem(item));
 }
 
 void Start(
@@ -347,7 +361,7 @@ void Start(
 	}
 	state->media = document->createMediaView();
 	if (state->media->loaded()) {
-		StartTranscription(box, session, state, document, LangHintForItem(item));
+		StartTranscription(box, session, state, document, LangHintForItem(item), TranslationTargetForItem(item));
 		return;
 	}
 
@@ -523,10 +537,8 @@ void InlineTranslate(
 		not_null<Main::Session*> session,
 		FullMsgId itemId,
 		const QString &transcript) {
-	if (!VoiceToTextAutoTranslate()) {
-		return;
-	}
-	const auto target = ReadingLanguage();
+	const auto target = TranslationTargetForItem(
+		session->data().message(itemId));
 	if (target.isEmpty()) {
 		return;
 	}
