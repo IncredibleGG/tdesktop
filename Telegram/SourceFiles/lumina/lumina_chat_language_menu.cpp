@@ -90,7 +90,7 @@ void AddAbout(not_null<Ui::PopupMenu*> menu, const QString &text) {
 	if (ChatTranslationExcluded(history) || !ChatTranslating(history)) {
 		return Tr(u"LuminaChatLangThemOff"_q);
 	}
-	const auto stored = TranslateReadLanguage();
+	const auto stored = ChatReadLanguageCode(history);
 	return Tr(u"LuminaChatLangThem"_q, stored.isEmpty()
 		? Ui::LanguageName(ChatTranslateDefaultTo(history))
 		: TranslateLanguageName(stored));
@@ -142,7 +142,7 @@ void FillIncoming(
 				OffCode(),
 				((ChatTranslating(opened)
 					&& !ChatTranslationExcluded(opened))
-					? TranslateReadLanguage()
+					? ChatReadLanguageCode(opened)
 					: OffCode()),
 				[=](QString code) {
 					const auto strong = weak.get();
@@ -162,7 +162,7 @@ void FillIncoming(
 					// the translation starts reading it. Naming a language
 					// also takes the chat back off the excluded list, which
 					// SetChatTranslatingTo() does on the way through.
-					SetTranslateReadLanguage(code);
+					SetChatReadLanguage(strong, code);
 					SetChatTranslating(strong, true);
 				});
 		});

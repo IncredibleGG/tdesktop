@@ -22,6 +22,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_translate_caption.h"
 #include "lumina/lumina_translate_gating.h"
 #include "lumina/lumina_translate_providers.h"
+#include "spellcheck/spellcheck_types.h"
 #include "lumina/lumina_translate_settings.h"
 #include "main/main_session.h"
 #include "menu/menu_checked_action.h"
@@ -94,6 +95,9 @@ constexpr auto kCaptionBoxTimeout = crl::time(3 * 60 * 1000);
 
 [[nodiscard]] QString DialogLanguagesKey() {
 	return u"trSendLangDialog"_q;
+}
+[[nodiscard]] QString DialogReadLanguagesKey() {
+	return u"trReadLangDialog"_q;
 }
 
 // Whether a chat translates its outgoing messages at all, stored per chat as
@@ -1274,6 +1278,55 @@ void SetDialogSendTranslateOn(not_null<History*> history, bool on) {
 	}
 }
 
+QString ChatReadLanguageCode(not_null<History*> history) {
+	return Settings::Instance().getObject(
+		DialogReadLanguagesKey()
+	).value(DialogKey(history)).toString().trimmed();
+}
+void SetChatReadLanguage(not_null<History*> history, const QString &code) {
+	const auto key = DialogKey(history);
+	const auto trimmed = code.trimmed();
+	auto object = Settings::Instance().getObject(DialogReadLanguagesKey());
+	if (trimmed.isEmpty()) {
+		object.remove(key);
+	} else {
+		object.insert(key, trimmed);
+	}
+	if (object.isEmpty()) {
+		Settings::Instance().remove(DialogReadLanguagesKey());
+	} else {
+		Settings::Instance().set(
+			DialogReadLanguagesKey(),
+			object,
+			Store::Private);
+	}
+}
+LanguageId ChatReadLanguageId(not_null<History*> history) {
+	const auto code = ChatReadLanguageCode(history);
+	if (code.isEmpty()) {
+		return LanguageId();
+	}
+	const auto id = LanguageId::FromName(code);
+	return (id.value == QLocale::AnyLanguage || id.value == QLocale::C)
+		? LanguageId()
+		: id;
+}
+LanguageId ChatTranslateTargetId(
+		not_null<History*> history,
+		LanguageId fallback) {
+	if (const auto perChat = ChatReadLanguageId(history)) {
+		return perChat;
+	}
+	const auto ifaceCode = InterfaceLanguageCode();
+	if (!ifaceCode.isEmpty()) {
+		const auto iface = LanguageId::FromName(ifaceCode);
+		if (iface.value != QLocale::AnyLanguage
+			&& iface.value != QLocale::C) {
+			return iface;
+		}
+	}
+	return fallback;
+}
 QString DialogSendLanguage(not_null<History*> history) {
 	return Settings::Instance().getObject(
 		DialogLanguagesKey()

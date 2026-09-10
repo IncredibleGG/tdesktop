@@ -8,6 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #pragma once
 
 #include "api/api_common.h" // Api::SendOptions.
+#include "spellcheck/spellcheck_types.h" // LanguageId.
 
 #include <QtCore/QString>
 #include <rpl/producer.h>
@@ -234,6 +235,17 @@ void FlushTranslateSendsAndCaptions();
 // cached translation.
 [[nodiscard]] QString DialogSendLanguage(not_null<History*> history);
 void SetDialogSendLanguage(not_null<History*> history, const QString &code);
+
+// LuminaGram: per-chat INCOMING translate-to target (mirrors the outgoing
+// DialogSendLanguage above). Each chat remembers its own target, so a choice
+// in one chat never leaks into another through a single global value.
+[[nodiscard]] QString ChatReadLanguageCode(not_null<History*> history);
+[[nodiscard]] LanguageId ChatReadLanguageId(not_null<History*> history);
+// per-chat target if set, else the interface language, else `fallback`.
+[[nodiscard]] LanguageId ChatTranslateTargetId(
+	not_null<History*> history,
+	LanguageId fallback);
+void SetChatReadLanguage(not_null<History*> history, const QString &code);
 
 // The per-chat send-translate switch, the peer of the language lock above:
 // default false, so a chat never switched on sends as typed no matter what the

@@ -27,6 +27,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_instance.h"
 #include "lang/lang_keys.h"
 #include "lumina/lumina_translate_readlang.h"
+#include "lumina/lumina_translate_send.h"
 #include "lumina/lumina_translate_selection.h"
 #include "main/main_session.h"
 #include "mtproto/sender.h"
@@ -585,7 +586,11 @@ object_ptr<BoxContent> ChooseTranslateToBox(
 }
 
 LanguageId ChooseTranslateTo(not_null<History*> history) {
-	return ChooseTranslateTo(history->translateOfferedFrom());
+	const auto &settings = Core::App().settings();
+	return ChooseTranslateTo(
+		history,
+		settings.translateTo(),
+		settings.skipTranslationLanguages());
 }
 
 LanguageId ChooseTranslateTo(LanguageId offeredFrom) {
@@ -600,7 +605,12 @@ LanguageId ChooseTranslateTo(
 		not_null<History*> history,
 		LanguageId savedTo,
 		const std::vector<LanguageId> &skip) {
-	return ChooseTranslateTo(history->translateOfferedFrom(), savedTo, skip);
+	// LuminaGram: per-chat target. The language chosen for THIS chat wins;
+	// a chat with no choice falls back to the interface language, then to the
+	// saved value. A pick in one chat never leaks into another.
+	const auto to = Lumina::ChatTranslateTargetId(history, savedTo);
+	const auto offeredFrom = history->translateOfferedFrom();
+	return (!skip.empty() && offeredFrom == to) ? skip.front() : to;
 }
 
 // LuminaGram's explicit read-language override stands in for the language the

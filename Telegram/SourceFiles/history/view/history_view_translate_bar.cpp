@@ -20,6 +20,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_keys.h"
 #include "lumina/lumina_translate_readlang.h"
 #include "lumina/lumina_translate_toggle.h"
+#include "lumina/lumina_translate_send.h"
 #include "main/main_session.h"
 #include "settings/settings_credits_graphics.h" // CreditsEntryBoxStyleOverrides
 #include "ui/widgets/labels.h"
@@ -465,7 +466,10 @@ void TranslateBar::showMenu(base::unique_qptr<Ui::PopupMenu> menu) {
 		if (const auto strong = weak.get()) {
 			strong->show(Ui::ChooseTranslateToBox(
 				to,
-				crl::guard(guard, [=](LanguageId id) { _overridenTo = id; })
+				crl::guard(guard, [=](LanguageId id) {
+					_overridenTo = id;
+					Lumina::SetChatReadLanguage(_history, id.twoLetterCode());
+				})
 			));
 		}
 	};
