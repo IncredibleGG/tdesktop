@@ -19,6 +19,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/history.h"
 #include "lang/lang_keys.h"
 #include "lumina/lumina_translate_readlang.h"
+#include "lumina/lumina_translate_toggle.h"
 #include "main/main_session.h"
 #include "settings/settings_credits_graphics.h" // CreditsEntryBoxStyleOverrides
 #include "ui/widgets/labels.h"
@@ -297,7 +298,17 @@ void TranslateBar::setup(not_null<History*> history) {
 	}, button->lifetime());
 
 	button->setClickedCallback([=] {
-		translateTo(history->translatedTo() ? LanguageId() : _to.current());
+		if (history->translatedTo()) {
+			// LuminaGram: turning translation off from the bar HIDES the offer
+			// for good, instead of dropping back to a "translate to ..." that
+			// re-appears on the next message (which reads as the off never having
+			// taken). Excluding stops translation and withdraws the offer; the
+			// user re-translates from the always-present top-bar button, which
+			// clears the exclusion on its way through.
+			Lumina::SetChatTranslationExcluded(history, true);
+		} else {
+			translateTo(_to.current());
+		}
 	});
 
 	const auto label = Ui::CreateChild<Ui::FlatLabel>(
