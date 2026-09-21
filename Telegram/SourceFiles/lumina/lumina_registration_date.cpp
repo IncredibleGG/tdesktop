@@ -101,7 +101,7 @@ constexpr auto kAnchors = std::array<Anchor, 51>{ {
 } // namespace
 
 bool RegistrationDateRowEnabled() {
-	return Settings::Instance().getBool(kKey, false);
+	return Settings::Instance().getBool(kKey, true);
 }
 
 void SetRegistrationDateRowEnabled(bool value) {

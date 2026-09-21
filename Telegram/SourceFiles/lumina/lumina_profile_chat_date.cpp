@@ -25,7 +25,7 @@ const auto kKey = u"showChatDate"_q;
 } // namespace
 
 bool ChatCreationDateRowEnabled() {
-	return Settings::Instance().getBool(kKey, false);
+	return Settings::Instance().getBool(kKey, true);
 }
 
 void SetChatCreationDateRowEnabled(bool value) {
