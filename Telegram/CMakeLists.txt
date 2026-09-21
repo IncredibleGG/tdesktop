@@ -2006,6 +2006,8 @@ PRIVATE
     lumina/lumina_profile_card_settings.h
     lumina/lumina_profile_chat_date.cpp
     lumina/lumina_profile_chat_date.h
+    lumina/lumina_profile_chat_id.cpp
+    lumina/lumina_profile_chat_id.h
     lumina/lumina_profile_dc_id.cpp
     lumina/lumina_profile_dc_id.h
     lumina/lumina_profile_extra_settings.cpp

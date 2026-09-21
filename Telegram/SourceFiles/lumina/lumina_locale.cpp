@@ -549,6 +549,7 @@ struct Registration {
 		{ u"LuminaProfileChatCreated"_q, u"Created"_q },
 		{ u"LuminaProfileDcId"_q, u"Datacenter"_q },
 		{ u"LuminaProfileUserId"_q, u"User ID"_q },
+		{ u"LuminaProfileChatId"_q, u"Chat ID"_q },
 		{ u"LuminaProfileDcIdValue"_q, u"DC{1}"_q },
 		{ u"LuminaProfileNameWarning"_q, u"Possible impersonation"_q },
 		{ u"LuminaProfileNameWarningLabel"_q, u"Name uses look-alike characters"_q },

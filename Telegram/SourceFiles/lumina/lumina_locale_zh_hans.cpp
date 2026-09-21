@@ -521,6 +521,7 @@ namespace {
 		{ u"LuminaProfileChatCreated"_q, u"创建于"_q },
 		{ u"LuminaProfileDcId"_q, u"数据中心"_q },
 		{ u"LuminaProfileUserId"_q, u"用户 ID"_q },
+		{ u"LuminaProfileChatId"_q, u"对话 ID"_q },
 		{ u"LuminaProfileDcIdValue"_q, u"DC{1}"_q },
 		{ u"LuminaProfileNameWarning"_q, u"可能冒充他人"_q },
 		{ u"LuminaProfileNameWarningLabel"_q, u"名称含视觉近似字符"_q },

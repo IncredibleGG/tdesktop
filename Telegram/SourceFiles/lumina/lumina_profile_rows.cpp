@@ -14,6 +14,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_user.h"
 #include "lumina/lumina_contact_notes.h"
 #include "lumina/lumina_profile_chat_date.h"
+#include "lumina/lumina_profile_chat_id.h"
 #include "lumina/lumina_profile_dc_id.h"
 #include "lumina/lumina_profile_name_warning.h"
 #include "lumina/lumina_profile_user_id.h"
@@ -37,6 +38,7 @@ void AddChatInfoRows(
 		Data::ForumTopic *topic) {
 	AddChatCreationDateRow(context, peer, topic);
 	AddProfileDcIdRow(context, peer, topic);
+	AddChatIdRow(context, peer, topic);
 }
 
 } // namespace Lumina
