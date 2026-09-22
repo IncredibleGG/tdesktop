@@ -33,6 +33,13 @@ public:
 
 	struct Entry {
 		QString result;
+		// LuminaGram inline voice transcript: the raw transcript before any
+		// translation (empty on a stock/paid entry), and the chat-translation
+		// target `result` is currently aligned to (default = untranslated). These
+		// let the transcript be re-translated when chat translation is toggled
+		// later, mirroring the paid SummaryEntry above.
+		QString source;
+		LanguageId languageId;
 		bool shown = false;
 		bool failed = false;
 		bool toolong = false;
@@ -52,7 +59,18 @@ public:
 	// Each mirrors the resize / view-refresh that stock load()/toggle()/apply()
 	// perform. Driven from lumina/lumina_voice_to_text.cpp.
 	void luminaStartInline(not_null<HistoryItem*> item, bool roundview);
-	void luminaShowInline(not_null<HistoryItem*> item, const QString &text);
+	void luminaShowInline(
+		not_null<HistoryItem*> item,
+		const QString &result,
+		const QString &source,
+		LanguageId languageId);
+	// Re-publish a transcript's translation without disturbing its shown /
+	// spinner state (a background re-translation after a translation toggle).
+	void luminaRetranslateInline(
+		not_null<HistoryItem*> item,
+		const QString &result,
+		const QString &source,
+		LanguageId languageId);
 	void luminaFailInline(not_null<HistoryItem*> item);
 	void luminaToggleInline(not_null<HistoryItem*> item);
 
@@ -87,6 +105,8 @@ private:
 	base::flat_map<uint64, FullMsgId> _ids;
 
 	base::flat_map<FullMsgId, SummaryEntry> _summaries;
+
+	rpl::lifetime _lifetime;
 
 };
 

@@ -8,11 +8,16 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #pragma once
 
 #include "base/basic_types.h"
+#include "data/data_msg_id.h"
 
 #include <rpl/producer.h>
 
 class DocumentData;
 class HistoryItem;
+
+namespace Main {
+class Session;
+} // namespace Main
 
 namespace Ui {
 class PopupMenu;
@@ -110,6 +115,17 @@ void ShowVoiceToText(
 void ToggleVoiceToTextInline(
 	not_null<Window::SessionController*> controller,
 	not_null<HistoryItem*> item);
+
+// Re-translate an already-produced inline voice transcript to the chat's
+// current translation target. The transcript is translated once, at
+// transcription time, so without this a transcript produced while the chat was
+// NOT being translated would never pick up a translation the user turns on
+// afterwards (ordinary text messages do, via HistoryView::TranslateTracker).
+// No-op unless `itemId` carries one of our inline transcripts whose recorded
+// target differs from the chat's current one; safe to call for any item.
+void MaybeRetranslateInlineTranscript(
+	not_null<Main::Session*> session,
+	FullMsgId itemId);
 
 // The F-04 row. Signature matches the AddVoiceToTextRow stub in
 // lumina/lumina_message_menu.h.

@@ -537,11 +537,17 @@ void InlineTranslate(
 		not_null<Main::Session*> session,
 		FullMsgId itemId,
 		const QString &transcript) {
-	const auto target = TranslationTargetForItem(
-		session->data().message(itemId));
+	const auto item = session->data().message(itemId);
+	const auto target = TranslationTargetForItem(item);
 	if (target.isEmpty()) {
 		return;
 	}
+	// The chat-translation target this result will be aligned to. When the
+	// translation comes from the standalone STT auto-translate setting rather
+	// than chat translation (chat not being translated), this is the default
+	// (untranslated) LanguageId - so a later chat-translation toggle still
+	// drives a re-translation, and turning it off again does not.
+	const auto lang = item ? item->history()->translatedTo() : LanguageId();
 	// Same quota saver as the box: a transcript already in the reading language
 	// has nothing to translate. See StartTranslation above.
 	const auto detected = Platform::Language::Recognize(transcript);
@@ -566,7 +572,9 @@ void InlineTranslate(
 			// The two-segment layout the box copy button and Android use.
 			session->api().transcribes().luminaShowInline(
 				item,
-				transcript + u"\n\n"_q + text);
+				transcript + u"\n\n"_q + text,
+				transcript,
+				lang);
 		}
 	}));
 }
@@ -602,8 +610,14 @@ void InlineTranscribe(
 		const auto transcript = result.text.trimmed();
 		if (const auto item = session->data().message(itemId)) {
 			// Published first and unconditionally - a translation that never
-			// returns can only leave the plain transcript on screen.
-			session->api().transcribes().luminaShowInline(item, transcript);
+			// returns can only leave the plain transcript on screen. Recorded as
+			// source with an untranslated target; InlineTranslate below
+			// re-publishes both segments and the real target on success.
+			session->api().transcribes().luminaShowInline(
+				item,
+				transcript,
+				transcript,
+				LanguageId());
 			InlineTranslate(session, itemId, transcript);
 		}
 		// Free the engine from a later main turn; this runs inside the reply.
@@ -653,6 +667,77 @@ void StartInline(
 }
 
 } // namespace
+
+void MaybeRetranslateInlineTranscript(
+		not_null<Main::Session*> session,
+		FullMsgId itemId) {
+	const auto item = session->data().message(itemId);
+	if (!item) {
+		return;
+	}
+	auto &transcribes = session->api().transcribes();
+	const auto &entry = transcribes.entry(item);
+	// Only our inline transcript qualifies: a stock/paid entry never records a
+	// source, and one still being produced (spinner up) has none yet either.
+	if (entry.source.isEmpty() || entry.requestId) {
+		return;
+	}
+	const auto now = item->history()->translatedTo();
+	if (entry.languageId == now) {
+		// Already aligned with the chat's current translation - nothing to do.
+		return;
+	}
+	const auto source = entry.source;
+	const auto currentResult = entry.result;
+	const auto target = TranslationTargetForItem(item);
+	if (target.isEmpty()) {
+		// Chat translation off and STT auto-translate off: drop any stale
+		// translation, leaving the plain transcript, and record the new target.
+		transcribes.luminaRetranslateInline(item, source, source, now);
+		return;
+	}
+	// Same quota saver as the initial path: a transcript already in the target
+	// language has nothing to translate - show it alone and record alignment.
+	const auto detected = Platform::Language::Recognize(source);
+	if (detected.known()
+		&& (BaseLanguageCode(detected.twoLetterCode())
+			== BaseLanguageCode(target))) {
+		transcribes.luminaRetranslateInline(item, source, source, now);
+		return;
+	}
+	// Keep whatever is on screen while the new translation is fetched (no
+	// flicker), and record the new target now so a second trigger for the same
+	// change - e.g. TranslateTracker::switchTranslation firing for a voice note
+	// that does carry a caption - is a no-op rather than a duplicate request.
+	// TranslateText owns and releases its own engine; guard by the session so a
+	// late reply cannot touch a closed account.
+	transcribes.luminaRetranslateInline(item, currentResult, source, now);
+	TranslateText(session, source, target, crl::guard(session, [=](
+			TranslateResult result) {
+		if (result.failed()) {
+			// Fail-safe: the transcript stays on screen; already marked aligned
+			// so it is not retried until the target changes again.
+			return;
+		}
+		const auto text = result.text.trimmed();
+		if (const auto item = session->data().message(itemId)) {
+			if (text.isEmpty() || (text == source.trimmed())) {
+				// Provider echoed the source: leave transcript-only.
+				session->api().transcribes().luminaRetranslateInline(
+					item,
+					source,
+					source,
+					now);
+			} else {
+				session->api().transcribes().luminaRetranslateInline(
+					item,
+					source + u"\n\n"_q + text,
+					source,
+					now);
+			}
+		}
+	}));
+}
 
 bool VoiceToTextEnabled() {
 	// Default ON, exactly as Android's LuminaVoiceToTextActivity defaults it.

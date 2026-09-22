@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "apiwrap.h"
 #include "api/api_text_entities.h"
+#include "data/data_changes.h"
 #include "data/data_channel.h"
 #include "data/data_document.h"
 #include "data/data_peer.h"
@@ -21,6 +22,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "main/main_session.h"
 #include "main/main_session_settings.h"
 #include "spellcheck/spellcheck_types.h"
+#include "lumina/lumina_voice_to_text.h"
+
+#include <vector>
 
 namespace Api {
 namespace {
@@ -40,6 +44,27 @@ constexpr auto kLuminaInlineRequestId = mtpRequestId(-1);
 Transcribes::Transcribes(not_null<ApiWrap*> api)
 : _session(&api->session())
 , _api(&api->instance()) {
+	// LuminaGram: re-translate an already-produced inline voice transcript when
+	// the chat's translation target changes. Ordinary text re-translates through
+	// HistoryView::TranslateTracker, but a voice note carries no message text and
+	// so is dropped by that tracker's only-emoji-and-spaces filter, never
+	// reaching switchTranslation() - hence this direct hook off the same signal
+	// the tracker reacts to. Idempotent: MaybeRetranslateInlineTranscript no-ops
+	// when a transcript is already aligned with the current target.
+	_session->changes().historyUpdates(
+		Data::HistoryUpdate::Flag::TranslatedTo
+	) | rpl::on_next([this](const Data::HistoryUpdate &update) {
+		const auto peerId = update.history->peer->id;
+		auto ids = std::vector<FullMsgId>();
+		for (const auto &[id, entry] : _map) {
+			if (id.peer == peerId && !entry.source.isEmpty()) {
+				ids.push_back(id);
+			}
+		}
+		for (const auto &id : ids) {
+			Lumina::MaybeRetranslateInlineTranscript(_session, id);
+		}
+	}, _lifetime);
 }
 
 bool Transcribes::isRated(not_null<HistoryItem*> item) const {
@@ -148,7 +173,9 @@ void Transcribes::luminaStartInline(
 
 void Transcribes::luminaShowInline(
 		not_null<HistoryItem*> item,
-		const QString &text) {
+		const QString &result,
+		const QString &source,
+		LanguageId languageId) {
 	const auto id = item->fullId();
 	auto &entry = _map[id];
 	entry.requestId = 0;
@@ -156,11 +183,35 @@ void Transcribes::luminaShowInline(
 	entry.failed = false;
 	entry.toolong = false;
 	entry.shown = true;
-	entry.result = text;
+	entry.result = result;
+	entry.source = source;
+	entry.languageId = languageId;
 	if (entry.roundview) {
 		// A round video renders its transcript by switching from the Gif view
 		// to the Document view (data_media_types.cpp MediaFile::createView),
 		// which only re-runs on a view refresh.
+		_session->data().requestItemViewRefresh(item);
+	}
+	_session->data().requestItemResize(item);
+}
+
+void Transcribes::luminaRetranslateInline(
+		not_null<HistoryItem*> item,
+		const QString &result,
+		const QString &source,
+		LanguageId languageId) {
+	const auto i = _map.find(item->fullId());
+	if (i == _map.end()) {
+		return;
+	}
+	auto &entry = i->second;
+	entry.result = result;
+	entry.source = source;
+	entry.languageId = languageId;
+	// shown / requestId / pending are deliberately left as they are: a
+	// background re-translation must not pop open a hidden transcript nor
+	// disturb an in-flight spinner.
+	if (entry.roundview) {
 		_session->data().requestItemViewRefresh(item);
 	}
 	_session->data().requestItemResize(item);

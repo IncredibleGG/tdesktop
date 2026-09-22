@@ -26,6 +26,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_translate_providers.h" // TranslateProviderChanges.
 #include "lumina/lumina_translate_send.h" // Lumina::DialogReadTranslateOn.
 #include "lumina/lumina_translate_toggle.h" // Lumina::SetChatTranslating.
+#include "lumina/lumina_voice_to_text.h" // Lumina::MaybeRetranslateInlineTranscript.
 #include "main/main_session.h"
 #include "spellcheck/platform/platform_language.h"
 
@@ -327,6 +328,14 @@ void TranslateTracker::switchTranslation(
 		not_null<HistoryItem*> item,
 		LanguageId id) {
 	_history->session().api().transcribes().checkSummaryToTranslate(
+		item->fullId());
+	// LuminaGram: re-translate an inline voice transcript on the same signal.
+	// Voice notes without a caption never reach here (add()'s only-emoji-and-
+	// spaces guard drops them), so the reliable driver is the TranslatedTo
+	// subscription in Api::Transcribes; this covers the captioned case and keeps
+	// the behaviour beside the summary re-translate it mirrors. Idempotent.
+	Lumina::MaybeRetranslateInlineTranscript(
+		&_history->session(),
 		item->fullId());
 	if (item->translationShowRequiresRequest(id)) {
 		_itemsToRequest.emplace(item->fullId(), ItemToRequest{
