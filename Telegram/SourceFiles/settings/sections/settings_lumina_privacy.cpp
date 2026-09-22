@@ -16,6 +16,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_file_guard_settings.h"
 #include "lumina/lumina_clipboard_guard_settings.h"
 #include "lumina/lumina_link_safety_settings.h"
+#include "lumina/lumina_notification_control.h"
 #include "lumina/lumina_locale.h"
 #include "ui/wrap/vertical_layout.h"
 #include "ui/rp_widget.h"
@@ -71,6 +72,7 @@ void LuminaPrivacy::setupContent(not_null<Ui::VerticalLayout*> container) {
 	Lumina::AddFileGuardRows(container, controller());
 	Lumina::AddExifStripRows(container, controller());
 	Lumina::AddProfileExtraRows(container, controller());
+	Lumina::AddNotificationControlRows(container, controller());
 }
 
 } // namespace Settings

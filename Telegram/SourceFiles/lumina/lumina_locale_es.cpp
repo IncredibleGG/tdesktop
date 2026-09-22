@@ -1018,6 +1018,11 @@ namespace {
 		{ u"LuminaMessageFilterEmpty"_q, u"Aún no hay palabras clave. Añade una y cualquier mensaje que la contenga se ocultará de la lista en este dispositivo."_q },
 		{ u"LuminaMessageFilterListInfo"_q, u"Los mensajes que contengan cualquiera de estas palabras clave se ocultan de la lista de mensajes en este dispositivo."_q },
 		{ u"LuminaMessageFilterFull"_q, u"Has alcanzado el número máximo de palabras clave."_q },
+		{ u"LuminaNotifyControlSubtitle"_q, u"Notificaciones"_q },
+		{ u"LuminaNotifyMutePinned"_q, u"Silenciar mensajes fijados"_q },
+		{ u"LuminaNotifyMutePinnedInfo"_q, u"No mostrar una notificación cuando alguien fija un mensaje. El mensaje fijado no se ve afectado."_q },
+		{ u"LuminaNotifyMuteMentions"_q, u"Silenciar menciones y respuestas"_q },
+		{ u"LuminaNotifyMuteMentionsInfo"_q, u"No mostrar una notificación cuando alguien te menciona con @ o responde a tu mensaje. Nada se marca como leído y los mensajes se siguen mostrando con normalidad."_q },
 	};
 }
 

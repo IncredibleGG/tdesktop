@@ -41,6 +41,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "apiwrap.h"
 #include "data/data_media_types.h"
 #include "lumina/lumina_stories_off.h"
+#include "lumina/lumina_notification_control.h"
 #include "main/main_account.h"
 #include "main/main_domain.h"
 #include "main/main_session.h"
@@ -327,6 +328,26 @@ System::SkipState System::skipNotification(
 		// and no story-reaction notification type; a story mention arrives as an
 		// ordinary item whose media is a MediaStory in mention mode, and this is
 		// the one gate every notification type passes through.
+		return { SkipState::Skip };
+	}
+	if (Lumina::MutePinnedNotifications()
+		&& item->Has<HistoryServicePinned>()) {
+		// LuminaGram #18: suppress the "X pinned a message" notification
+		// only. The service message itself is untouched, nothing is marked
+		// read and no unread counter changes - this is the same skip path a
+		// muted chat takes.
+		return { SkipState::Skip };
+	}
+	if (messageType
+		&& Lumina::MuteMentionReplyNotifications()
+		&& (item->mentionsMe() || [&] {
+			const auto reply = item->Get<HistoryMessageReply>();
+			const auto to = reply ? reply->resolvedMessage.get() : nullptr;
+			return to && to->out();
+		}())) {
+		// LuminaGram #18: an @mention of me, or a reply to one of my
+		// messages, stops being a notify-worthy event. Notification only -
+		// read state, unread counters and the message are left alone.
 		return { SkipState::Skip };
 	}
 	if (!thread

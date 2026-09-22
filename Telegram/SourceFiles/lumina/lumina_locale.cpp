@@ -867,6 +867,11 @@ struct Registration {
 		{ u"LuminaMessageFilterEmpty"_q, u"No keywords yet. Add one and any message that contains it is hidden from the list on this device."_q },
 		{ u"LuminaMessageFilterListInfo"_q, u"Messages containing any of these keywords are hidden from the message list on this device."_q },
 		{ u"LuminaMessageFilterFull"_q, u"You have reached the maximum number of keywords."_q },
+		{ u"LuminaNotifyControlSubtitle"_q, u"Notifications"_q },
+		{ u"LuminaNotifyMutePinned"_q, u"Mute pinned messages"_q },
+		{ u"LuminaNotifyMutePinnedInfo"_q, u"Don’t show a notification when someone pins a message. The pinned message itself is not affected."_q },
+		{ u"LuminaNotifyMuteMentions"_q, u"Mute mentions and replies"_q },
+		{ u"LuminaNotifyMuteMentionsInfo"_q, u"Don’t show a notification when someone @mentions you or replies to your message. Nothing is marked as read, and the messages still appear as usual."_q },
 
 	};
 	return result;

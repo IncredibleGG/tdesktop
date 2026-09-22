@@ -918,6 +918,11 @@ namespace {
 		{ u"LuminaMessageFilterEmpty"_q, u"尚无关键词。添加后,任何包含该关键词的消息都会在此设备上从列表中隐藏。"_q },
 		{ u"LuminaMessageFilterListInfo"_q, u"包含其中任一关键词的消息,会在此设备上从消息列表中隐藏。"_q },
 		{ u"LuminaMessageFilterFull"_q, u"已达关键词数量上限。"_q },
+		{ u"LuminaNotifyControlSubtitle"_q, u"通知"_q },
+		{ u"LuminaNotifyMutePinned"_q, u"静音置顶消息通知"_q },
+		{ u"LuminaNotifyMutePinnedInfo"_q, u"有人置顶消息时不再弹出通知。被置顶的消息本身不受影响。"_q },
+		{ u"LuminaNotifyMuteMentions"_q, u"静音提及和回复通知"_q },
+		{ u"LuminaNotifyMuteMentionsInfo"_q, u"有人@你或回复你的消息时不再弹出通知。不会把任何消息标为已读，消息照常显示。"_q },
 	};
 }
 

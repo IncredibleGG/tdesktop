@@ -976,6 +976,11 @@ namespace {
 		{ u"LuminaMessageFilterEmpty"_q, u"Ainda não há palavras-chave. Adicione uma e qualquer mensagem que a contenha ficará oculta da lista neste dispositivo."_q },
 		{ u"LuminaMessageFilterListInfo"_q, u"Mensagens que contêm qualquer uma dessas palavras-chave ficam ocultas da lista de mensagens neste dispositivo."_q },
 		{ u"LuminaMessageFilterFull"_q, u"Você atingiu o número máximo de palavras-chave."_q },
+		{ u"LuminaNotifyControlSubtitle"_q, u"Notificações"_q },
+		{ u"LuminaNotifyMutePinned"_q, u"Silenciar mensagens fixadas"_q },
+		{ u"LuminaNotifyMutePinnedInfo"_q, u"Não mostrar uma notificação quando alguém fixa uma mensagem. A mensagem fixada em si não é afetada."_q },
+		{ u"LuminaNotifyMuteMentions"_q, u"Silenciar menções e respostas"_q },
+		{ u"LuminaNotifyMuteMentionsInfo"_q, u"Não mostrar uma notificação quando alguém menciona você com @ ou responde à sua mensagem. Nada é marcado como lido, e as mensagens continuam aparecendo normalmente."_q },
 	};
 }
 

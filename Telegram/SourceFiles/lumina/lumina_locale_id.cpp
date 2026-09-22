@@ -973,6 +973,11 @@ namespace {
 		{ u"LuminaMessageFilterEmpty"_q, u"Belum ada kata kunci. Tambahkan satu, dan pesan apa pun yang mengandungnya akan disembunyikan dari daftar di perangkat ini."_q },
 		{ u"LuminaMessageFilterListInfo"_q, u"Pesan yang mengandung salah satu kata kunci ini akan disembunyikan dari daftar pesan di perangkat ini."_q },
 		{ u"LuminaMessageFilterFull"_q, u"Anda telah mencapai jumlah maksimum kata kunci."_q },
+		{ u"LuminaNotifyControlSubtitle"_q, u"Notifikasi"_q },
+		{ u"LuminaNotifyMutePinned"_q, u"Bisukan notifikasi pesan tersemat"_q },
+		{ u"LuminaNotifyMutePinnedInfo"_q, u"Jangan tampilkan notifikasi saat seseorang menyematkan pesan. Pesan yang disematkan tidak terpengaruh."_q },
+		{ u"LuminaNotifyMuteMentions"_q, u"Bisukan notifikasi sebutan dan balasan"_q },
+		{ u"LuminaNotifyMuteMentionsInfo"_q, u"Jangan tampilkan notifikasi saat seseorang menyebut Anda dengan @ atau membalas pesan Anda. Tidak ada yang ditandai sudah dibaca, dan pesan tetap muncul seperti biasa."_q },
 	};
 }
 

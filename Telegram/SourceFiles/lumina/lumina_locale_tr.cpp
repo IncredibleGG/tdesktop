@@ -681,6 +681,11 @@ namespace {
 		{ u"LuminaMessageFilterEmpty"_q, u"Henüz anahtar kelime yok. Bir tane ekleyin; onu içeren her mesaj bu cihazdaki listede gizlenir."_q },
 		{ u"LuminaMessageFilterListInfo"_q, u"Bu anahtar kelimelerden herhangi birini içeren mesajlar, bu cihazdaki mesaj listesinde gizlenir."_q },
 		{ u"LuminaMessageFilterFull"_q, u"Maksimum anahtar kelime sayısına ulaştınız."_q },
+		{ u"LuminaNotifyControlSubtitle"_q, u"Bildirimler"_q },
+		{ u"LuminaNotifyMutePinned"_q, u"Sabitlenen mesaj bildirimlerini sustur"_q },
+		{ u"LuminaNotifyMutePinnedInfo"_q, u"Biri bir mesajı sabitlediğinde bildirim gösterme. Sabitlenen mesajın kendisi etkilenmez."_q },
+		{ u"LuminaNotifyMuteMentions"_q, u"Bahsetme ve yanıt bildirimlerini sustur"_q },
+		{ u"LuminaNotifyMuteMentionsInfo"_q, u"Biri sizden @ ile bahsettiğinde veya mesajınıza yanıt verdiğinde bildirim gösterme. Hiçbir şey okundu olarak işaretlenmez ve mesajlar her zamanki gibi görünmeye devam eder."_q },
 	};
 }
 

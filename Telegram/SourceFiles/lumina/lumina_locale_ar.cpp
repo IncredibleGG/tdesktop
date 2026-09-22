@@ -678,6 +678,11 @@ namespace {
 		{ u"LuminaMessageFilterEmpty"_q, u"لا توجد كلمات مفتاحية بعد. أضِف واحدة وسيُخفى أي رسالة تحتوي عليها من القائمة على هذا الجهاز."_q },
 		{ u"LuminaMessageFilterListInfo"_q, u"تُخفى الرسائل التي تحتوي على أي من هذه الكلمات المفتاحية من قائمة الرسائل على هذا الجهاز."_q },
 		{ u"LuminaMessageFilterFull"_q, u"لقد وصلت إلى الحد الأقصى لعدد الكلمات المفتاحية."_q },
+		{ u"LuminaNotifyControlSubtitle"_q, u"الإشعارات"_q },
+		{ u"LuminaNotifyMutePinned"_q, u"كتم إشعارات الرسائل المثبّتة"_q },
+		{ u"LuminaNotifyMutePinnedInfo"_q, u"عدم إظهار إشعار عندما يثبّت أحدهم رسالة. لا تتأثر الرسالة المثبّتة نفسها."_q },
+		{ u"LuminaNotifyMuteMentions"_q, u"كتم إشعارات الإشارات والردود"_q },
+		{ u"LuminaNotifyMuteMentionsInfo"_q, u"عدم إظهار إشعار عندما يشير إليك أحدهم بـ @ أو يرد على رسالتك. لا يتم تعليم أي شيء كمقروء، وتظل الرسائل ظاهرة كالمعتاد."_q },
 	};
 }
 

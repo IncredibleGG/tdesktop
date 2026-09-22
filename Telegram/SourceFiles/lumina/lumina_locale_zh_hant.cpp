@@ -916,6 +916,11 @@ namespace {
 		{ u"LuminaMessageFilterEmpty"_q, u"尚無關鍵字。新增後,任何包含該關鍵字的訊息都會在此裝置上從清單中隱藏。"_q },
 		{ u"LuminaMessageFilterListInfo"_q, u"包含其中任一關鍵字的訊息,會在此裝置上從訊息清單中隱藏。"_q },
 		{ u"LuminaMessageFilterFull"_q, u"已達關鍵字數量上限。"_q },
+		{ u"LuminaNotifyControlSubtitle"_q, u"通知"_q },
+		{ u"LuminaNotifyMutePinned"_q, u"靜音置頂訊息通知"_q },
+		{ u"LuminaNotifyMutePinnedInfo"_q, u"有人置頂訊息時不再彈出通知。被置頂的訊息本身不受影響。"_q },
+		{ u"LuminaNotifyMuteMentions"_q, u"靜音提及和回覆通知"_q },
+		{ u"LuminaNotifyMuteMentionsInfo"_q, u"有人@你或回覆你的訊息時不再彈出通知。不會把任何訊息標為已讀，訊息照常顯示。"_q },
 	};
 }
 

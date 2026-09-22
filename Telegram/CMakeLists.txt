@@ -2006,6 +2006,8 @@ PRIVATE
     lumina/lumina_muted_badge.h
     lumina/lumina_muted_badge_settings.cpp
     lumina/lumina_muted_badge_settings.h
+    lumina/lumina_notification_control.cpp
+    lumina/lumina_notification_control.h
     lumina/lumina_number_format.cpp
     lumina/lumina_number_format.h
     lumina/lumina_number_format_settings.cpp
