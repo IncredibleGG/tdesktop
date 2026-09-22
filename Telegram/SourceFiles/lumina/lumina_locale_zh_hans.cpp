@@ -884,6 +884,12 @@ namespace {
 		{ u"LuminaWideChannelPostsInfo"_q, u"以更宽的气泡显示频道帖子，使用大部分可用宽度，像阅读版面一样。仅影响纯文字帖子，媒体保持原本大小。"_q },
 		{ u"LuminaStickerTimestamp"_q, u"在贴纸上显示时间"_q },
 		{ u"LuminaStickerTimestampInfo"_q, u"在贴纸、动态贴纸和圆形视频消息上显示消息时间；平常只有在你把光标移上去时才会显示。"_q },
+
+		// LuminaGram 输入栏细节开关（Batch 3，#10；聊天子页）。
+		{ u"LuminaInputRowTitle"_q, u"输入栏"_q },
+		{ u"LuminaHideVoiceButton"_q, u"隐藏语音消息按钮"_q },
+		{ u"LuminaHideSendAsButton"_q, u"隐藏发送身份按钮"_q },
+		{ u"LuminaInputRowInfo"_q, u"隐藏输入框为空时出现的语音／视频消息按钮，以及用来选择以哪个账号或频道身份发送消息的发送身份按钮。默认关闭；其他输入控件不受影响。"_q },
 	};
 }
 

@@ -882,6 +882,12 @@ namespace {
 		{ u"LuminaWideChannelPostsInfo"_q, u"以更寬的氣泡顯示頻道貼文，使用大部分可用寬度，像閱讀版面一樣。只影響純文字貼文，媒體維持原本大小。"_q },
 		{ u"LuminaStickerTimestamp"_q, u"在貼圖上顯示時間"_q },
 		{ u"LuminaStickerTimestampInfo"_q, u"在貼圖、動態貼圖和圓形影片訊息上顯示訊息時間；平常只有在你把游標移上去時才會顯示。"_q },
+
+		// LuminaGram 輸入列細節開關（Batch 3，#10；聊天子頁）。
+		{ u"LuminaInputRowTitle"_q, u"輸入列"_q },
+		{ u"LuminaHideVoiceButton"_q, u"隱藏語音訊息按鈕"_q },
+		{ u"LuminaHideSendAsButton"_q, u"隱藏傳送身分按鈕"_q },
+		{ u"LuminaInputRowInfo"_q, u"隱藏輸入框為空時出現的語音／視訊訊息按鈕，以及用來選擇以哪個帳號或頻道身分發送訊息的傳送身分按鈕。預設關閉；其他輸入控制項不受影響。"_q },
 	};
 }
 

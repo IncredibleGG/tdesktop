@@ -833,6 +833,12 @@ struct Registration {
 		{ u"LuminaWideChannelPostsInfo"_q, u"Show channel posts in wider bubbles that use most of the available width, like a reading layout. Only affects text posts; media keeps its own size."_q },
 		{ u"LuminaStickerTimestamp"_q, u"Show time on stickers"_q },
 		{ u"LuminaStickerTimestampInfo"_q, u"Show the message time on sticker, animated-sticker and round-video messages, which normally show it only when you hover over them."_q },
+
+		// LuminaGram input-row detail toggles (Batch 3, #10; chats sub-page).
+		{ u"LuminaInputRowTitle"_q, u"Input row"_q },
+		{ u"LuminaHideVoiceButton"_q, u"Hide voice message button"_q },
+		{ u"LuminaHideSendAsButton"_q, u"Hide send-as button"_q },
+		{ u"LuminaInputRowInfo"_q, u"Hide the voice/video message button that appears when the message field is empty, and the send-as button for choosing which account or channel a message is posted as. Off by default; other input controls are unchanged."_q },
 	};
 	return result;
 }

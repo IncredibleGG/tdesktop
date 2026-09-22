@@ -44,6 +44,27 @@ void AddToggle(
 	}, button->lifetime());
 }
 
+// Batch 3, #10: input-row detail toggles. Each defaults to false, i.e. the
+// button keeps its stock visibility until the user opts in.
+void AddInputRowToggles(not_null<Ui::VerticalLayout*> container) {
+	Ui::AddSkip(container);
+	Ui::AddSubsectionTitle(
+		container,
+		Lumina::TrValue(u"LuminaInputRowTitle"_q));
+	AddToggle(
+		container,
+		Lumina::TrValue(u"LuminaHideVoiceButton"_q),
+		u"hideVoiceRecordButton"_q);
+	AddToggle(
+		container,
+		Lumina::TrValue(u"LuminaHideSendAsButton"_q),
+		u"hideSendAsButton"_q);
+	Ui::AddSkip(container);
+	Ui::AddDividerText(
+		container,
+		Lumina::TrValue(u"LuminaInputRowInfo"_q));
+}
+
 } // namespace
 
 Type LuminaChatId() {
@@ -84,6 +105,7 @@ void LuminaChat::setupContent(not_null<Ui::VerticalLayout*> container) {
 	Lumina::AddSelectAuthorRows(container, controller());
 	Lumina::AddUndoSendRows(container, controller());
 	Lumina::AddReplyTemplatesRows(container, controller());
+	AddInputRowToggles(container);
 }
 
 } // namespace Settings

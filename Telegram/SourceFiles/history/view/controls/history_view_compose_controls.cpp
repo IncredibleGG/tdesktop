@@ -102,6 +102,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_ai_editor.h"
 #include "lumina/lumina_quick_replies.h"
 #include "lumina/lumina_translate_preview_bar.h"
+#include "lumina/lumina_settings.h"
 #include "main/main_app_config.h"
 #include "main/main_session.h"
 #include "main/main_session_settings.h"
@@ -2758,6 +2759,23 @@ void ComposeControls::init() {
 		updateControlsGeometry(_wrap->size());
 	}, _wrap->lifetime());
 
+	// LuminaGram (Batch 3, #10): the voice-record and send-as input-row
+	// toggles gate showRecordButton()/updateSendAsButton(); re-run them so
+	// flipping a switch takes effect without re-opening the chat.
+	Lumina::Settings::Instance().changes(
+	) | rpl::on_next([=](const QString &key) {
+		if (key == u"hideVoiceRecordButton"_q) {
+			updateSendButtonType();
+			updateControlsGeometry(_wrap->size());
+		} else if (key == u"hideSendAsButton"_q) {
+			if (_history && updateSendAsButton(nullptr)) {
+				updateControlsVisibility();
+				updateControlsGeometry(_wrap->size());
+				orderControls();
+			}
+		}
+	}, _wrap->lifetime());
+
 	if (_botCommandStart) {
 		_botCommandStart->setAccessibleName(tr::lng_bot_commands_start(tr::now));
 		_botCommandStart->setClickedCallback([=] { setText({ "/" }); });
@@ -2951,7 +2969,9 @@ bool ComposeControls::showRecordButton() const {
 		&& !_voiceRecordBar->isRecordingByAnotherBar()
 		&& !hasSendableContent()
 		&& (replyingToMessage().replying() || !readyToForward())
-		&& !isEditingMessage();
+		&& !isEditingMessage()
+		&& !Lumina::Settings::Instance().getBool(
+			u"hideVoiceRecordButton"_q);
 }
 
 bool ComposeControls::showEditStarsButton() const {
@@ -5596,6 +5616,7 @@ bool ComposeControls::updateSendAsButton(
 	if (!_features.sendAs
 		|| !peer
 		|| isEditingMessage()
+		|| Lumina::Settings::Instance().getBool(u"hideSendAsButton"_q)
 		|| !session().sendAsPeers().shouldChoose({ peer, type })) {
 		if (!_sendAs) {
 			return false;
