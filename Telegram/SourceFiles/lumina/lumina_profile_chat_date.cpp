@@ -86,12 +86,21 @@ TimeId ChatCreationDate(not_null<PeerData*> peer) {
 		// message #1 does not apply. For basic groups chat->date IS the real
 		// creation date, so use it directly.
 		return chat->date;
-	} else if (peer->isChannel()) {
-		// Channel / supergroup: the timestamp of message #1 is the true creation
-		// date. When that message is not (yet) cached this returns 0, which hides
-		// the row until the fetch kicked off by FirstMessageResolved() lands - and
-		// stays 0 (row hidden) if the message is genuinely unavailable or deleted.
-		// It NEVER falls back to channel->date (the viewer's join date).
+	} else if (const auto channel = peer->asChannel()) {
+		// A supergroup migrated from a basic group inherits the basic group's
+		// creation date; the supergroup's own message #1 is only the migration
+		// point (a newer, wrong date). The legacy chat and its ->date arrive in
+		// the getFullChannel response's chats list (no extra fetch); the row
+		// re-evaluates on PeerUpdate::Flag::FullInfo when that link is set.
+		if (const auto migrated = channel->getMigrateFromChat()) {
+			if (migrated->date != 0) {
+				return migrated->date;
+			}
+		}
+		// Non-migrated channel / supergroup: message #1 is the true creation
+		// date. 0 hides the row until FirstMessageResolved() lands, and stays 0
+		// if message #1 is genuinely unavailable - it NEVER falls back to the
+		// viewer's join date (channel->date).
 		const auto item = peer->session().data().message(peer, kFirstMessageId);
 		return item ? item->date() : 0;
 	}
