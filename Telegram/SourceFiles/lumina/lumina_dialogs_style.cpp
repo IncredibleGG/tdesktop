@@ -15,6 +15,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_dialogs.h"
 
 #include <rpl/map.h>
+#include <rpl/merge.h>
 #include <rpl/producer.h>
 #include <rpl/range.h>
 #include <rpl/then.h>
@@ -28,6 +29,15 @@ namespace Lumina {
 namespace {
 
 const auto kKeyCompactListRows = u"compactListRows"_q;
+const auto kKeyPreviewLines = u"chatListPreviewLines"_q;
+
+// Whether ANY metric preference is off the stock value, i.e. whether the
+// patched styles differ from the codegen ones at all. When this is false
+// every entry point short-circuits to its stock argument and the chat list
+// is bit-identical to the stock one.
+[[nodiscard]] bool Active() {
+	return CompactListRows() || (PreviewLines() > kPreviewLinesMin);
+}
 
 enum Index : int {
 	kDefaultRow,
@@ -108,11 +118,11 @@ struct Cache {
 [[nodiscard]] Cache &Data() {
 	static auto result = Cache();
 	[[maybe_unused]] static const auto init = [] {
-		result.enabled = CompactListRows();
+		result.enabled = Active();
 		Settings::Instance().changes(
 		) | rpl::on_next([](const QString &key) {
-			if (key == kKeyCompactListRows) {
-				result.enabled = CompactListRows();
+			if (key == kKeyCompactListRows || key == kKeyPreviewLines) {
+				result.enabled = Active();
 				result.built = false;
 			}
 		}, result.lifetime);
@@ -124,34 +134,55 @@ struct Cache {
 void Rebuild(Cache &data) {
 	const auto &originals = Originals();
 	const auto &specs = Specs();
+	const auto compact = CompactListRows();
+	// Each preview line beyond the first adds exactly one line of the message
+	// font to the row - the same height dialogs_layout.cpp gives each drawn
+	// line - so the row and what it paints can never disagree. The metric is
+	// already interface-scaled, so it is NOT run through ConvertScale() again.
+	const auto extra = std::max(PreviewLines() - kPreviewLinesMin, 0)
+		* st::dialogsTextFont->height;
 	for (auto i = 0; i != int(kRowCount); ++i) {
 		auto row = *originals[i];
-		const auto &spec = specs[i];
-		const auto top = style::ConvertScale(spec.paddingTop);
-		const auto bottom = style::ConvertScale(spec.paddingBottom);
-		// The avatar's shrink is rounded down to an even number of physical
-		// pixels before it is split between the two sides, so that
-		// padding.left() + photoSize + padding.left() stays EXACTLY the stock
-		// narrow-column width at every interface scale. Taking half of an odd
-		// shrink would lose that pixel, and the scales are 5% apart, so at
-		// well over half of them ConvertScale(46) - ConvertScale(38) is odd.
-		const auto scaled = style::ConvertScale(spec.photoSize);
-		const auto shrink = (row.photoSize - scaled) & ~1;
-		const auto photo = row.photoSize - shrink;
-		const auto shift = shrink / 2;
-		row.padding = style::margins(
-			row.padding.left() + shift,
-			top,
-			row.padding.right(),
-			bottom);
-		row.photoSize = photo;
-		row.height = std::max(
-			style::ConvertScale(spec.height),
-			top + photo + bottom);
-		row.nameTop = style::ConvertScale(spec.nameTop);
-		row.textTop = style::ConvertScale(spec.textTop);
-		if (spec.tagTop) {
-			row.tagTop = style::ConvertScale(spec.tagTop);
+		if (compact) {
+			const auto &spec = specs[i];
+			const auto top = style::ConvertScale(spec.paddingTop);
+			const auto bottom = style::ConvertScale(spec.paddingBottom);
+			// The avatar's shrink is rounded down to an even number of physical
+			// pixels before it is split between the two sides, so that
+			// padding.left() + photoSize + padding.left() stays EXACTLY the
+			// stock narrow-column width at every interface scale. Taking half
+			// of an odd shrink would lose that pixel, and the scales are 5%
+			// apart, so at well over half of them ConvertScale(46) -
+			// ConvertScale(38) is odd.
+			const auto scaled = style::ConvertScale(spec.photoSize);
+			const auto shrink = (row.photoSize - scaled) & ~1;
+			const auto photo = row.photoSize - shrink;
+			const auto shift = shrink / 2;
+			row.padding = style::margins(
+				row.padding.left() + shift,
+				top,
+				row.padding.right(),
+				bottom);
+			row.photoSize = photo;
+			row.height = std::max(
+				style::ConvertScale(spec.height),
+				top + photo + bottom);
+			row.nameTop = style::ConvertScale(spec.nameTop);
+			row.textTop = style::ConvertScale(spec.textTop);
+			if (spec.tagTop) {
+				row.tagTop = style::ConvertScale(spec.tagTop);
+			}
+		}
+		if (extra > 0) {
+			// The extra lines sit below the existing text block; avatar, name
+			// and the first text line keep their tops. A tagged family draws
+			// its tag row immediately under what used to be a single text line,
+			// so it moves down by the same amount - otherwise the added lines
+			// would paint over the tags.
+			row.height += extra;
+			if (row.tagTop) {
+				row.tagTop += extra;
+			}
 		}
 		data.rows[i] = row;
 	}
@@ -186,6 +217,46 @@ rpl::producer<bool> CompactListRowsValue() {
 	) | rpl::map([] {
 		return CompactListRows();
 	});
+}
+
+int PreviewLines() {
+	return std::clamp(
+		Settings::Instance().getInt(kKeyPreviewLines, kPreviewLinesMin),
+		kPreviewLinesMin,
+		kPreviewLinesMax);
+}
+
+void SetPreviewLines(int value) {
+	Settings::Instance().set(
+		kKeyPreviewLines,
+		std::clamp(value, kPreviewLinesMin, kPreviewLinesMax),
+		Store::Prefs);
+}
+
+rpl::producer<int> PreviewLinesValue() {
+	// Same ordering guarantee as CompactListRowsValue(): touch Data() first so
+	// the style-invalidating subscriber is registered ahead of any consumer
+	// that re-lays out a chat list off this producer.
+	[[maybe_unused]] const auto &data = Data();
+
+	return rpl::single(
+		rpl::empty
+	) | rpl::then(
+		Settings::Instance().changesFor(kKeyPreviewLines)
+	) | rpl::map([] {
+		return PreviewLines();
+	});
+}
+
+rpl::producer<> ChatListMetricsChanges() {
+	// As above, register the invalidating subscriber before the consumer, and
+	// merge the two metric preferences into one change stream so a consumer
+	// re-lays out once per change from either.
+	[[maybe_unused]] const auto &data = Data();
+
+	return rpl::merge(
+		Settings::Instance().changesFor(kKeyCompactListRows),
+		Settings::Instance().changesFor(kKeyPreviewLines));
 }
 
 const style::DialogRow &DialogRowStyle(const style::DialogRow &original) {

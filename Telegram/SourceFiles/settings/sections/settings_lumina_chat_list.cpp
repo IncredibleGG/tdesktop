@@ -55,6 +55,7 @@ void LuminaChatList::setupContent(not_null<Ui::VerticalLayout*> container) {
 	Lumina::AddChatListDotRows(container, controller());
 	Lumina::AddMutedBadgeRows(container, controller());
 	Lumina::AddCompactListRows(container, controller());
+	Lumina::AddPreviewLinesRows(container, controller());
 }
 
 } // namespace Settings

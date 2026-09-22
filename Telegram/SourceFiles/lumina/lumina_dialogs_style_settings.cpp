@@ -11,6 +11,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_locale.h"
 #include "ui/vertical_list.h"
 #include "ui/widgets/buttons.h"
+#include "ui/widgets/checkbox.h"
 #include "ui/wrap/vertical_layout.h"
 
 #include "styles/style_settings.h"
@@ -39,6 +40,63 @@ void AddCompactListRows(
 	Ui::AddDividerText(
 		container,
 		TrValue(u"LuminaCompactListRowsInfo"_q));
+}
+
+namespace {
+
+[[nodiscard]] QString PreviewLinesChoiceText(int lines) {
+	return (lines == 1)
+		? Tr(u"LuminaPreviewLinesChoiceOne"_q)
+		: Tr(u"LuminaPreviewLinesChoice"_q, QString::number(lines));
+}
+
+} // namespace
+
+void AddPreviewLinesRows(
+		not_null<Ui::VerticalLayout*> container,
+		not_null<Window::SessionController*>) {
+	Ui::AddSkip(container);
+	Ui::AddSubsectionTitle(
+		container,
+		TrValue(u"LuminaPreviewLinesTitle"_q));
+	Ui::AddSkip(container, st::settingsSendTypeSkip);
+
+	const auto group = std::make_shared<Ui::RadiobuttonGroup>(PreviewLines());
+	for (auto lines = kPreviewLinesMin; lines <= kPreviewLinesMax; ++lines) {
+		const auto row = container->add(
+			object_ptr<Ui::Radiobutton>(
+				container,
+				group,
+				lines,
+				PreviewLinesChoiceText(lines),
+				st::settingsSendType),
+			st::settingsSendTypePadding);
+		LangChanges(
+		) | rpl::on_next([=] {
+			row->setText(PreviewLinesChoiceText(lines));
+		}, row->lifetime());
+	}
+
+	// The preference can also move under the page - a restored backup writes
+	// every key it carries - so the rows follow the preference rather than only
+	// the clicks. `syncing` keeps that path from writing the value straight
+	// back.
+	const auto syncing = container->lifetime().make_state<bool>(false);
+	group->setChangedCallback([=](int value) {
+		if (*syncing) {
+			return;
+		}
+		SetPreviewLines(value);
+	});
+	PreviewLinesValue(
+	) | rpl::on_next([=](int lines) {
+		*syncing = true;
+		group->setValue(lines);
+		*syncing = false;
+	}, container->lifetime());
+
+	Ui::AddSkip(container, st::settingsSendTypeSkip);
+	Ui::AddDividerText(container, TrValue(u"LuminaPreviewLinesInfo"_q));
 }
 
 } // namespace Lumina

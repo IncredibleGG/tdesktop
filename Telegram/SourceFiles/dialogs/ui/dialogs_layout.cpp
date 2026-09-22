@@ -642,7 +642,7 @@ void PaintRow(
 			nameleft,
 			texttop,
 			availableWidth,
-			st::dialogsTextFont->height);
+			Lumina::PreviewLines() * st::dialogsTextFont->height);
 		PaintFolderEntryText(p, folder, context, rect);
 	} else if (const auto info = CommunityListInfo(history)) {
 		// Unlike the Archive folder (fixed on top), a collapsed community is
@@ -661,7 +661,7 @@ void PaintRow(
 			nameleft,
 			texttop,
 			availableWidth,
-			st::dialogsTextFont->height);
+			Lumina::PreviewLines() * st::dialogsTextFont->height);
 		PaintCommunityEntryText(p, info, context, rect);
 	} else if (promoted && !history->topPromotionMessage().isEmpty()) {
 		auto availableWidth = namewidth;
@@ -684,7 +684,7 @@ void PaintRow(
 			.now = context.now,
 			.pausedEmoji = context.paused || On(PowerSaving::kEmojiChat),
 			.pausedSpoiler = context.paused || On(PowerSaving::kChatSpoiler),
-			.elisionLines = 1,
+			.elisionLines = Lumina::PreviewLines(),
 		});
 	} else if (draft
 		|| (supportMode
@@ -787,7 +787,7 @@ void PaintRow(
 				.now = context.now,
 				.pausedEmoji = context.paused || On(PowerSaving::kEmojiChat),
 				.pausedSpoiler = context.paused || On(PowerSaving::kChatSpoiler),
-				.elisionLines = 1,
+				.elisionLines = Lumina::PreviewLines(),
 			});
 		}
 	} else if (!item) {
@@ -1233,7 +1233,7 @@ void RowPainter::Paint(
 			nameleft,
 			texttop,
 			availableWidth,
-			st::dialogsTextFont->height);
+			Lumina::PreviewLines() * st::dialogsTextFont->height);
 		const auto actionWasPainted = ShowSendActionInDialogs(thread)
 			? thread->sendActionPainter()->paint(
 				p,
@@ -1358,7 +1358,7 @@ void RowPainter::Paint(
 			nameleft,
 			texttop,
 			availableWidth,
-			st::dialogsTextFont->height);
+			Lumina::PreviewLines() * st::dialogsTextFont->height);
 		auto &view = row->itemView();
 		if (!view.prepared(item, nullptr, nullptr)) {
 			view.prepare(

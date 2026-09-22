@@ -335,13 +335,15 @@ InnerWidget::InnerWidget(
 
 	_communityViewable.setRepaint([=] { update(); });
 
-	// Toggling the compact preference changes the height of every row that is
-	// already laid out, so the list has to be measured again rather than only
+	// Changing a chat-list metric preference (compact rows, or the number of
+	// message-preview lines) changes the height of every row that is already
+	// laid out, so the list has to be measured again rather than only
 	// repainted: _shownList and _communityViewable own the tops of the rows
 	// they show, _filterResults owns its own, and _rowsScrollCache holds
-	// painted row images at the previous height.
-	Lumina::CompactListRowsValue(
-	) | rpl::skip(1) | rpl::on_next([=] {
+	// painted row images at the previous height. ChatListMetricsChanges() is a
+	// change-only stream, so no initial value has to be skipped.
+	Lumina::ChatListMetricsChanges(
+	) | rpl::on_next([=] {
 		_st = &Lumina::DialogRowStyle(_openedForum
 			? st::forumTopicRow
 			: st::defaultDialogRow);

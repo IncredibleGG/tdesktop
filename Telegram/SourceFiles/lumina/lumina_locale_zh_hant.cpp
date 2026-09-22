@@ -379,6 +379,11 @@ namespace {
 		{ u"LuminaCompactListRows"_q, u"精簡列高"_q },
 		{ u"LuminaCompactListRowsInfo"_q, u"縮短聊天清單每一列的高度，讓螢幕"
 			u"上能顯示更多聊天。大頭貼與訊息預覽仍會顯示。"_q },
+		{ u"LuminaPreviewLinesTitle"_q, u"訊息預覽"_q },
+		{ u"LuminaPreviewLinesChoiceOne"_q, u"1 列"_q },
+		{ u"LuminaPreviewLinesChoice"_q, u"{1} 列"_q },
+		{ u"LuminaPreviewLinesInfo"_q, u"在每個聊天名稱下方最多顯示這麼多列的最新訊息。"
+			u"列數越多，聊天清單的每一列就越高。"_q },
 		{ u"LuminaChatListDotsTitle"_q, u"大頭貼圓點"_q },
 		{ u"LuminaChatListOnlineDot"_q, u"線上圓點"_q },
 		{ u"LuminaChatListOnlineDotInfo"_q, u"在一對一聊天中，若對方目前在"

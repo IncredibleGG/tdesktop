@@ -52,6 +52,31 @@ namespace Lumina {
 void SetCompactListRows(bool value);
 [[nodiscard]] rpl::producer<bool> CompactListRowsValue();
 
+// Preference `chatListPreviewLines`, Store::Prefs, default 1 (the stock
+// single-line message preview). 1 / 2 / 3 lines of the last-message preview in
+// every chat-list row - the desktop analogue of Android's per-row preview line
+// count. The extra lines are added to the row height (see DialogRowStyle) and
+// the message-preview paint region in dialogs_layout.cpp grows to match, so a
+// taller row and the number of lines it draws can never disagree. Default 1
+// short-circuits to the stock chat list exactly like compact does. Main thread
+// only.
+[[nodiscard]] int PreviewLines();
+void SetPreviewLines(int value);
+[[nodiscard]] rpl::producer<int> PreviewLinesValue();
+
+// The lowest and highest line counts the settings page offers. The bounds are
+// also enforced on read, so a hand-edited luminagram.json or a restored backup
+// cannot make a row draw an unbounded number of lines.
+inline constexpr auto kPreviewLinesMin = 1;
+inline constexpr auto kPreviewLinesMax = 3;
+
+// Fires (empty) whenever a preference that changes chat-list row METRICS moves
+// - today `compactListRows` or `chatListPreviewLines`. A consumer that has to
+// re-measure and re-lay out every open chat list subscribes to this instead of
+// to each preference separately, so the two never fight over subscription
+// order. Does NOT emit an initial value; it is a change stream only.
+[[nodiscard]] rpl::producer<> ChatListMetricsChanges();
+
 // The row style to actually use in place of `original`.
 //
 // `original` must be one of the codegen st::...DialogRow objects; anything else

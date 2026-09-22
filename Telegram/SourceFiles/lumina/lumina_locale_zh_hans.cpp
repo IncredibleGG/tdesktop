@@ -385,6 +385,11 @@ namespace {
 		{ u"LuminaCompactListRows"_q, u"精简行高"_q },
 		{ u"LuminaCompactListRowsInfo"_q, u"缩短聊天列表每一行的高度，让屏幕"
 			u"上能显示更多聊天。头像与消息预览仍会显示。"_q },
+		{ u"LuminaPreviewLinesTitle"_q, u"消息预览"_q },
+		{ u"LuminaPreviewLinesChoiceOne"_q, u"1 行"_q },
+		{ u"LuminaPreviewLinesChoice"_q, u"{1} 行"_q },
+		{ u"LuminaPreviewLinesInfo"_q, u"在每个聊天名称下方最多显示这么多行的最新消息。"
+			u"行数越多，聊天列表的每一行就越高。"_q },
 		{ u"LuminaChatListDotsTitle"_q, u"头像圆点"_q },
 		{ u"LuminaChatListOnlineDot"_q, u"在线圆点"_q },
 		{ u"LuminaChatListOnlineDotInfo"_q, u"在单聊头像上显示一个小绿点，"

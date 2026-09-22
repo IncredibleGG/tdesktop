@@ -24,4 +24,11 @@ void AddCompactListRows(
 	not_null<Ui::VerticalLayout*> container,
 	not_null<Window::SessionController*> controller);
 
+// The chat-list sub-page rows for `chatListPreviewLines`: a 1 / 2 / 3 radio
+// list choosing how many lines of the last-message preview each row shows.
+// Changing it re-lays out every open chat list immediately, no restart.
+void AddPreviewLinesRows(
+	not_null<Ui::VerticalLayout*> container,
+	not_null<Window::SessionController*> controller);
+
 } // namespace Lumina
