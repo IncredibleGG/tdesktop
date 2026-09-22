@@ -816,6 +816,10 @@ namespace {
 		{ u"LuminaSttKey"_q, u"API 金鑰"_q },
 		{ u"LuminaSttBaseUrl"_q, u"介面位址"_q },
 		{ u"LuminaSttModel"_q, u"模型"_q },
+		{ u"LuminaSttProbeModels"_q, u"探測模型"_q },
+		{ u"LuminaSttProbeNoKey"_q, u"請先設定 API 金鑰，再探測模型。"_q },
+		{ u"LuminaSttProbeFailed"_q, u"無法取得模型清單。請檢查介面位址與 API 金鑰後再試一次。"_q },
+		{ u"LuminaSttProbeEmpty"_q, u"這個端點沒有回傳任何模型。"_q },
 		{ u"LuminaSttNotReady"_q, u"語音轉文字已開啟，但下方選擇的引擎還沒有 API 金鑰，因此無法運作。請到「引擎」儲存金鑰，或關閉這個開關。"_q },
 		{ u"LuminaSttInfoDesktop"_q, u"轉錄用的是你自己的 API key、花你自己的額度，"
 			u"LuminaGram 不提供 key。語音檔會上傳到"

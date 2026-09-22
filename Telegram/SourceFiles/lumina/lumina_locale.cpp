@@ -755,6 +755,10 @@ struct Registration {
 		{ u"LuminaSttKey"_q, u"API key"_q },
 		{ u"LuminaSttBaseUrl"_q, u"Base URL"_q },
 		{ u"LuminaSttModel"_q, u"Model"_q },
+		{ u"LuminaSttProbeModels"_q, u"Detect models"_q },
+		{ u"LuminaSttProbeNoKey"_q, u"Set an API key first, then detect models."_q },
+		{ u"LuminaSttProbeFailed"_q, u"Could not fetch the model list. Check the base URL and API key, then try again."_q },
+		{ u"LuminaSttProbeEmpty"_q, u"The endpoint returned no models."_q },
 		{ u"LuminaSttNotReady"_q, u"Voice to text is on, but the engine selected below has no API key yet, so it cannot run. Save a key under Engine, or turn this off."_q },
 		{ u"LuminaSttSetupTitle"_q, u"Finish setup"_q },
 		{ u"LuminaSttSetupInfo"_q, u"Voice to text is on, but the engine "

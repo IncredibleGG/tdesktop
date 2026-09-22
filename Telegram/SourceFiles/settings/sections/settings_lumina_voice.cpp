@@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "settings/sections/settings_lumina_voice.h"
 
+#include "base/weak_qptr.h"
 #include "lang/lang_keys.h"
 #include "lumina/lumina_locale.h"
 #include "lumina/lumina_transcribers.h"
@@ -484,6 +485,61 @@ void AddEngineRows(
 				kModelMaxLength,
 				[](QString value) { Lumina::SetSttModel(value); });
 		});
+
+	// LuminaGram: probe the endpoint's /models list so the user can pick an id
+	// instead of typing it. Lives in the same needsModel fold as the model row
+	// above, so it appears only for the OpenAI-compatible cloud engine - the one
+	// engine that actually has both a key and a base url to query.
+	const auto probe = AddButtonWithIcon(
+		modelBlock,
+		Lumina::TrValue(u"LuminaSttProbeModels"_q),
+		st::settingsButtonNoIcon);
+	// One request at a time: a second tap while the first is still in flight is
+	// ignored rather than opening a race. The flag lives in the button's own
+	// lifetime, which is why the callback below is guarded on the button.
+	const auto probing = probe->lifetime().make_state<bool>(false);
+	probe->setClickedCallback([=] {
+		if (*probing) {
+			return;
+		}
+		*probing = true;
+		// Guarded on the button: if the page is closed while the probe is in
+		// flight the callback is dropped, so it never touches `*probing` (which
+		// dies with the button) or a stale controller. The owned network manager
+		// in FetchSttModels is freed either way.
+		Lumina::FetchSttModels(crl::guard(base::make_weak(probe), [=](
+				std::vector<QString> models,
+				QString error) {
+			*probing = false;
+			if (!error.isEmpty()) {
+				controller->showToast(error);
+				return;
+			} else if (models.empty()) {
+				controller->showToast(Lumina::Tr(u"LuminaSttProbeEmpty"_q));
+				return;
+			}
+			const auto current = Lumina::SttModel();
+			auto selected = 0;
+			for (auto i = 0, count = int(models.size()); i != count; ++i) {
+				if (models[i] == current) {
+					selected = i;
+				}
+			}
+			controller->show(Box([=](not_null<Ui::GenericBox*> box) {
+				SingleChoiceBox(box, {
+					.title = Lumina::TrValue(u"LuminaSttProbeModels"_q),
+					.options = models,
+					.initialSelection = selected,
+					.callback = [=](int index) {
+						if (index >= 0 && index < int(models.size())) {
+							Lumina::SetSttModel(models[index]);
+						}
+					},
+				});
+			}));
+		}));
+	});
+	GateRow(probe, nullptr);
 
 #ifndef Q_OS_MAC
 	// LuminaGram: the offline model download/status row. Non-mac only (mac uses

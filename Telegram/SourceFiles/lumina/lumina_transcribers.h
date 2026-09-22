@@ -99,6 +99,15 @@ void SetSttBaseUrl(const QString &value);
 [[nodiscard]] QString SttModel();
 void SetSttModel(const QString &value);
 
+// LuminaGram: probe the OpenAI-compatible endpoint's `/models` list so the
+// settings page can offer the ids to pick from instead of making the user
+// type one by hand. Performs GET <base>/models with the Whisper engine's
+// key; on success `models` holds the ids (likely-transcription ones first)
+// and `error` is empty, on any failure `models` is empty and `error` is a
+// human, localised, body-free message. `done` runs exactly once, on the
+// main thread.
+void FetchSttModels(Fn<void(std::vector<QString> models, QString error)> done);
+
 // False when the selected engine needs an API key that is not set. There is
 // no free fallback on desktop, so this is the whole difference between "the
 // feature can run" and "the feature can only apologise".

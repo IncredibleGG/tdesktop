@@ -8,6 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_transcribers.h"
 
 #include "base/random.h"
+#include "lumina/lumina_locale.h"
 #include "lumina/lumina_settings.h"
 #ifdef Q_OS_MAC
 #include "lumina/lumina_transcriber_apple.h" // LuminaGram: on-device Apple engine.
@@ -16,6 +17,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_transcriber_whisper.h" // LuminaGram: offline whisper.cpp.
 #include "lumina/lumina_whisper_model.h"
 #endif // !Q_OS_MAC
+
+#include <algorithm>
 
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
@@ -105,6 +108,40 @@ void SendPost(
 		request.setRawHeader(header.name, header.value);
 	}
 	const auto reply = network->post(request, body);
+	QObject::connect(reply, &QNetworkReply::finished, [=] {
+		const auto status = reply->attribute(
+			QNetworkRequest::HttpStatusCodeAttribute).toInt();
+		const auto failure = reply->error();
+		auto received = reply->readAll();
+		reply->deleteLater();
+		if (status >= 400) {
+			done(QByteArray(), ErrorForStatus(status), status);
+		} else if (failure != QNetworkReply::NoError) {
+			done(QByteArray(), TranscribeError::Network, status);
+		} else {
+			done(std::move(received), TranscribeError::None, status);
+		}
+	});
+}
+
+// GET twin of SendPost above, for endpoints that take no body: same timeout,
+// header and error handling, so the /models probe reads exactly like the
+// transcription POST does. Kept next to SendPost on purpose.
+void SendGet(
+		not_null<QNetworkAccessManager*> network,
+		const QUrl &url,
+		const std::vector<HttpHeader> &headers,
+		Fn<void(QByteArray, TranscribeError, int)> done) {
+	if (!url.isValid()) {
+		done(QByteArray(), TranscribeError::Network, 0);
+		return;
+	}
+	auto request = QNetworkRequest(url);
+	request.setTransferTimeout(kRequestTimeoutMs);
+	for (const auto &header : headers) {
+		request.setRawHeader(header.name, header.value);
+	}
+	const auto reply = network->get(request);
 	QObject::connect(reply, &QNetworkReply::finished, [=] {
 		const auto status = reply->attribute(
 			QNetworkRequest::HttpStatusCodeAttribute).toInt();
@@ -592,6 +629,66 @@ void SetSttModel(const QString &value) {
 	} else {
 		Settings::Instance().set(ModelKey(), trimmed);
 	}
+}
+
+void FetchSttModels(Fn<void(std::vector<QString>, QString)> done) {
+	const auto key = TranscriberApiKey(WhisperTranscriberId());
+	if (key.isEmpty()) {
+		done({}, Tr(u"LuminaSttProbeNoKey"_q));
+		return;
+	}
+	// A free function has no engine object to hang a QNetworkAccessManager
+	// off, so it owns one for this single request and drops it (deleteLater,
+	// never a delete from inside its own reply's signal) once the reply has
+	// been read. The manager is created on the calling thread - the main
+	// thread, from the settings page - so `finished`, and therefore `done`,
+	// fire on the main thread, exactly as the engines' member managers do.
+	const auto network = new QNetworkAccessManager();
+	SendGet(
+		network,
+		QUrl(TrimTrailingSlash(SttBaseUrl()) + u"/models"_q),
+		{ { "Authorization", "Bearer " + key.toUtf8() } },
+		[network, done](QByteArray body, TranscribeError error, int status) {
+			network->deleteLater();
+			if (error != TranscribeError::None) {
+				done({}, Tr(u"LuminaSttProbeFailed"_q));
+				return;
+			}
+			const auto parsed = ParseJsonObject(body);
+			if (!parsed) {
+				done({}, Tr(u"LuminaSttProbeFailed"_q));
+				return;
+			}
+			auto models = std::vector<QString>();
+			const auto data = parsed->value(u"data"_q).toArray();
+			for (const auto &entry : data) {
+				const auto id = entry.toObject().value(u"id"_q).toString();
+				if (!id.isEmpty()) {
+					models.push_back(id);
+				}
+			}
+			// Likely-transcription models first (ids that mention
+			// "transcribe" or "whisper"), then the rest, each group sorted
+			// case-insensitively. An OpenAI-compatible or self-hosted server
+			// may name its models anything, so nothing is dropped - the hint
+			// only reorders.
+			const auto rank = [](const QString &id) {
+				return (id.contains(u"transcribe"_q, Qt::CaseInsensitive)
+						|| id.contains(u"whisper"_q, Qt::CaseInsensitive))
+					? 0
+					: 1;
+			};
+			std::sort(models.begin(), models.end(), [&](
+					const QString &a,
+					const QString &b) {
+				const auto ra = rank(a);
+				const auto rb = rank(b);
+				return (ra != rb)
+					? (ra < rb)
+					: (a.compare(b, Qt::CaseInsensitive) < 0);
+			});
+			done(std::move(models), QString());
+		});
 }
 
 bool TranscriberConfigured(const QString &id) {

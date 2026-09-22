@@ -818,6 +818,10 @@ namespace {
 		{ u"LuminaSttKey"_q, u"API 密钥"_q },
 		{ u"LuminaSttBaseUrl"_q, u"接口地址"_q },
 		{ u"LuminaSttModel"_q, u"模型"_q },
+		{ u"LuminaSttProbeModels"_q, u"探测模型"_q },
+		{ u"LuminaSttProbeNoKey"_q, u"请先设置 API 密钥，再探测模型。"_q },
+		{ u"LuminaSttProbeFailed"_q, u"无法获取模型列表。请检查接口地址与 API 密钥后再试一次。"_q },
+		{ u"LuminaSttProbeEmpty"_q, u"这个端点没有返回任何模型。"_q },
 		{ u"LuminaSttNotReady"_q, u"语音转文字已开启，但下方选择的引擎还没有 API 密钥，因此无法运行。请到“引擎”保存密钥，或关闭这个开关。"_q },
 		{ u"LuminaSttInfoDesktop"_q, u"转录用的是你自己的 API key、花你自己的额度，"
 			u"LuminaGram 不提供 key。语音文件会上传"
