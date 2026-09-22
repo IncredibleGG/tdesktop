@@ -63,6 +63,18 @@ void SetHideChatFolders(bool value);
 [[nodiscard]] rpl::producer<bool> HideChatFoldersValue();
 [[nodiscard]] rpl::producer<> HideChatFoldersChanges();
 
+// Preference `foldersAtBottom`, Store::Prefs, default false.
+//
+// LUMINA (Folders at Bottom): when on, Dialogs::Widget anchors the
+// horizontal folder tab strip to the bottom of the dialogs pane instead of
+// its stock position under the search bar, for one-handed reach. Pure
+// layout preference read inside updateControlsGeometry; default false leaves
+// the stock geometry untouched. Main thread only.
+[[nodiscard]] bool FoldersAtBottom();
+void SetFoldersAtBottom(bool value);
+[[nodiscard]] rpl::producer<bool> FoldersAtBottomValue();
+[[nodiscard]] rpl::producer<> FoldersAtBottomChanges();
+
 // Preference `hideStories`, Store::Prefs, default false. Same key name as
 // Android. Main thread only.
 [[nodiscard]] bool HideStories();

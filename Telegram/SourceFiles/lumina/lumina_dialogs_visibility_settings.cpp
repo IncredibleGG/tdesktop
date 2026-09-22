@@ -45,6 +45,16 @@ void AddDialogsVisibilityRows(
 		SetHideStories(value);
 	}, stories->lifetime());
 
+	const auto bottom = container->add(object_ptr<Ui::SettingsButton>(
+		container,
+		TrValue(u"LuminaFoldersAtBottom"_q),
+		st::settingsButtonNoIcon
+	))->toggleOn(FoldersAtBottomValue());
+	bottom->toggledChanges(
+	) | rpl::on_next([](bool value) {
+		SetFoldersAtBottom(value);
+	}, bottom->lifetime());
+
 	Ui::AddSkip(container);
 	Ui::AddDividerText(
 		container,

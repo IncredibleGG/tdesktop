@@ -391,6 +391,7 @@ namespace {
 		{ u"LuminaForwardNoCaptionTitle"_q, u"إعادة التوجيه دون المؤلف والتعليقات"_q },
 		{ u"LuminaHideStories"_q, u"إخفاء القصص"_q },
 		{ u"LuminaHideTabs"_q, u"إخفاء علامات تبويب المجلدات"_q },
+		{ u"LuminaFoldersAtBottom"_q, u"المجلدات في الأسفل"_q },
 		{ u"LuminaRememberFolder"_q, u"تذكّر آخر مجلد"_q },
 		{ u"LuminaRememberFolderAbout"_q, u"أعِد فتح قائمة الدردشات على المجلد الذي فتحته آخر مرة، بدلاً من البدء دائماً على المجلد الافتراضي للحساب. وما دامت علامات تبويب المجلدات مخفية فلا يفعل هذا الخيار شيئاً."_q },
 		{ u"LuminaRememberFolderTitle"_q, u"المجلدات"_q },

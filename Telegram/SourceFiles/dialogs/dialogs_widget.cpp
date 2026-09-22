@@ -4652,22 +4652,49 @@ void Widget::updateControlsGeometry() {
 		}
 		const auto chatFiltersTop = forumReportTop
 			+ (_forumReportBar ? _forumReportBar->bar().height() : 0);
-		if (_chatFilters) {
-			_chatFilters->move(0, chatFiltersTop);
-		}
-		const auto scrollTop = chatFiltersTop
-			+ ((_chatFilters
-				&& _searchState.query.isEmpty()
+		if (Lumina::FoldersAtBottom() && _chatFilters) {
+			// LUMINA (Folders at Bottom): anchor the folder tab strip to
+			// the bottom of the dialogs pane, just above the bottom
+			// buttons. Reached only when the flag is on; the stock path in
+			// the else stays byte-identical for the default.
+			const auto filtersShown = _searchState.query.isEmpty()
 				&& !_openedForum
 				&& !_searchState.community
-				&& !searchInPeer())
+				&& !searchInPeer();
+			const auto shownHeight = filtersShown
 				? (_chatFilters->height() * (1. - narrowRatio))
-				: 0);
-		const auto scrollHeight = height() - scrollTop - bottomSkip;
-		const auto wasScrollHeight = _scroll->height();
-		_scroll->setGeometry(0, scrollTop, scrollWidth, scrollHeight);
-		if (scrollHeight != wasScrollHeight) {
-			controller()->floatPlayerAreaUpdated();
+				: 0.;
+			const auto scrollTop = chatFiltersTop;
+			const auto scrollHeight = height()
+				- bottomSkip
+				- scrollTop
+				- shownHeight;
+			const auto wasScrollHeight = _scroll->height();
+			_scroll->setGeometry(0, scrollTop, scrollWidth, scrollHeight);
+			_chatFilters->move(
+				0,
+				height() - bottomSkip - _chatFilters->height());
+			if (scrollHeight != wasScrollHeight) {
+				controller()->floatPlayerAreaUpdated();
+			}
+		} else {
+			if (_chatFilters) {
+				_chatFilters->move(0, chatFiltersTop);
+			}
+			const auto scrollTop = chatFiltersTop
+				+ ((_chatFilters
+					&& _searchState.query.isEmpty()
+					&& !_openedForum
+					&& !_searchState.community
+					&& !searchInPeer())
+					? (_chatFilters->height() * (1. - narrowRatio))
+					: 0);
+			const auto scrollHeight = height() - scrollTop - bottomSkip;
+			const auto wasScrollHeight = _scroll->height();
+			_scroll->setGeometry(0, scrollTop, scrollWidth, scrollHeight);
+			if (scrollHeight != wasScrollHeight) {
+				controller()->floatPlayerAreaUpdated();
+			}
 		}
 	};
 	_updateScrollGeometryCached();

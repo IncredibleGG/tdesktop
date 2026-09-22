@@ -393,6 +393,7 @@ namespace {
 		{ u"LuminaForwardNoCaptionTitle"_q, u"Yazarı ve açıklamaları olmadan ilet"_q },
 		{ u"LuminaHideStories"_q, u"Hikâyeleri gizle"_q },
 		{ u"LuminaHideTabs"_q, u"Klasör sekmelerini gizle"_q },
+		{ u"LuminaFoldersAtBottom"_q, u"Klasörler altta"_q },
 		{ u"LuminaRememberFolder"_q, u"Son klasörü hatırla"_q },
 		{ u"LuminaRememberFolderAbout"_q, u"Sohbet listesini her zaman hesabın varsayılan klasöründe açmak yerine, en son açık olan klasörde yeniden açar. Klasör sekmeleri gizliyken bu seçenek hiçbir şey yapmaz."_q },
 		{ u"LuminaRememberFolderTitle"_q, u"Klasörler"_q },

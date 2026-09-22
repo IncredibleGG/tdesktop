@@ -370,6 +370,7 @@ namespace {
 		{ u"LuminaForwardNoCaptionTitle"_q, u"هدایت بدون نویسنده و شرح"_q },
 		{ u"LuminaHideStories"_q, u"پنهان کردن استوری‌ها"_q },
 		{ u"LuminaHideTabs"_q, u"پنهان کردن زبانه‌های پوشه"_q },
+		{ u"LuminaFoldersAtBottom"_q, u"پوشه‌ها در پایین"_q },
 		{ u"LuminaRememberFolder"_q, u"به‌خاطر سپردن آخرین پوشه"_q },
 		{ u"LuminaRememberFolderAbout"_q, u"فهرست گفتگوها را روی پوشه‌ای که آخرین‌بار باز کرده بودید باز می‌کند، به‌جای اینکه همیشه از پوشهٔ پیش‌فرض حساب شروع کند. تا وقتی زبانه‌های پوشه پنهان است، این گزینه کاری نمی‌کند."_q },
 		{ u"LuminaRememberFolderTitle"_q, u"پوشه‌ها"_q },

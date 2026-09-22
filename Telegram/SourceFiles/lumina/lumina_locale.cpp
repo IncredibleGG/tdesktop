@@ -497,6 +497,7 @@ struct Registration {
 		{ u"LuminaForwardNoCaptionTitle"_q, u"Forward without author and captions"_q },
 		{ u"LuminaHideStories"_q, u"Hide stories"_q },
 		{ u"LuminaHideTabs"_q, u"Hide folder tabs"_q },
+		{ u"LuminaFoldersAtBottom"_q, u"Folders at bottom"_q },
 		{ u"LuminaRememberFolder"_q, u"Remember last folder"_q },
 		{ u"LuminaRememberFolderAbout"_q, u"Reopen the chat list on the folder you last had open, instead of always starting on the account's default folder. While folder tabs are hidden this does nothing."_q },
 		{ u"LuminaRememberFolderTitle"_q, u"Folders"_q },

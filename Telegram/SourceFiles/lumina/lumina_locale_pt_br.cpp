@@ -451,6 +451,7 @@ namespace {
 			u"Encaminhar sem autor e sem legendas"_q },
 		{ u"LuminaHideStories"_q, u"Ocultar stories"_q },
 		{ u"LuminaHideTabs"_q, u"Ocultar abas de pastas"_q },
+		{ u"LuminaFoldersAtBottom"_q, u"Pastas na parte inferior"_q },
 		{ u"LuminaRememberFolder"_q, u"Lembrar a última pasta"_q },
 		{ u"LuminaRememberFolderAbout"_q, u"Reabre a lista de conversas na pasta que você tinha aberto por último, em vez de começar sempre na pasta padrão da conta. Enquanto as abas de pastas estão ocultas, esta opção não faz nada."_q },
 		{ u"LuminaRememberFolderTitle"_q, u"Pastas"_q },

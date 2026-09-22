@@ -16,6 +16,7 @@ namespace {
 
 const auto kKeyHideChatFolders = u"hideChatFolders"_q;
 const auto kKeyHideStories = u"hideStories"_q;
+const auto kKeyFoldersAtBottom = u"foldersAtBottom"_q;
 
 } // namespace
 
@@ -61,6 +62,28 @@ rpl::producer<bool> HideStoriesValue() {
 
 rpl::producer<> HideStoriesChanges() {
 	return Settings::Instance().changesFor(kKeyHideStories);
+}
+
+bool FoldersAtBottom() {
+	return Settings::Instance().getBool(kKeyFoldersAtBottom, false);
+}
+
+void SetFoldersAtBottom(bool value) {
+	Settings::Instance().set(kKeyFoldersAtBottom, value, Store::Prefs);
+}
+
+rpl::producer<bool> FoldersAtBottomValue() {
+	return rpl::single(
+		rpl::empty
+	) | rpl::then(
+		FoldersAtBottomChanges()
+	) | rpl::map([] {
+		return FoldersAtBottom();
+	});
+}
+
+rpl::producer<> FoldersAtBottomChanges() {
+	return Settings::Instance().changesFor(kKeyFoldersAtBottom);
 }
 
 } // namespace Lumina
