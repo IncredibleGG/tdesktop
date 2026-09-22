@@ -36,6 +36,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "iv/iv_instance.h"
 #include "iv/iv_rich_page.h"
 #include "lumina/lumina_dual_language_line.h"
+#include "lumina/lumina_message_display.h"
 #include "boxes/premium_preview_box.h"
 #include "boxes/share_box.h"
 #include "boxes/peers/tag_info_box.h"
@@ -6669,7 +6670,13 @@ int Message::resizeContentGetHeight(int newWidth) {
 		}
 	}
 	accumulate_min(contentWidth, maxWidth());
-	_bubbleWidthLimit = (UnlimitedMessageWidth.value() && !mediaDisplayed)
+	_bubbleWidthLimit = ((UnlimitedMessageWidth.value()
+			// LuminaGram: widen channel (broadcast) post bubbles toward the
+			// full available width, reusing the exact same width-cap lift the
+			// "Unlimited message width" option uses. Text-only posts only, so
+			// media keeps its own sizing.
+			|| (item->isPost() && Lumina::WideChannelPosts()))
+			&& !mediaDisplayed)
 		? 0x3FFFFFF
 		: std::max({
 			st::msgMaxWidth,

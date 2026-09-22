@@ -8,6 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "settings/sections/settings_lumina_appearance.h"
 
 #include "lumina/lumina_media_pause_settings.h"
+#include "lumina/lumina_message_display_settings.h"
 #include "lumina/lumina_number_format_settings.h"
 #include "lumina/lumina_time_format_settings.h"
 #include "lumina/lumina_recent_limits_settings.h"
@@ -56,6 +57,7 @@ void LuminaAppearance::setupContent(not_null<Ui::VerticalLayout*> container) {
 	Lumina::AddTimeFormatRows(container, controller());
 	Lumina::AddExactNumbersRows(container, controller());
 	Lumina::AddMediaPauseRows(container, controller());
+	Lumina::AddMessageDisplayRows(container, controller());
 }
 
 } // namespace Settings

@@ -1980,6 +1980,10 @@ PRIVATE
     lumina/lumina_message_actions_settings.h
     lumina/lumina_message_details.cpp
     lumina/lumina_message_details.h
+    lumina/lumina_message_display.cpp
+    lumina/lumina_message_display.h
+    lumina/lumina_message_display_settings.cpp
+    lumina/lumina_message_display_settings.h
     lumina/lumina_message_menu.cpp
     lumina/lumina_message_menu.h
     lumina/lumina_muted_badge.cpp

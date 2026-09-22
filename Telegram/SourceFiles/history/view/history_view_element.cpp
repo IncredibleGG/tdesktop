@@ -36,6 +36,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "iv/iv_cached_media.h"
 #include "iv/iv_rich_page.h"
 #include "lumina/lumina_dual_language_line.h"
+#include "lumina/lumina_message_display.h"
 #include "base/unixtime.h"
 #include "boxes/premium_preview_box.h"
 #include "core/application.h"
@@ -2866,6 +2867,13 @@ void Element::setupReactions(Element *replacing) {
 
 void Element::refreshReactions() {
 	using namespace Reactions;
+	// LuminaGram: hide reaction chips entirely. Building no inline list means
+	// every draw and every geometry site in the message cell (all guarded by
+	// `_reactions`) skips reactions, so no empty gap is reserved.
+	if (Lumina::HideReactions()) {
+		setReactions(nullptr);
+		return;
+	}
 	auto reactionsData = InlineListDataFromMessage(this);
 	if (reactionsData.reactions.empty()) {
 		setReactions(nullptr);

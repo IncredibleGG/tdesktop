@@ -870,6 +870,15 @@ namespace {
 		{ u"LuminaBrandAboutIntro"_q, u"Telegram Desktop 的独立分支。\n与 Telegram 无关联，也未获其认可。"_q },
 		{ u"LuminaBrandAboutSummaryPre"_q, u"Telegram Desktop 的独立分支，构建于 "_q },
 		{ u"LuminaBrandAboutSummaryPost"_q, u"。\n与 Telegram 无关联、未获其认可，也未获其赞助。"_q },
+
+		// LuminaGram 消息显示开关（外观子页）。
+		{ u"LuminaBubbleGatesTitle"_q, u"消息气泡"_q },
+		{ u"LuminaHideReactions"_q, u"隐藏表情回应"_q },
+		{ u"LuminaHideReactionsInfo"_q, u"隐藏消息下方的表情回应标签，连同它们占用的空间一起移除，不会留下空白。"_q },
+		{ u"LuminaWideChannelPosts"_q, u"加宽频道帖子"_q },
+		{ u"LuminaWideChannelPostsInfo"_q, u"以更宽的气泡显示频道帖子，使用大部分可用宽度，像阅读版面一样。仅影响纯文字帖子，媒体保持原本大小。"_q },
+		{ u"LuminaStickerTimestamp"_q, u"在贴纸上显示时间"_q },
+		{ u"LuminaStickerTimestampInfo"_q, u"在贴纸、动态贴纸和圆形视频消息上显示消息时间；平常只有在你把光标移上去时才会显示。"_q },
 	};
 }
 

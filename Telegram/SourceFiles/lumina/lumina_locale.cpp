@@ -820,6 +820,15 @@ struct Registration {
 		{ u"LuminaBrandAboutIntro"_q, u"An independent fork of Telegram Desktop.\nNot affiliated with or endorsed by Telegram."_q },
 		{ u"LuminaBrandAboutSummaryPre"_q, u"An independent fork of Telegram Desktop, built on the "_q },
 		{ u"LuminaBrandAboutSummaryPost"_q, u".\nNot affiliated with, endorsed by or sponsored by Telegram."_q },
+
+		// LuminaGram message-display gates (appearance sub-page).
+		{ u"LuminaBubbleGatesTitle"_q, u"Message bubbles"_q },
+		{ u"LuminaHideReactions"_q, u"Hide reactions"_q },
+		{ u"LuminaHideReactionsInfo"_q, u"Hide the reaction chips shown under messages. The space they took is removed too, so no empty gap is left behind."_q },
+		{ u"LuminaWideChannelPosts"_q, u"Wide channel posts"_q },
+		{ u"LuminaWideChannelPostsInfo"_q, u"Show channel posts in wider bubbles that use most of the available width, like a reading layout. Only affects text posts; media keeps its own size."_q },
+		{ u"LuminaStickerTimestamp"_q, u"Show time on stickers"_q },
+		{ u"LuminaStickerTimestampInfo"_q, u"Show the message time on sticker, animated-sticker and round-video messages, which normally show it only when you hover over them."_q },
 	};
 	return result;
 }

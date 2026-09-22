@@ -17,6 +17,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/view/history_view_reply.h"
 #include "history/history_item.h"
 #include "history/history_item_components.h"
+#include "lumina/lumina_message_display.h"
 #include "lottie/lottie_single_player.h"
 #include "ui/cached_round_corners.h"
 #include "ui/chat/chat_style.h"
@@ -731,6 +732,11 @@ bool UnwrappedMedia::needInfoDisplay() const {
 		|| _parent->rightActionSize()
 		|| _parent->isLastAndSelfMessage()
 		|| (_parent->delegate()->elementContext() == Context::ChatPreview)
+		// LuminaGram: always show the timestamp on sticker / animated-sticker
+		// / round-video messages, which otherwise reveal it only on hover. It
+		// is drawn as the usual translucent corner overlay, so the message's
+		// size is unchanged. Suppressed where the parent hides bottom info.
+		|| (Lumina::StickerTimestamp() && !_parent->hidesBottomInfo())
 		|| (_parent->hasRightLayout()
 			&& _content->alwaysShowOutTimestamp());
 }
