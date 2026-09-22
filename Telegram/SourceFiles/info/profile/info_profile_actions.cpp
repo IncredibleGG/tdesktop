@@ -1565,13 +1565,14 @@ Section DetailsFiller::makeInfo() {
 	const auto addLuminaClickableRow = [&](
 			rpl::producer<QString> text,
 			rpl::producer<bool> shown,
-			Fn<void()> onClick) {
+			Fn<void()> onClick,
+			const style::icon *icon) {
 		tracker.track(AddActionButton(
 			result,
 			std::move(text),
 			std::move(shown),
 			std::move(onClick),
-			nullptr));
+			icon));
 	};
 	const auto fitLabelToButton = [&](
 			not_null<Ui::RpWidget*> button,

@@ -72,7 +72,8 @@ using InfoOneLineFactory = Fn<Info::Profile::TextWithLabel(
 using ClickableRowFactory = Fn<void(
 	rpl::producer<QString> text,
 	rpl::producer<bool> shown,
-	Fn<void()> onClick)>;
+	Fn<void()> onClick,
+	const style::icon *icon)>;
 
 // Also call-scoped: makeInfo() passes a temporary, so the reference dies at
 // the end of the call. Copy out the individual members you need to keep - both

@@ -21,6 +21,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_locale.h"
 #include "main/main_session.h"
 #include "window/window_session_controller.h"
+#include "styles/style_menu_icons.h"
 
 #include <memory>
 #include "lumina/lumina_contact_notes.h"
@@ -73,7 +74,8 @@ void AddGroupSettingsRow(
 		std::move(shown),
 		[controller, peer] {
 			controller->showEditPeerBox(peer);
-		});
+		},
+		&st::menuIconManage);
 }
 
 // "Recent Actions" - opens the admin event log. Channels/supergroups only, and
@@ -103,7 +105,8 @@ void AddRecentActionsRow(
 		[controller, channel] {
 			controller->showSection(
 				std::make_shared<AdminLog::SectionMemento>(channel));
-		});
+		},
+		&st::menuIconGroupLog);
 }
 
 } // namespace
