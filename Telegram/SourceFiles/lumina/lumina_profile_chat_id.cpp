@@ -17,9 +17,11 @@ namespace Lumina {
 
 QString ChatIdText(not_null<PeerData*> peer) {
 	if (peer->isChat()) {
-		return QString::number(peerToChat(peer->id).bare);
+		// Basic (legacy) group: canonical Bot-API id is "-" + the bare id.
+		return u"-"_q + QString::number(peerToChat(peer->id).bare);
 	} else if (peer->isChannel()) {
-		return QString::number(peerToChannel(peer->id).bare);
+		// Supergroup / channel: canonical Bot-API id is "-100" + the bare id.
+		return u"-100"_q + QString::number(peerToChannel(peer->id).bare);
 	}
 	return QString();
 }

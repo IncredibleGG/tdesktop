@@ -21,10 +21,11 @@ class ForumTopic;
 
 namespace Lumina {
 
-// The "Chat ID" row on a group or channel profile: the peer's numeric Telegram
-// id - the bare chat id for a basic group (`peerToChat(peer->id).bare`) or the
-// bare channel id for a supergroup / channel (`peerToChannel(peer->id).bare`),
-// the same value Android prints on the profile screen.
+// The "Chat ID" row on a group or channel profile: the peer's canonical
+// Bot-API chat id - "-" + the bare chat id for a basic group
+// (`-<peerToChat(peer->id).bare>`) or "-100" + the bare channel id for a
+// supergroup / channel (`-100<peerToChannel(peer->id).bare>`), the same value
+// the reference client prints on the profile screen.
 //
 // UNCONDITIONAL, exactly like the user-id row (lumina_profile_user_id): it
 // shows on every group and channel and there is no preference to switch it off.
@@ -33,14 +34,15 @@ namespace Lumina {
 // are: the value label goes through the same addInfoOneLine factory, which
 // makes it selectable and gives it a "Copy" context-menu entry.
 //
-// The bare id is used - not the -100 / bot-API form - to match the user-id row
-// and Android's own display, so the two id rows read consistently.
+// The canonical Bot-API form is used (basic group "-<id>", supergroup /
+// channel "-100<id>") so the value matches the reference client and can be
+// pasted straight into bots and Bot-API calls.
 //
 // Purely local: the id is already part of the peer, so nothing is requested
 // from the server to build this row.
 
-// The bare numeric id as text. Empty for a peer that is neither a group nor a
-// channel (a user peer never reaches this row).
+// The canonical Bot-API id as text. Empty for a peer that is neither a group
+// nor a channel (a user peer never reaches this row).
 [[nodiscard]] QString ChatIdText(not_null<PeerData*> peer);
 
 // Adds the row through the F-05 seam. Call from Lumina::AddChatInfoRows(),

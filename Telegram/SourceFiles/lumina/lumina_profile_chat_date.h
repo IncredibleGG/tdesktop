@@ -23,23 +23,29 @@ namespace Lumina {
 
 // The "Created" row on a group or channel profile.
 //
-// The value is the `date` field of the chat / channel constructor, which
-// tdesktop already stores as ChatData::date (data/data_chat.h:173) and
-// ChannelData::date (data/data_channel.h:588). It is filled from the ordinary
-// chat list traffic, so nothing is requested to build this row.
+// The value is the timestamp of the peer's FIRST cloud message (message id 1),
+// which is its real creation date. It is deliberately NOT the `date` field of
+// the chat / channel constructor: for a channel that field is the CURRENT
+// USER'S JOIN date (ChannelData::date; it only equals the creation date when
+// the viewer is the creator), so showing it under a "Created" label mislabels
+// a join as a creation - the bug this row was rewritten to fix. This matches
+// the reference client, which reads firstMessage.timestamp of MessageId 1.
 //
-// THE LABEL IS ALWAYS "Created", AND THAT IS A DELIBERATE DIVERGENCE.
-// Android relabels the same number "Joined" for a channel the user is a member
-// of (ProfileActivity.java:13649-13650). There is nothing behind that
-// relabelling: it is the same single field, the protocol carries no separate
-// join date on this constructor, and there is no per-user component to it at
-// all. Presenting one number under two different meanings is worse than
-// presenting it under the one meaning it actually has, so this row says
-// "Created" everywhere.
+// Message #1 is fetched on demand (ApiWrap::requestMessageData, which picks
+// messages.getMessages for basic groups and channels.getMessages for channels
+// on its own) and the row updates reactively when it arrives. Until then, and
+// whenever message #1 is unavailable or deleted, the value is 0, which hides
+// the row - it NEVER falls back to the join date.
 //
-// (ChannelData::date is only assigned for a non-"min" channel, so a channel
-// that has so far only been seen as the author of a forwarded message reads 0
-// until it is loaded properly. 0 hides the row rather than showing 1970.)
+// THE LABEL IS ALWAYS "Created", now truthfully: the value really is the
+// creation date, so - unlike Android, which relabels the raw join date field
+// "Joined" - there is no meaning to hide behind.
+//
+// Best-effort caveat for basic (legacy) groups: their first message is not
+// addressable as id 1 in the shared (non-channel) message-id space, so the
+// fetch usually finds nothing and the row hides. It still never shows a wrong
+// date. Migrated supergroups show the message-#1 timestamp of the supergroup
+// (not the pre-migration basic group's original creation date).
 
 // Preference `showChatDate`, Store::Prefs, default false. Same key and same
 // default as Android (LuminaChatActivity.java:76).
@@ -50,8 +56,9 @@ void SetChatCreationDateRowEnabled(bool value);
 // restore by Settings::importAll().
 [[nodiscard]] rpl::producer<> ChatCreationDateRowChanges();
 
-// The creation timestamp of a group or channel, 0 when unknown or when the
-// peer is neither.
+// The creation timestamp of a group or channel - the date of its first cloud
+// message (id 1) - 0 when message #1 is not (yet) available or when the peer
+// is neither a group nor a channel.
 [[nodiscard]] TimeId ChatCreationDate(not_null<PeerData*> peer);
 
 // What the row shows. Empty - which makes the row slide itself away - when the
