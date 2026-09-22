@@ -440,6 +440,9 @@ namespace {
 		{ u"LuminaForwardNoCaptionTitle"_q, u"转发时隐藏作者与说明文字"_q },
 		{ u"LuminaHideStories"_q, u"隐藏动态"_q },
 		{ u"LuminaHideTabs"_q, u"隐藏文件夹标签"_q },
+		{ u"LuminaRememberFolder"_q, u"记住上次的文件夹"_q },
+		{ u"LuminaRememberFolderAbout"_q, u"重新打开聊天列表时回到你上次打开的文件夹,而不是每次都停在账号的默认文件夹。文件夹标签隐藏时此设置不起作用。"_q },
+		{ u"LuminaRememberFolderTitle"_q, u"文件夹"_q },
 		{ u"LuminaLinkSafetyDestination"_q, u"真实目标地址"_q },
 		{ u"LuminaLinkSafetyInfo"_q, u"在打开这几类链接前先询问：用“@”符号"
 			u"前的文字隐藏真实目标地址的链接、域名用 punycode 拼写的链接，"

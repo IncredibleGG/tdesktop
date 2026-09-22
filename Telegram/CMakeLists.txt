@@ -1929,6 +1929,10 @@ PRIVATE
     lumina/lumina_dialogs_visibility.h
     lumina/lumina_dialogs_visibility_settings.cpp
     lumina/lumina_dialogs_visibility_settings.h
+    lumina/lumina_remember_folder.cpp
+    lumina/lumina_remember_folder.h
+    lumina/lumina_remember_folder_settings.cpp
+    lumina/lumina_remember_folder_settings.h
     lumina/lumina_dual_language_line.cpp
     lumina/lumina_dual_language_line.h
     lumina/lumina_exif_strip.cpp

@@ -481,6 +481,9 @@ namespace {
 			u"descripción"_q },
 		{ u"LuminaHideStories"_q, u"Ocultar historias"_q },
 		{ u"LuminaHideTabs"_q, u"Ocultar pestañas de carpetas"_q },
+		{ u"LuminaRememberFolder"_q, u"Recordar la última carpeta"_q },
+		{ u"LuminaRememberFolderAbout"_q, u"Vuelve a abrir la lista de chats en la carpeta que tenías abierta por última vez, en lugar de empezar siempre en la carpeta predeterminada de la cuenta. Mientras las pestañas de carpetas están ocultas, esta opción no hace nada."_q },
+		{ u"LuminaRememberFolderTitle"_q, u"Carpetas"_q },
 		{ u"LuminaLinkSafetyDestination"_q, u"Destino real"_q },
 		{ u"LuminaLinkSafetyInfo"_q, u"Pregunta antes de abrir un enlace que "
 			u"oculte su destino real tras el texto que precede a un signo @, "

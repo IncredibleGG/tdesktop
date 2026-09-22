@@ -449,6 +449,9 @@ namespace {
 			u"Teruskan tanpa penulis dan keterangan"_q },
 		{ u"LuminaHideStories"_q, u"Sembunyikan cerita"_q },
 		{ u"LuminaHideTabs"_q, u"Sembunyikan tab folder"_q },
+		{ u"LuminaRememberFolder"_q, u"Ingat folder terakhir"_q },
+		{ u"LuminaRememberFolderAbout"_q, u"Buka kembali daftar obrolan pada folder yang terakhir Anda buka, alih-alih selalu mulai dari folder bawaan akun. Selama tab folder disembunyikan, opsi ini tidak berpengaruh."_q },
+		{ u"LuminaRememberFolderTitle"_q, u"Folder"_q },
 		{ u"LuminaLinkSafetyDestination"_q, u"Tujuan asli"_q },
 		{ u"LuminaLinkSafetyInfo"_q, u"Menanyakan sebelum membuka tautan yang "
 			u"menyembunyikan tujuan aslinya di balik teks sebelum tanda @, "

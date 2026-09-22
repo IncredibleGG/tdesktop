@@ -425,6 +425,9 @@ namespace {
 		// Chat list: folders, stories, badges and avatar dots.
 		{ u"LuminaChatListVisibilityTitle"_q, u"Папки и истории"_q },
 		{ u"LuminaHideTabs"_q, u"Скрыть вкладки папок"_q },
+		{ u"LuminaRememberFolder"_q, u"Запоминать последнюю папку"_q },
+		{ u"LuminaRememberFolderAbout"_q, u"Открывает список чатов на папке, которую вы открывали в последний раз, вместо того чтобы каждый раз начинать с папки по умолчанию. Пока вкладки папок скрыты, этот параметр ничего не делает."_q },
+		{ u"LuminaRememberFolderTitle"_q, u"Папки"_q },
 		{ u"LuminaHideStories"_q, u"Скрыть истории"_q },
 		{ u"LuminaChatListVisibilityAbout"_q, u"Убирает панель папок из "
 			u"списка чатов — и вертикальную панель сбоку, и "

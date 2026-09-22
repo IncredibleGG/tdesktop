@@ -11,6 +11,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_dialogs_badges_settings.h"
 #include "lumina/lumina_dialogs_style_settings.h"
 #include "lumina/lumina_dialogs_visibility_settings.h"
+#include "lumina/lumina_remember_folder_settings.h"
 #include "lumina/lumina_locale.h"
 #include "lumina/lumina_stories_off_settings.h"
 #include "ui/wrap/vertical_layout.h"
@@ -51,6 +52,7 @@ rpl::producer<QString> LuminaChatList::title() {
 //   W6-A compact chat-list rows.
 void LuminaChatList::setupContent(not_null<Ui::VerticalLayout*> container) {
 	Lumina::AddDialogsVisibilityRows(container, controller());
+	Lumina::AddRememberFolderRows(container, controller());
 	Lumina::AddStoriesOffRows(container, controller());
 	Lumina::AddChatListDotRows(container, controller());
 	Lumina::AddMutedBadgeRows(container, controller());

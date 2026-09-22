@@ -105,6 +105,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "main/main_session.h"
 #include "main/main_session_settings.h"
 #include "lumina/lumina_dialogs_visibility.h"
+#include "lumina/lumina_remember_folder.h"
 #include "lumina/lumina_scam_watch.h"
 #include "lumina/lumina_session_guard.h"
 #include "lang/lang_keys.h"
@@ -149,6 +150,29 @@ base::options::toggle OptionExternalMediaViewer({
 	return item
 		&& (item->forbidsSaving()
 			|| !item->history()->peer->allowsForwarding());
+}
+
+// The chat filter the chat list should open on. With Lumina's
+// "remember last folder" on and a still-existing stored id, that folder;
+// otherwise the account default, exactly as upstream. Callers gate on
+// Lumina::HideChatFolders() first, so this never restores into a hidden bar.
+[[nodiscard]] FilterId InitialActiveChatsFilter(
+		not_null<Main::Session*> session) {
+	const auto &filters = session->data().chatsFilters();
+	if (Lumina::RememberLastFolder()) {
+		const auto remembered = FilterId(Lumina::LastFolderId());
+		if (remembered) {
+			const auto &list = filters.list();
+			const auto i = ranges::find(
+				list,
+				remembered,
+				&Data::ChatFilter::id);
+			if (i != end(list)) {
+				return remembered;
+			}
+		}
+	}
+	return filters.defaultId();
 }
 
 class MainWindowShow final : public ChatHelpers::Show {
@@ -1580,7 +1604,7 @@ SessionController::SessionController(
 , _invitePeekTimer([=] { checkInvitePeek(); })
 , _activeChatsFilter(Lumina::HideChatFolders()
 	? FilterId(0)
-	: session->data().chatsFilters().defaultId())
+	: InitialActiveChatsFilter(session))
 , _openedFolder(window->id().folder())
 , _openedCommunity(window->id().community())
 , _defaultChatTheme(std::make_shared<Ui::ChatTheme>())
@@ -2086,7 +2110,7 @@ void SessionController::activateFirstChatsFilter() {
 		return;
 	}
 	_filtersActivated = true;
-	setActiveChatsFilter(session().data().chatsFilters().defaultId());
+	setActiveChatsFilter(InitialActiveChatsFilter(&session()));
 }
 
 bool SessionController::uniqueChatsInSearchResults(
@@ -3359,6 +3383,10 @@ void SessionController::setActiveChatsFilter(
 		resetFakeUnreadWhileOpened();
 	}
 	_activeChatsFilter.force_assign(id);
+	if (changed && Lumina::RememberLastFolder()) {
+		// Persist at the one choke point every folder switch passes through.
+		Lumina::SetLastFolderId(id);
+	}
 	if (id || !changed) {
 		closeForum();
 		closeFolder();

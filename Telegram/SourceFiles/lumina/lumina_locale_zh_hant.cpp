@@ -436,6 +436,9 @@ namespace {
 		{ u"LuminaForwardNoCaptionTitle"_q, u"轉發時隱藏作者與說明文字"_q },
 		{ u"LuminaHideStories"_q, u"隱藏限時動態"_q },
 		{ u"LuminaHideTabs"_q, u"隱藏資料夾分頁"_q },
+		{ u"LuminaRememberFolder"_q, u"記住上次的資料夾"_q },
+		{ u"LuminaRememberFolderAbout"_q, u"重新開啟聊天列表時,回到你上次開啟的資料夾,而不是每次都停在帳號的預設資料夾。資料夾分頁隱藏時此設定不起作用。"_q },
+		{ u"LuminaRememberFolderTitle"_q, u"資料夾"_q },
 		{ u"LuminaLinkSafetyDestination"_q, u"真實目標位址"_q },
 		{ u"LuminaLinkSafetyInfo"_q, u"在開啟以下連結之前先詢問：把真實目標"
 			u"位址藏在「@」符號前的文字後面、網域以 punycode 拼寫，或是透過"
