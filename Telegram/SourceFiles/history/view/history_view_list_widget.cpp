@@ -80,6 +80,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/ui_utility.h"
 #include "lang/lang_keys.h"
 #include "lumina/lumina_select_author.h"
+#include "lumina/lumina_double_tap_edit.h"
 #include "lang/lang_tag.h"
 #include "boxes/peers/edit_participant_box.h"
 #include "boxes/delete_messages_box.h"
@@ -3989,6 +3990,20 @@ auto ListWidget::scrollKeyEvents() const
 void ListWidget::mouseDoubleClickEvent(QMouseEvent *e) {
 	registerReadMetricsActivity();
 	mouseActionStart(e->globalPos(), e->button());
+
+	// LuminaGram, Batch 4 #14: double-tap your own editable message to edit it.
+	// Off by default; when on it takes over the double-click before word
+	// selection or the reply / react quick action.
+	if (Lumina::DoubleTapEditEnabled()
+		&& e->button() == Qt::LeftButton
+		&& _selected.empty()
+		&& _overElement
+		&& _overElement->data()->allowsEdit(base::unixtime::now())) {
+		mouseActionCancel();
+		editMessageRequestNotify(_overElement->data()->fullId());
+		return;
+	}
+
 	trySwitchToWordSelection();
 	if (!ClickHandler::getActive()
 		&& !ClickHandler::getPressed()

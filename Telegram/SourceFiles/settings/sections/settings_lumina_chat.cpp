@@ -14,6 +14,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_ai_editor.h"
 #include "lumina/lumina_link_preview_settings.h"
 #include "lumina/lumina_voice_confirm_settings.h"
+#include "lumina/lumina_call_confirm_settings.h"
+#include "lumina/lumina_double_tap_edit_settings.h"
+#include "lumina/lumina_menu_customize_settings.h"
 #include "lumina/lumina_text_replace_settings.h"
 #include "lumina/lumina_locale.h"
 #include "lumina/lumina_settings.h"
@@ -100,8 +103,11 @@ void LuminaChat::setupContent(not_null<Ui::VerticalLayout*> container) {
 	Lumina::AddAiEditorRows(container, controller());
 	Lumina::AddTextReplaceRows(container, controller());
 	Lumina::AddVoiceConfirmRows(container, controller());
+	Lumina::AddCallConfirmRows(container, controller());
 	Lumina::AddLinkPreviewRows(container, controller());
 	Lumina::AddMessageActionsRows(container, controller());
+	Lumina::AddDoubleTapEditRows(container, controller());
+	Lumina::AddMenuCustomizeRows(container, controller());
 	Lumina::AddSelectAuthorRows(container, controller());
 	Lumina::AddUndoSendRows(container, controller());
 	Lumina::AddReplyTemplatesRows(container, controller());

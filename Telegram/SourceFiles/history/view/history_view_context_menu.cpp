@@ -113,6 +113,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "media/player/media_player_instance.h"
 #include "spellcheck/spellcheck_types.h"
 #include "lumina/lumina_message_menu.h"
+#include "lumina/lumina_menu_customize.h"
 #include "lumina/lumina_translate_selection.h"
 #include "apiwrap.h"
 #include "styles/style_chat.h"
@@ -1353,7 +1354,9 @@ void AddSelectionAction(
 		const ContextMenuRequest &request,
 		not_null<ListWidget*> list) {
 	if (!AddClearSelectionAction(menu, request, list)) {
-		AddSelectMessageAction(menu, request, list);
+		if (Lumina::MenuActionShown(Lumina::MenuAction::Select)) {
+			AddSelectMessageAction(menu, request, list);
+		}
 	}
 }
 
@@ -1396,7 +1399,9 @@ void AddTopMessageActions(
 	AddViewRepliesAction(menu, request, list);
 	AddEditMessageAction(menu, request, list);
 	AddFactcheckAction(menu, request, list);
-	AddPinMessageAction(menu, request, list);
+	if (Lumina::MenuActionShown(Lumina::MenuAction::Pin)) {
+		AddPinMessageAction(menu, request, list);
+	}
 	AddViewStatisticsAction(menu, request, list);
 }
 
@@ -1405,13 +1410,17 @@ void AddMessageActions(
 		const ContextMenuRequest &request,
 		not_null<ListWidget*> list) {
 	AddPostLinkAction(menu, request);
-	AddForwardAction(menu, request, list);
+	if (Lumina::MenuActionShown(Lumina::MenuAction::Forward)) {
+		AddForwardAction(menu, request, list);
+	}
 	AddOfferAction(menu, request, list);
 	AddSendNowAction(menu, request, list);
 	AddDeleteAction(menu, request, list);
 	AddDownloadFilesAction(menu, request, list);
 	AddSaveRichHtmlAction(menu, request, list);
-	AddReportAction(menu, request, list);
+	if (Lumina::MenuActionShown(Lumina::MenuAction::Report)) {
+		AddReportAction(menu, request, list);
+	}
 	AddBlockSenderAction(menu, request, list);
 	if (request.item && request.selectedItems.empty()) {
 		AddEphemeralMessageActions(
@@ -1779,7 +1788,9 @@ void FillContextMenuItems(
 	const auto hasWhoReactedItem = item
 		&& Api::WhoReactedExists(item, Api::WhoReactedList::All);
 
-	AddReplyToMessageAction(result, request, list);
+	if (Lumina::MenuActionShown(Lumina::MenuAction::Reply)) {
+		AddReplyToMessageAction(result, request, list);
+	}
 	if (item) {
 		const auto media = item->media();
 		const auto document = media ? media->document() : nullptr;
@@ -1916,7 +1927,8 @@ void FillContextMenuItems(
 			AddDocumentActions(result, document, view->data(), list);
 		}
 		if (!link && (view->hasVisibleText() || mediaHasTextForCopy)) {
-			if (!list->hasCopyRestriction(view->data())) {
+			if (Lumina::MenuActionShown(Lumina::MenuAction::Copy)
+				&& !list->hasCopyRestriction(view->data())) {
 				const auto asGroup = (request.pointState != PointState::GroupPart);
 				result->addAction(tr::lng_context_copy_text(tr::now), [=] {
 					if (const auto item = owner->message(itemId)) {

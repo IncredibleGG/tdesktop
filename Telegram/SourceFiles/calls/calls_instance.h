@@ -58,6 +58,11 @@ struct StartConferenceInfo;
 struct StartOutgoingCallArgs {
 	bool video = false;
 	bool isConfirmed = false;
+
+	// LuminaGram, Batch 4 #16. Set once the user has answered the "start a
+	// call?" confirmation, so the re-entry into startOutgoingCall() skips the
+	// question. Read only by startOutgoingCall(); inert everywhere else.
+	bool luminaConfirmed = false;
 };
 
 struct StartGroupCallArgs {

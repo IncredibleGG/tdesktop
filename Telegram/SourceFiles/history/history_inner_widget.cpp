@@ -129,6 +129,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_changes.h"
 #include "dialogs/ui/dialogs_video_userpic.h"
 #include "lumina/lumina_message_menu.h"
+#include "lumina/lumina_menu_customize.h"
+#include "lumina/lumina_double_tap_edit.h"
 #include "lumina/lumina_select_author.h"
 #include "styles/style_chat.h"
 #include "styles/style_menu_icons.h"
@@ -2670,6 +2672,24 @@ void HistoryInner::mouseDoubleClickEvent(QMouseEvent *e) {
 	registerReadMetricsActivity();
 	mouseActionStart(e->globalPos(), e->button());
 
+	// LuminaGram, Batch 4 #14: double-tap your own editable message to edit it.
+	// Off by default; when on it takes over the double-click before word
+	// selection or the reply / react quick action, using the same allowsEdit()
+	// test the context-menu "Edit" action uses.
+	if (Lumina::DoubleTapEditEnabled()
+		&& e->button() == Qt::LeftButton
+		&& !hasSelectedItems()
+		&& !inSelectionMode().inSelectionMode) {
+		if (const auto view = Element::Moused()) {
+			const auto item = view->data();
+			if (item->allowsEdit(base::unixtime::now())) {
+				mouseActionCancel();
+				_widget->editMessage(item, {});
+				return;
+			}
+		}
+	}
+
 	const auto mouseActionView = viewByItem(_mouseActionItem);
 	if (_mouseSelectType == TextSelectType::Letters
 		&& mouseActionView
@@ -3024,7 +3044,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 		const auto pinItem = (item->canPin() && item->isPinned())
 			? item
 			: groupLeaderOrSelf(item);
-		if (pinItem->canPin()) {
+		if (pinItem->canPin() && Lumina::MenuActionShown(Lumina::MenuAction::Pin)) {
 			const auto isPinned = pinItem->isPinned();
 			const auto pinItemId = pinItem->fullId();
 			_menu->addAction(isPinned ? tr::lng_context_unpin_msg(tr::now) : tr::lng_context_pin_msg(tr::now), crl::guard(controller, [=] {
@@ -3157,7 +3177,8 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 				Element::Moused())
 		) != HistoryView::PointState::GroupPart);
 	const auto addSelectMessageAction = [&](not_null<HistoryItem*> item) {
-		if (item->canBeSelected() && !hasSelectRestriction()) {
+		if (item->canBeSelected() && !hasSelectRestriction()
+			&& Lumina::MenuActionShown(Lumina::MenuAction::Select)) {
 			const auto itemId = item->fullId();
 			_menu->addAction(tr::lng_context_select_msg(tr::now), [=] {
 				if (const auto item = session->data().message(itemId)) {
@@ -3281,6 +3302,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 					Ui::Text::FixAmpersandInAction);
 			const auto replyToItem = selected.item ? selected.item : item;
 			const auto itemId = replyToItem->fullId();
+			if (Lumina::MenuActionShown(Lumina::MenuAction::Reply)) {
 			_menu->addAction(std::move(text), [=] {
 				_widget->replyToMessage({
 					.messageId = itemId,
@@ -3292,6 +3314,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 					_widget->clearSelected();
 				}
 			}, &st::menuIconReply);
+			}
 			const auto media = item->media();
 			const auto document = media
 				? media->document()
@@ -3427,7 +3450,8 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 			const auto itemId = item->fullId();
 			const auto blockSender = item->history()->peer->isRepliesChat();
 			if (isUponSelected != -2) {
-				if (item->allowsForward() && !IsAnchoredEphemeral(item)) {
+				if (item->allowsForward() && !IsAnchoredEphemeral(item)
+					&& Lumina::MenuActionShown(Lumina::MenuAction::Forward)) {
 					_menu->addAction(tr::lng_context_forward_msg(tr::now), [=] {
 						forwardItem(itemId);
 					}, &st::menuIconForward);
@@ -3456,7 +3480,8 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 							[=] { _menu = nullptr; }));
 					}
 				}
-				if (!blockSender && item->suggestReport()) {
+				if (!blockSender && item->suggestReport()
+					&& Lumina::MenuActionShown(Lumina::MenuAction::Report)) {
 					_menu->addAction(tr::lng_context_report_msg(tr::now), [=] {
 						reportItem(itemId);
 					}, &st::menuIconReport);
@@ -3638,7 +3663,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 				}
 				if (!item->isService() && view && actionText.isEmpty()) {
 					const auto hasRestriction = hasCopyRestriction(item);
-					if (!hasRestriction
+					if (!hasRestriction && Lumina::MenuActionShown(Lumina::MenuAction::Copy)
 						&& (view->hasVisibleText() || mediaHasTextForCopy)) {
 						_menu->addAction(
 							tr::lng_context_copy_text(tr::now),
@@ -3742,7 +3767,8 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 				|| item->isRegular()
 				|| item->isEphemeral())) {
 			if (isUponSelected != -2) {
-				if (canForward) {
+				if (canForward
+					&& Lumina::MenuActionShown(Lumina::MenuAction::Forward)) {
 					_menu->addAction(tr::lng_context_forward_msg(tr::now), [=] {
 						forwardAsGroup(itemId);
 					}, &st::menuIconForward);
@@ -3773,7 +3799,8 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 							[=] { _menu = nullptr; }));
 					}
 				}
-				if (!canBlockSender && canReport) {
+				if (!canBlockSender && canReport
+					&& Lumina::MenuActionShown(Lumina::MenuAction::Report)) {
 					_menu->addAction(tr::lng_context_report_msg(tr::now), [=] {
 						reportAsGroup(itemId);
 					}, &st::menuIconReport);

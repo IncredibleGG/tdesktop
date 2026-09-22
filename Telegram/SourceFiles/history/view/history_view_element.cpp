@@ -37,6 +37,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "iv/iv_rich_page.h"
 #include "lumina/lumina_dual_language_line.h"
 #include "lumina/lumina_message_display.h"
+#include "lumina/lumina_message_filter.h"
 #include "base/unixtime.h"
 #include "boxes/premium_preview_box.h"
 #include "core/application.h"
@@ -1539,7 +1540,12 @@ bool Element::isHiddenByGroup() const {
 }
 
 bool Element::isHidden() const {
-	return isHiddenByGroup();
+	// LuminaGram, Batch 4 #22: a local, display-only keyword filter. A message
+	// whose text matches one of the user's keywords reports hidden, so it
+	// collapses to zero height and is neither painted nor interactive, exactly
+	// like a grouped-away part. Cheap and a no-op when no keywords are set.
+	return isHiddenByGroup()
+		|| Lumina::MessageTextFiltered(data()->originalText().text);
 }
 
 void Element::overrideMedia(std::unique_ptr<Media> media) {

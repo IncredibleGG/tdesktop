@@ -1986,6 +1986,22 @@ PRIVATE
     lumina/lumina_message_display_settings.h
     lumina/lumina_message_menu.cpp
     lumina/lumina_message_menu.h
+    lumina/lumina_double_tap_edit.cpp
+    lumina/lumina_double_tap_edit.h
+    lumina/lumina_double_tap_edit_settings.cpp
+    lumina/lumina_double_tap_edit_settings.h
+    lumina/lumina_call_confirm.cpp
+    lumina/lumina_call_confirm.h
+    lumina/lumina_call_confirm_settings.cpp
+    lumina/lumina_call_confirm_settings.h
+    lumina/lumina_menu_customize.cpp
+    lumina/lumina_menu_customize.h
+    lumina/lumina_menu_customize_settings.cpp
+    lumina/lumina_menu_customize_settings.h
+    lumina/lumina_message_filter.cpp
+    lumina/lumina_message_filter.h
+    lumina/lumina_message_filter_settings.cpp
+    lumina/lumina_message_filter_settings.h
     lumina/lumina_muted_badge.cpp
     lumina/lumina_muted_badge.h
     lumina/lumina_muted_badge_settings.cpp

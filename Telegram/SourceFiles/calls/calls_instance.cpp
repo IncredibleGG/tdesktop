@@ -24,6 +24,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "main/main_account.h"
 #include "apiwrap.h"
 #include "lang/lang_keys.h"
+#include "lumina/lumina_call_confirm.h"
+#include "lumina/lumina_locale.h"
 #include "ui/boxes/confirm_box.h"
 #include "calls/group/calls_group_call.h"
 #include "calls/group/calls_group_panel.h"
@@ -216,6 +218,30 @@ void Instance::startOutgoingCall(
 			user->name())));
 		return;
 	}
+
+	// LuminaGram, Batch 4 #16: ask before actually placing the call. Off by
+	// default. Guards only this 1-on-1 outgoing choke point, which every call
+	// button funnels through; group / conference calls are unaffected. On
+	// confirm we re-enter with luminaConfirmed set, so the real start runs once.
+	if (!args.luminaConfirmed && Lumina::ConfirmCallStart()) {
+		const auto video = args.video;
+		Ui::show(Ui::MakeConfirmBox({
+			.text = Lumina::Tr(video
+				? u"LuminaCallConfirmVideoText"_q
+				: u"LuminaCallConfirmText"_q,
+				user->name()),
+			.confirmed = [=](Fn<void()> close) {
+				close();
+				auto confirmed = args;
+				confirmed.luminaConfirmed = true;
+				Core::App().calls().startOutgoingCall(user, confirmed);
+			},
+			.confirmText = Lumina::TrValue(u"LuminaCallConfirmButton"_q),
+			.title = Lumina::Tr(u"LuminaCallConfirmBoxTitle"_q),
+		}));
+		return;
+	}
+
 	requestPermissionsOrFail(crl::guard(this, [=] {
 		if (activateCurrentCall()
 			|| (!args.isConfirmed && activateUnconfirmedCall(user))) {

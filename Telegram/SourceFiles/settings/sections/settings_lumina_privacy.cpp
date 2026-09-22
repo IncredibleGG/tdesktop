@@ -10,6 +10,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_profile_extra_settings.h"
 #include "lumina/lumina_exif_strip_settings.h"
 #include "lumina/lumina_scam_watch_settings.h"
+#include "lumina/lumina_message_filter_settings.h"
 #include "lumina/lumina_otp_guard_settings.h"
 #include "lumina/lumina_homoglyph_settings.h"
 #include "lumina/lumina_file_guard_settings.h"
@@ -64,6 +65,7 @@ void LuminaPrivacy::setupContent(not_null<Ui::VerticalLayout*> container) {
 	Lumina::AddLinkSafetyRows(container, controller());
 	Lumina::AddCryptoGuardRows(container, controller());
 	Lumina::AddScamWarningRows(container, controller());
+	Lumina::AddMessageFilterRows(container, controller());
 	Lumina::AddOtpGuardRows(container, controller());
 	Lumina::AddHomoglyphWarnRows(container, controller());
 	Lumina::AddFileGuardRows(container, controller());
