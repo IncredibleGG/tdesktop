@@ -308,7 +308,12 @@ void TranslateBar::setup(not_null<History*> history) {
 			// clears the exclusion on its way through.
 			Lumina::SetChatTranslationExcluded(history, true);
 		} else {
-			translateTo(_to.current());
+			// LuminaGram: turning translation ON from the offer bar must go
+			// through the persistent choke point (writes trReadChatOn, sets
+			// translateOfferFrom, clears Disabled) so it survives a restart -
+			// the same write the per-chat menu uses. Calling history->translateTo
+			// directly would translate now but forget across sessions.
+			Lumina::SetChatTranslatingTo(history, _to.current());
 		}
 	});
 
