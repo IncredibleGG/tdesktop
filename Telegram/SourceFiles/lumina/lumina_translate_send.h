@@ -254,6 +254,12 @@ void SetChatReadLanguage(not_null<History*> history, const QString &code);
 [[nodiscard]] bool DialogSendTranslateOn(not_null<History*> history);
 void SetDialogSendTranslateOn(not_null<History*> history, bool on);
 
+// The incoming counterpart: whether this chat translates messages it
+// RECEIVES. Persisted like the send switch so it survives a restart and is
+// re-applied when the chat is opened (HistoryView::TranslateTracker::setup).
+[[nodiscard]] bool DialogReadTranslateOn(not_null<History*> history);
+void SetDialogReadTranslateOn(not_null<History*> history, bool on);
+
 // Fires when any chat's outgoing (translate-before-send) switch flips, so
 // UI that reflects TranslateBeforeSendActive() (e.g. the top-bar button colour)
 // can refresh - the incoming ChatTranslateStateChanges() does not cover it.

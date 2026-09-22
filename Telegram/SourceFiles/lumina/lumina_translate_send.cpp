@@ -108,6 +108,14 @@ constexpr auto kCaptionBoxTimeout = crl::time(3 * 60 * 1000);
 	return u"trSendChatOn"_q;
 }
 
+// Whether a chat translates INCOMING messages at all, stored per chat like
+// the outgoing switch above. A missing entry is off. The incoming target
+// language (trReadLangDialog) is remembered separately and kept even when
+// this is off, so turning it back on restores the same language.
+[[nodiscard]] QString DialogReadActiveKey() {
+	return u"trReadChatOn"_q;
+}
+
 // The session id is in the key so that two logged-in accounts cannot share a
 // per-chat lock. Peer ids are very nearly unique on their own, which is
 // exactly the kind of "nearly" that turns into a cross-account bug later.
@@ -1273,6 +1281,30 @@ void SetDialogSendTranslateOn(not_null<History*> history, bool on) {
 	} else {
 		Settings::Instance().set(
 			DialogSendActiveKey(),
+			object,
+			Store::Private);
+	}
+}
+
+bool DialogReadTranslateOn(not_null<History*> history) {
+	return Settings::Instance().getObject(
+		DialogReadActiveKey()
+	).value(DialogKey(history)).toBool();
+}
+
+void SetDialogReadTranslateOn(not_null<History*> history, bool on) {
+	const auto key = DialogKey(history);
+	auto object = Settings::Instance().getObject(DialogReadActiveKey());
+	if (on) {
+		object.insert(key, true);
+	} else {
+		object.remove(key);
+	}
+	if (object.isEmpty()) {
+		Settings::Instance().remove(DialogReadActiveKey());
+	} else {
+		Settings::Instance().set(
+			DialogReadActiveKey(),
 			object,
 			Store::Private);
 	}

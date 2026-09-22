@@ -24,6 +24,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/translate_provider.h"
 #include "lumina/lumina_translate_gating.h"
 #include "lumina/lumina_translate_providers.h" // TranslateProviderChanges.
+#include "lumina/lumina_translate_send.h" // Lumina::DialogReadTranslateOn.
+#include "lumina/lumina_translate_toggle.h" // Lumina::SetChatTranslating.
 #include "main/main_session.h"
 #include "spellcheck/platform/platform_language.h"
 
@@ -73,6 +75,19 @@ rpl::producer<bool> TranslateTracker::trackingLanguage() const {
 void TranslateTracker::setup() {
 	const auto peer = _history->peer;
 	peer->updateFull();
+
+	// LuminaGram: re-arm per-chat incoming translation on open. tdesktop keeps
+	// the "translating now" state only in memory (History::translatedTo()), so
+	// after a restart a chat the user had set to translate incoming messages
+	// silently stops. The target language and an on/off switch are persisted
+	// (Lumina::DialogReadTranslateOn / ChatReadLanguage); restore the live
+	// state from them here, as the outgoing switch is re-checked on each send.
+	if (Lumina::ChatTranslateAvailable(_history)
+		&& Lumina::DialogReadTranslateOn(_history)
+		&& !Lumina::ChatTranslationExcluded(_history)
+		&& !_history->translatedTo()) {
+		Lumina::SetChatTranslating(_history, true);
+	}
 
 	// The revocation half of Lumina::TranslateOfferSkip(). An offer this file
 	// made on relaxed terms has to disappear the moment the terms are

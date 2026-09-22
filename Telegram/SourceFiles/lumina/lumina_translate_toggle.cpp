@@ -14,6 +14,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_peer.h"
 #include "history/history.h"
 #include "lumina/lumina_translate_gating.h"
+#include "lumina/lumina_translate_send.h" // Set/DialogReadTranslateOn.
 #include "main/main_session.h"
 #include "spellcheck/spellcheck_types.h" // LanguageId.
 
@@ -77,6 +78,11 @@ void SetChatTranslationExcluded(
 }
 
 void SetChatTranslatingTo(not_null<History*> history, LanguageId id) {
+	// The single choke point for incoming translation being turned on (id
+	// set) or off (id empty): persist the per-chat switch here so it survives
+	// a restart, the way the outgoing switch is. Every menu path runs through
+	// this, so no call site needs to remember to do it.
+	SetDialogReadTranslateOn(history, id ? true : false);
 	const auto peer = history->peer;
 	using Flag = PeerData::TranslationFlag;
 	if (id && (peer->translationFlag() == Flag::Disabled)) {
