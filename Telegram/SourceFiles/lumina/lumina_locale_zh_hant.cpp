@@ -924,6 +924,10 @@ namespace {
 		{ u"LuminaNotifyMutePinnedInfo"_q, u"有人置頂訊息時不再彈出通知。被置頂的訊息本身不受影響。"_q },
 		{ u"LuminaNotifyMuteMentions"_q, u"靜音提及和回覆通知"_q },
 		{ u"LuminaNotifyMuteMentionsInfo"_q, u"有人@你或回覆你的訊息時不再彈出通知。不會把任何訊息標為已讀，訊息照常顯示。"_q },
+		{ u"LuminaPhotoQualityHeader"_q, u"相片品質"_q },
+		{ u"LuminaPhotoQualityChoice"_q, u"{1}%"_q },
+		{ u"LuminaPhotoQualityChoiceDefault"_q, u"{1}%（預設）"_q },
+		{ u"LuminaPhotoQualityInfo"_q, u"傳送相片需要重新壓縮時所使用的 JPEG 品質。數值越高保留越多細節，但上傳的檔案也越大。相片仍以一般解析度透過 Telegram 的正常上傳流程傳送；若相片本可原封不動傳送，則不受影響。87% 為標準品質。"_q },
 	};
 }
 

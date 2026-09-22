@@ -18,6 +18,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_double_tap_edit_settings.h"
 #include "lumina/lumina_menu_customize_settings.h"
 #include "lumina/lumina_text_replace_settings.h"
+#include "lumina/lumina_photo_quality.h"
 #include "lumina/lumina_locale.h"
 #include "lumina/lumina_settings.h"
 #include "ui/widgets/buttons.h"
@@ -111,6 +112,7 @@ void LuminaChat::setupContent(not_null<Ui::VerticalLayout*> container) {
 	Lumina::AddSelectAuthorRows(container, controller());
 	Lumina::AddUndoSendRows(container, controller());
 	Lumina::AddReplyTemplatesRows(container, controller());
+	Lumina::AddPhotoQualityRows(container);
 	AddInputRowToggles(container);
 }
 

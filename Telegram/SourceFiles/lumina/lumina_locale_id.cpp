@@ -981,6 +981,10 @@ namespace {
 		{ u"LuminaNotifyMutePinnedInfo"_q, u"Jangan tampilkan notifikasi saat seseorang menyematkan pesan. Pesan yang disematkan tidak terpengaruh."_q },
 		{ u"LuminaNotifyMuteMentions"_q, u"Bisukan notifikasi sebutan dan balasan"_q },
 		{ u"LuminaNotifyMuteMentionsInfo"_q, u"Jangan tampilkan notifikasi saat seseorang menyebut Anda dengan @ atau membalas pesan Anda. Tidak ada yang ditandai sudah dibaca, dan pesan tetap muncul seperti biasa."_q },
+		{ u"LuminaPhotoQualityHeader"_q, u"Kualitas foto"_q },
+		{ u"LuminaPhotoQualityChoice"_q, u"{1}%"_q },
+		{ u"LuminaPhotoQualityChoiceDefault"_q, u"{1}% (bawaan)"_q },
+		{ u"LuminaPhotoQualityInfo"_q, u"Kualitas JPEG yang dipakai saat foto yang kamu kirim harus dikompresi ulang. Nilai lebih tinggi menyimpan lebih banyak detail tetapi membuat unggahan lebih besar. Foto tetap dikirim melalui alur unggah normal Telegram pada resolusi biasa, dan foto yang akan dikirim Telegram tanpa perubahan tidak terpengaruh. 87% adalah kualitas standar."_q },
 	};
 }
 

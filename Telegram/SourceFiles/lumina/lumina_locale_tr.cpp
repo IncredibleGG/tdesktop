@@ -689,6 +689,10 @@ namespace {
 		{ u"LuminaNotifyMutePinnedInfo"_q, u"Biri bir mesajı sabitlediğinde bildirim gösterme. Sabitlenen mesajın kendisi etkilenmez."_q },
 		{ u"LuminaNotifyMuteMentions"_q, u"Bahsetme ve yanıt bildirimlerini sustur"_q },
 		{ u"LuminaNotifyMuteMentionsInfo"_q, u"Biri sizden @ ile bahsettiğinde veya mesajınıza yanıt verdiğinde bildirim gösterme. Hiçbir şey okundu olarak işaretlenmez ve mesajlar her zamanki gibi görünmeye devam eder."_q },
+		{ u"LuminaPhotoQualityHeader"_q, u"Fotoğraf kalitesi"_q },
+		{ u"LuminaPhotoQualityChoice"_q, u"%{1}"_q },
+		{ u"LuminaPhotoQualityChoiceDefault"_q, u"%{1} (varsayılan)"_q },
+		{ u"LuminaPhotoQualityInfo"_q, u"Gönderdiğin bir fotoğraf yeniden sıkıştırılması gerektiğinde kullanılan JPEG kalitesi. Daha yüksek değerler daha fazla ayrıntı korur ama yüklemeyi büyütür. Fotoğraflar yine Telegram’ın normal yükleme yolundan ve olağan çözünürlükte gönderilir; Telegram’ın değiştirmeden göndereceği bir fotoğraf etkilenmez. %87 standart kalitedir."_q },
 	};
 }
 

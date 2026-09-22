@@ -27,6 +27,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "mtproto/facade.h"
 #include "lottie/lottie_animation.h"
 #include "lumina/lumina_exif_strip.h"
+#include "lumina/lumina_photo_quality.h"
 #include "history/history.h"
 #include "history/history_item.h"
 #include "boxes/abstract_box.h"
@@ -183,7 +184,8 @@ struct PreparedFileThumbnail {
 [[nodiscard]] QByteArray ComputePhotoJpegBytes(
 		QImage &full,
 		const QByteArray &bytes,
-		const QByteArray &format) {
+		const QByteArray &format,
+		int quality) {
 	if (!bytes.isEmpty()
 		&& (bytes.size()
 			<= full.width() * full.height() * kRecompressAfterBpp / 8)
@@ -201,7 +203,7 @@ struct PreparedFileThumbnail {
 	auto result = QByteArray();
 	QBuffer buffer(&result);
 	QImageWriter writer(&buffer, "JPEG");
-	writer.setQuality(87);
+	writer.setQuality(quality);
 	writer.setProgressiveScanWrite(true);
 	writer.write(full);
 	buffer.close();
@@ -534,6 +536,7 @@ FileLoadTask::FileLoadTask(Args &&args)
 	// main-thread only, so the preference is mirrored here, where we are still
 	// on the main thread and the task has not been queued yet.
 	Lumina::RefreshStripPhotoLocationCache();
+	Lumina::RefreshOutgoingPhotoQualityCache();
 }
 
 FileLoadTask::FileLoadTask(VoiceArgs &&args)
@@ -1148,7 +1151,11 @@ void FileLoadTask::process(ProcessArgs &&args) {
 					// sticker keeps its bytes here while not being a JPEG.
 					fullimagebytes = fullimageformat = QByteArray();
 				}
-				filedata = ComputePhotoJpegBytes(full, fullimagebytes, fullimageformat);
+				filedata = ComputePhotoJpegBytes(
+					full,
+					fullimagebytes,
+					fullimageformat,
+					Lumina::OutgoingPhotoQualityCached());
 
 				photoThumbs.emplace('m', PreparedPhotoThumb{ .image = medium });
 				photoSizes.push_back(MTP_photoSize(MTP_string("m"), MTP_int(medium.width()), MTP_int(medium.height()), MTP_int(0)));

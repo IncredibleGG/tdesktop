@@ -926,6 +926,10 @@ namespace {
 		{ u"LuminaNotifyMutePinnedInfo"_q, u"有人置顶消息时不再弹出通知。被置顶的消息本身不受影响。"_q },
 		{ u"LuminaNotifyMuteMentions"_q, u"静音提及和回复通知"_q },
 		{ u"LuminaNotifyMuteMentionsInfo"_q, u"有人@你或回复你的消息时不再弹出通知。不会把任何消息标为已读，消息照常显示。"_q },
+		{ u"LuminaPhotoQualityHeader"_q, u"照片质量"_q },
+		{ u"LuminaPhotoQualityChoice"_q, u"{1}%"_q },
+		{ u"LuminaPhotoQualityChoiceDefault"_q, u"{1}%（默认）"_q },
+		{ u"LuminaPhotoQualityInfo"_q, u"发送照片需要重新压缩时使用的 JPEG 质量。数值越高保留的细节越多，但上传文件也越大。照片仍以通常的分辨率通过 Telegram 的正常上传流程发送；如果照片本可原样发送，则不受影响。87% 为标准质量。"_q },
 	};
 }
 

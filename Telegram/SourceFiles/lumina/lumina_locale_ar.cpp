@@ -686,6 +686,10 @@ namespace {
 		{ u"LuminaNotifyMutePinnedInfo"_q, u"عدم إظهار إشعار عندما يثبّت أحدهم رسالة. لا تتأثر الرسالة المثبّتة نفسها."_q },
 		{ u"LuminaNotifyMuteMentions"_q, u"كتم إشعارات الإشارات والردود"_q },
 		{ u"LuminaNotifyMuteMentionsInfo"_q, u"عدم إظهار إشعار عندما يشير إليك أحدهم بـ @ أو يرد على رسالتك. لا يتم تعليم أي شيء كمقروء، وتظل الرسائل ظاهرة كالمعتاد."_q },
+		{ u"LuminaPhotoQualityHeader"_q, u"جودة الصور"_q },
+		{ u"LuminaPhotoQualityChoice"_q, u"{1}%"_q },
+		{ u"LuminaPhotoQualityChoiceDefault"_q, u"{1}% (افتراضي)"_q },
+		{ u"LuminaPhotoQualityInfo"_q, u"جودة JPEG المستخدمة عند الحاجة إلى إعادة ضغط صورة ترسلها. القيم الأعلى تحافظ على تفاصيل أكثر لكنها تزيد حجم الرفع. تُرسَل الصور عبر مسار الرفع العادي في Telegram وبالدقة المعتادة، والصورة التي يرسلها Telegram دون تعديل لا تتأثر. 87% هي الجودة القياسية."_q },
 	};
 }
 

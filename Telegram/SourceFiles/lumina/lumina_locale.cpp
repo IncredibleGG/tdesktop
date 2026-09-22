@@ -876,6 +876,10 @@ struct Registration {
 		{ u"LuminaNotifyMuteMentions"_q, u"Mute mentions and replies"_q },
 		{ u"LuminaNotifyMuteMentionsInfo"_q, u"Don’t show a notification when someone @mentions you or replies to your message. Nothing is marked as read, and the messages still appear as usual."_q },
 
+		{ u"LuminaPhotoQualityHeader"_q, u"Photo quality"_q },
+		{ u"LuminaPhotoQualityChoice"_q, u"{1}%"_q },
+		{ u"LuminaPhotoQualityChoiceDefault"_q, u"{1}% (default)"_q },
+		{ u"LuminaPhotoQualityInfo"_q, u"The JPEG quality used when a photo you send has to be re-compressed. Higher keeps more detail but makes the upload larger. Photos still go through Telegram’s normal upload at the usual resolution, and a photo Telegram would send untouched is not affected. 87% is the standard quality."_q },
 	};
 	return result;
 }

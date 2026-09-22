@@ -984,6 +984,10 @@ namespace {
 		{ u"LuminaNotifyMutePinnedInfo"_q, u"Não mostrar uma notificação quando alguém fixa uma mensagem. A mensagem fixada em si não é afetada."_q },
 		{ u"LuminaNotifyMuteMentions"_q, u"Silenciar menções e respostas"_q },
 		{ u"LuminaNotifyMuteMentionsInfo"_q, u"Não mostrar uma notificação quando alguém menciona você com @ ou responde à sua mensagem. Nada é marcado como lido, e as mensagens continuam aparecendo normalmente."_q },
+		{ u"LuminaPhotoQualityHeader"_q, u"Qualidade das fotos"_q },
+		{ u"LuminaPhotoQualityChoice"_q, u"{1}%"_q },
+		{ u"LuminaPhotoQualityChoiceDefault"_q, u"{1}% (padrão)"_q },
+		{ u"LuminaPhotoQualityInfo"_q, u"A qualidade JPEG usada quando uma foto que você envia precisa ser recomprimida. Valores maiores mantêm mais detalhes, mas deixam o envio maior. As fotos continuam a ser enviadas pelo fluxo normal do Telegram, na resolução de sempre, e uma foto que o Telegram enviaria sem alterações não é afetada. 87% é a qualidade padrão."_q },
 	};
 }
 
