@@ -930,6 +930,11 @@ namespace {
 		{ u"LuminaPhotoQualityChoice"_q, u"{1}%"_q },
 		{ u"LuminaPhotoQualityChoiceDefault"_q, u"{1}%（默认）"_q },
 		{ u"LuminaPhotoQualityInfo"_q, u"发送照片需要重新压缩时使用的 JPEG 质量。数值越高保留的细节越多，但上传文件也越大。照片仍以通常的分辨率通过 Telegram 的正常上传流程发送；如果照片本可原样发送，则不受影响。87% 为标准质量。"_q },
+
+		// LuminaGram #21: transfer boost.
+		{ u"LuminaTransferBoostTitle"_q, u"大文件传输"_q },
+		{ u"LuminaTransferBoost"_q, u"加速大文件传输(实验性)"_q },
+		{ u"LuminaTransferBoostInfo"_q, u"实验性功能。上传改用较大的 512 KB 分块,下载则同时发出更多并行请求,在高速网络下可加快大文件传输。发送与接收的字节完全不变,只改变分块大小与并发程度。默认关闭——可开启以测试大文件传输;若出现上传或下载问题请关闭。"_q },
 	};
 }
 

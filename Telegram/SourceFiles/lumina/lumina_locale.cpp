@@ -842,6 +842,11 @@ struct Registration {
 		{ u"LuminaHideVoiceButton"_q, u"Hide voice message button"_q },
 		{ u"LuminaHideSendAsButton"_q, u"Hide send-as button"_q },
 		{ u"LuminaInputRowInfo"_q, u"Hide the voice/video message button that appears when the message field is empty, and the send-as button for choosing which account or channel a message is posted as. Off by default; other input controls are unchanged."_q },
+
+		// LuminaGram #21: increase MTProto transfer part size / parallelism.
+		{ u"LuminaTransferBoostTitle"_q, u"Large file transfers"_q },
+		{ u"LuminaTransferBoost"_q, u"Speed up large transfers (experimental)"_q },
+		{ u"LuminaTransferBoostInfo"_q, u"Experimental. Uploads use larger 512 KB parts and downloads issue more parallel requests, which can speed up large files on fast connections. The bytes sent and received are unchanged; only the chunking and concurrency differ. Off by default \u2014 turn it on to test large transfers, and turn it off if you see upload or download problems."_q },
 		// LuminaGram Batch 4 (#14 double-tap edit, #16 call confirm, #17 menu, #22 keyword filter).
 		{ u"LuminaDoubleTapEditTitle"_q, u"Editing"_q },
 		{ u"LuminaDoubleTapEditRow"_q, u"Double-tap your message to edit"_q },

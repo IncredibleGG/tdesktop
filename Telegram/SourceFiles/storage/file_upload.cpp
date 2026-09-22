@@ -31,6 +31,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "main/main_session.h"
 #include "storage/storage_account.h"
 #include "apiwrap.h"
+#include "lumina/lumina_settings.h"
 
 #include <QtCore/QFileInfo>
 
@@ -147,6 +148,17 @@ Uploader::Entry::Entry(
 
 void Uploader::Entry::setDocSize(int64 size) {
 	docSize = size;
+	if (Lumina::Settings::Instance().transferBoost()) {
+		// #21: pick the largest valid upload part size (512 KB, the stock
+		// maximum, a power of two dividing 1 MB and the server ceiling for
+		// upload parts) so fewer, larger requests are sent. This is exactly
+		// the size stock already falls back to for large documents; only the
+		// selection for smaller ones changes. It is never above 512 KB, so the
+		// part is always server-valid, and docPartsCount / offset math below is
+		// generic in docPartSize, so it stays correct.
+		setPartSize(kDocumentUploadPartSize4);
+		return;
+	}
 	constexpr auto limit0 = 1024 * 1024;
 	constexpr auto limit1 = 32 * limit0;
 	if (docSize >= limit0 || !setPartSize(kDocumentUploadPartSize0)) {

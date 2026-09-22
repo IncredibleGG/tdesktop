@@ -16,6 +16,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "apiwrap.h"
 #include "base/openssl_help.h"
 
+#include "lumina/lumina_settings.h"
+
 namespace Storage {
 namespace {
 
@@ -37,6 +39,19 @@ constexpr auto kBadRequestDurationThreshold = 8 * crl::time(1000);
 // kRetryAddSessionTimeout * max(removesCount, kMaxTrackedSessionRemoves)
 // and for successes in all remaining sessions:
 // kRetryAddSessionSuccesses * max(removesCount, kMaxTrackedSessionRemoves)
+
+// #21: ceiling for how much may be in flight per download session. When the
+// transfer boost is OFF this returns exactly the stock kMaxWaitedInSession
+// (16 * kDownloadPartSize), so every value derived from it is byte-identical
+// to stock. When ON it only raises how many 128 KB parts may be requested per
+// session at once - the part size, offsets and CDN hash granularity are left
+// untouched, so the bytes fetched are identical, merely fetched with more
+// concurrency (safe even for CDN downloads, which require a fixed part size).
+[[nodiscard]] int MaxWaitedInSession() {
+	return Lumina::Settings::Instance().transferBoost()
+		? (32 * kDownloadPartSize)
+		: kMaxWaitedInSession;
+}
 
 } // namespace
 
@@ -184,7 +199,7 @@ bool DownloadManagerMtproto::trySendNextPart(MTP::DcId dcId, Queue &queue) {
 		const auto proj = [](const DcSessionBalanceData &data) {
 			return (data.requested < data.maxWaitedAmount)
 				? data.requested
-				: kMaxWaitedInSession;
+				: MaxWaitedInSession();
 		};
 		const auto j = ranges::min_element(sessions, ranges::less(), proj);
 		return (j->requested + kDownloadPartSize <= j->maxWaitedAmount)
@@ -260,10 +275,10 @@ void DownloadManagerMtproto::requestSucceeded(
 		return;
 	}
 	if (amountAtRequestStart == data.maxWaitedAmount
-		&& data.maxWaitedAmount < kMaxWaitedInSession) {
+		&& data.maxWaitedAmount < MaxWaitedInSession()) {
 		data.maxWaitedAmount = std::min(
 			data.maxWaitedAmount + kDownloadPartSize,
-			kMaxWaitedInSession);
+			MaxWaitedInSession());
 		DEBUG_LOG(("Download (%1,%2) increased max waited amount %3."
 			).arg(dcId
 			).arg(index
@@ -350,9 +365,10 @@ void DownloadManagerMtproto::removeSession(MTP::DcId dcId) {
 	auto &session = dc.sessions.back();
 
 	// Make sure we don't send anything to that session while redirecting.
-	session.requested += kMaxWaitedInSession * kMaxSessionsCount;
+	const auto blockAmount = MaxWaitedInSession() * kMaxSessionsCount;
+	session.requested += blockAmount;
 	queue.removeSession(index);
-	Assert(session.requested == kMaxWaitedInSession * kMaxSessionsCount);
+	Assert(session.requested == blockAmount);
 
 	dc.sessions.pop_back();
 	api().instance().killSession(MTP::downloadDcId(dcId, index));

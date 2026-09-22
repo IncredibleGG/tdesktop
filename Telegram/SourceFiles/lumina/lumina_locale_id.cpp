@@ -985,6 +985,11 @@ namespace {
 		{ u"LuminaPhotoQualityChoice"_q, u"{1}%"_q },
 		{ u"LuminaPhotoQualityChoiceDefault"_q, u"{1}% (bawaan)"_q },
 		{ u"LuminaPhotoQualityInfo"_q, u"Kualitas JPEG yang dipakai saat foto yang kamu kirim harus dikompresi ulang. Nilai lebih tinggi menyimpan lebih banyak detail tetapi membuat unggahan lebih besar. Foto tetap dikirim melalui alur unggah normal Telegram pada resolusi biasa, dan foto yang akan dikirim Telegram tanpa perubahan tidak terpengaruh. 87% adalah kualitas standar."_q },
+
+		// LuminaGram #21: transfer boost.
+		{ u"LuminaTransferBoostTitle"_q, u"Transfer berkas besar"_q },
+		{ u"LuminaTransferBoost"_q, u"Percepat transfer besar (eksperimental)"_q },
+		{ u"LuminaTransferBoostInfo"_q, u"Eksperimental. Unggahan memakai bagian lebih besar 512 KB dan unduhan mengirim lebih banyak permintaan paralel, yang dapat mempercepat berkas besar pada koneksi cepat. Data yang dikirim dan diterima tidak berubah; hanya pembagian bagian dan konkurensi yang berubah. Nonaktif secara bawaan: aktifkan untuk menguji transfer besar, dan nonaktifkan jika Anda melihat masalah unggah atau unduh."_q },
 	};
 }
 

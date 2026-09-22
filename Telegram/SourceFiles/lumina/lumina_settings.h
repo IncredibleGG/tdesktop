@@ -118,6 +118,12 @@ public:
 	[[nodiscard]] bool autoTranslate() const;
 	void setAutoTranslate(bool value);
 
+	// #21: raise MTProto transfer part size / parallelism to speed large
+	// files. Default OFF; when off, upload and download behaviour is
+	// byte-identical to stock.
+	[[nodiscard]] bool transferBoost() const;
+	void setTransferBoost(bool value);
+
 	// Deprecated spelling, kept only so the current settings page keeps
 	// compiling. Remove together with its last caller in F-02.
 	[[nodiscard]] bool forwardWithoutAuthor() const {

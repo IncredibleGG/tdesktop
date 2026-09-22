@@ -433,4 +433,12 @@ void Settings::setAutoTranslate(bool value) {
 	set(u"autoTranslate"_q, value);
 }
 
+bool Settings::transferBoost() const {
+	return getBool(u"transferBoost"_q);
+}
+
+void Settings::setTransferBoost(bool value) {
+	set(u"transferBoost"_q, value);
+}
+
 } // namespace Lumina

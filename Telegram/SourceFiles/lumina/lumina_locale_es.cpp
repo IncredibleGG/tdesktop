@@ -1030,6 +1030,11 @@ namespace {
 		{ u"LuminaPhotoQualityChoice"_q, u"{1}%"_q },
 		{ u"LuminaPhotoQualityChoiceDefault"_q, u"{1}% (predeterminado)"_q },
 		{ u"LuminaPhotoQualityInfo"_q, u"La calidad JPEG que se usa cuando una foto que envías debe volver a comprimirse. Un valor más alto conserva más detalle pero hace la subida más grande. Las fotos se envían por el proceso de subida normal de Telegram y con la resolución habitual; una foto que Telegram enviaría sin modificar no se ve afectada. 87% es la calidad estándar."_q },
+
+		// LuminaGram #21: transfer boost.
+		{ u"LuminaTransferBoostTitle"_q, u"Transferencias de archivos grandes"_q },
+		{ u"LuminaTransferBoost"_q, u"Acelerar transferencias grandes (experimental)"_q },
+		{ u"LuminaTransferBoostInfo"_q, u"Experimental. Las subidas usan partes m\u00e1s grandes de 512 KB y las descargas hacen m\u00e1s solicitudes en paralelo, lo que puede acelerar los archivos grandes en conexiones r\u00e1pidas. Los datos enviados y recibidos no cambian; solo cambian la fragmentaci\u00f3n y la concurrencia. Desactivado de forma predeterminada: act\u00edvalo para probar transferencias grandes y desact\u00edvalo si observas problemas de subida o descarga."_q },
 	};
 }
 

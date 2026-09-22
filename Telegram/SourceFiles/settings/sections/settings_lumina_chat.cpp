@@ -69,6 +69,24 @@ void AddInputRowToggles(not_null<Ui::VerticalLayout*> container) {
 		Lumina::TrValue(u"LuminaInputRowInfo"_q));
 }
 
+// #21: experimental larger MTProto transfer parts / more parallel download
+// requests. Defaults to false, so transfers stay byte-identical to stock
+// until the user opts in.
+void AddTransferBoostToggle(not_null<Ui::VerticalLayout*> container) {
+	Ui::AddSkip(container);
+	Ui::AddSubsectionTitle(
+		container,
+		Lumina::TrValue(u"LuminaTransferBoostTitle"_q));
+	AddToggle(
+		container,
+		Lumina::TrValue(u"LuminaTransferBoost"_q),
+		u"transferBoost"_q);
+	Ui::AddSkip(container);
+	Ui::AddDividerText(
+		container,
+		Lumina::TrValue(u"LuminaTransferBoostInfo"_q));
+}
+
 } // namespace
 
 Type LuminaChatId() {
@@ -114,6 +132,7 @@ void LuminaChat::setupContent(not_null<Ui::VerticalLayout*> container) {
 	Lumina::AddReplyTemplatesRows(container, controller());
 	Lumina::AddPhotoQualityRows(container);
 	AddInputRowToggles(container);
+	AddTransferBoostToggle(container);
 }
 
 } // namespace Settings

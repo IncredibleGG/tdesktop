@@ -693,6 +693,11 @@ namespace {
 		{ u"LuminaPhotoQualityChoice"_q, u"%{1}"_q },
 		{ u"LuminaPhotoQualityChoiceDefault"_q, u"%{1} (varsayılan)"_q },
 		{ u"LuminaPhotoQualityInfo"_q, u"Gönderdiğin bir fotoğraf yeniden sıkıştırılması gerektiğinde kullanılan JPEG kalitesi. Daha yüksek değerler daha fazla ayrıntı korur ama yüklemeyi büyütür. Fotoğraflar yine Telegram’ın normal yükleme yolundan ve olağan çözünürlükte gönderilir; Telegram’ın değiştirmeden göndereceği bir fotoğraf etkilenmez. %87 standart kalitedir."_q },
+
+		// LuminaGram #21: transfer boost.
+		{ u"LuminaTransferBoostTitle"_q, u"B\u00fcy\u00fck dosya aktar\u0131mlar\u0131"_q },
+		{ u"LuminaTransferBoost"_q, u"B\u00fcy\u00fck aktar\u0131mlar\u0131 h\u0131zland\u0131r (deneysel)"_q },
+		{ u"LuminaTransferBoostInfo"_q, u"Deneysel. Y\u00fcklemeler daha b\u00fcy\u00fck 512 KB par\u00e7alar kullan\u0131r, indirmeler ise daha fazla paralel istek g\u00f6nderir; bu, h\u0131zl\u0131 ba\u011flant\u0131larda b\u00fcy\u00fck dosyalar\u0131 h\u0131zland\u0131rabilir. G\u00f6nderilen ve al\u0131nan veri de\u011fi\u015fmez; yaln\u0131zca par\u00e7alama ve e\u015fzamanl\u0131l\u0131k de\u011fi\u015fir. Varsay\u0131lan olarak kapal\u0131d\u0131r: b\u00fcy\u00fck aktar\u0131mlar\u0131 denemek i\u00e7in a\u00e7\u0131n, y\u00fckleme veya indirme sorunlar\u0131 g\u00f6r\u00fcrseniz kapat\u0131n."_q },
 	};
 }
 
