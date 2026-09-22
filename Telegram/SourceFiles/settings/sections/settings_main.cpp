@@ -374,6 +374,12 @@ void BuildSectionButtons(SectionBuilder &builder) {
 		.keywords = { u"lumina"_q, u"luminagram"_q, u"stealth"_q, u"fork"_q },
 	});
 
+	// LuminaGram: stand apart in its own block so our section reads as
+	// distinct from the stock settings and is ready to grow.
+	builder.addSkip();
+	builder.addDivider();
+	builder.addSkip();
+
 	if (!session->supportMode()) {
 		builder.addSectionButton({
 			.title = tr::lng_settings_my_account(),
