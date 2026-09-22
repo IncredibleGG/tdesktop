@@ -515,6 +515,8 @@ namespace {
 		{ u"LuminaProfileCardTaglineHint"_q, u"一句話介紹你自己"_q },
 		{ u"LuminaProfileCardTitle"_q, u"個人名片"_q },
 		{ u"LuminaProfileChatCreated"_q, u"建立於"_q },
+		{ u"LuminaProfileGroupSettings"_q, u"群組設定"_q },
+		{ u"LuminaProfileRecentActions"_q, u"最近操作"_q },
 		{ u"LuminaProfileDcId"_q, u"資料中心"_q },
 		{ u"LuminaProfileUserId"_q, u"用戶 ID"_q },
 		{ u"LuminaProfileChatId"_q, u"對話 ID"_q },

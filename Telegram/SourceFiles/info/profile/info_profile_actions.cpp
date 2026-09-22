@@ -1556,6 +1556,23 @@ Section DetailsFiller::makeInfo() {
 		result.text->setContextCopyText(contextCopyText);
 		return result;
 	};
+	// LuminaGram: a clickable, MultiSlideTracker-tracked row for the details
+	// block (see Lumina::ProfileRowsContext::addClickableRow). Built on the same
+	// AddActionButton() the upstream action buttons use and tracked the same
+	// way, so it slides on `shown` and the block still collapses when empty.
+	// `result` and `tracker` are makeInfo()'s own - call-scoped like
+	// addInfoOneLine above.
+	const auto addLuminaClickableRow = [&](
+			rpl::producer<QString> text,
+			rpl::producer<bool> shown,
+			Fn<void()> onClick) {
+		tracker.track(AddActionButton(
+			result,
+			std::move(text),
+			std::move(shown),
+			std::move(onClick),
+			nullptr));
+	};
 	const auto fitLabelToButton = [&](
 			not_null<Ui::RpWidget*> button,
 			not_null<Ui::FlatLabel*> label,
@@ -1743,6 +1760,7 @@ Section DetailsFiller::makeInfo() {
 					std::move(text),
 					contextCopyText);
 			},
+			.addClickableRow = addLuminaClickableRow,
 		}, user);
 
 		if (!user->isBot()) {
@@ -1869,6 +1887,7 @@ Section DetailsFiller::makeInfo() {
 					std::move(text),
 					contextCopyText);
 			},
+			.addClickableRow = addLuminaClickableRow,
 		}, _peer, _topic);
 
 		const auto about = addInfoLine(tr::lng_info_about_label(), _topic

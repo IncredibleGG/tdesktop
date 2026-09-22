@@ -547,6 +547,8 @@ struct Registration {
 		{ u"LuminaProfileCardTaglineHint"_q, u"A short headline about you"_q },
 		{ u"LuminaProfileCardTitle"_q, u"Profile card"_q },
 		{ u"LuminaProfileChatCreated"_q, u"Created"_q },
+		{ u"LuminaProfileGroupSettings"_q, u"Group Settings"_q },
+		{ u"LuminaProfileRecentActions"_q, u"Recent Actions"_q },
 		{ u"LuminaProfileDcId"_q, u"Datacenter"_q },
 		{ u"LuminaProfileUserId"_q, u"User ID"_q },
 		{ u"LuminaProfileChatId"_q, u"Chat ID"_q },

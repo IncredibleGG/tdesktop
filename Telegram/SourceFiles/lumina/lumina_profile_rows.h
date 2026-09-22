@@ -53,6 +53,27 @@ using InfoOneLineFactory = Fn<Info::Profile::TextWithLabel(
 	rpl::producer<TextWithEntities> text,
 	QString contextCopyText)>;
 
+// A full-width, clickable settings-button row (the same widget the upstream
+// action buttons in info_profile_actions.cpp use), tracked by makeInfo()'s
+// MultiSlideTracker just like every other row in the details block: when
+// `shown` emits false the row slides away, and when every row in the block is
+// hidden the block still collapses. Use it for a row that has to react to a
+// tap; use addInfoOneLine for a plain labelled value.
+//
+// !! CALL-SCOPED, exactly like addInfoOneLine above: the wrapped lambda holds
+// references into makeInfo()'s stack frame (its layout and its
+// Ui::MultiSlideTracker). Invoke it synchronously from AddChatInfoRows() /
+// AddUserInfoRows() and never copy it into a later callback.
+//
+// `onClick`, by contrast, is owned by the button and runs on tap long after
+// makeInfo() has returned, so it must capture only things that outlive the
+// section - context.controller and the peer pointers are safe (see the note on
+// ProfileRowsContext), makeInfo()'s locals are not.
+using ClickableRowFactory = Fn<void(
+	rpl::producer<QString> text,
+	rpl::producer<bool> shown,
+	Fn<void()> onClick)>;
+
 // Also call-scoped: makeInfo() passes a temporary, so the reference dies at
 // the end of the call. Copy out the individual members you need to keep - both
 // not_null pointers outlive the section, `addInfoOneLine` does not.
@@ -69,6 +90,11 @@ struct ProfileRowsContext {
 	not_null<Ui::VerticalLayout*> container;
 	not_null<Window::SessionController*> controller;
 	InfoOneLineFactory addInfoOneLine;
+
+	// Optional: only set by the chat/channel call site today. A row added
+	// through it is tracked exactly like an addInfoOneLine row. May be empty in
+	// contexts that do not provide it, so check it before calling.
+	ClickableRowFactory addClickableRow;
 };
 
 // Both functions are called once per built details section, from the matching
