@@ -48,6 +48,16 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtCore/QFile>
 
 namespace Lumina {
+
+#ifndef __APPLE__
+// Non-mac has no local confidence source, and whisper (the only non-mac
+// engine) auto-detects the spoken language and ignores this hint anyway, so
+// just delegate to the plain platform detector.
+LanguageId RecognizeConfidentSpokenLanguage(QStringView text) {
+	return Platform::Language::Recognize(text);
+}
+#endif // __APPLE__
+
 namespace {
 
 // Android's key names, unchanged, so a settings backup means the same thing
@@ -143,7 +153,7 @@ const auto kKeyAutoTranslate = u"sttAutoTranslate"_q;
 		if (buffer.isEmpty()) {
 			return {};
 		}
-		const auto id = Platform::Language::Recognize(buffer);
+		const auto id = RecognizeConfidentSpokenLanguage(buffer);
 		return (id.known() && id.value != QLocale::C) ? id : LanguageId();
 	};
 	if (const auto sameAuthor = scan(true)) {

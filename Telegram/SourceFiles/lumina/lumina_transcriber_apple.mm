@@ -10,6 +10,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #ifdef __APPLE__
 
 #include "lumina/lumina_audio_decode.h"
+#include "lumina/lumina_transcribers.h"
+#include <QtCore/QLocale>
 #include "base/weak_ptr.h"
 #include "base/platform/mac/base_utilities_mac.h"
 
@@ -22,6 +24,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
 #import <Speech/Speech.h>
+#import <NaturalLanguage/NLLanguageRecognizer.h>
 
 namespace Lumina {
 namespace {
@@ -239,6 +242,39 @@ void AppleSpeechEngine::start(
 }
 
 } // namespace
+
+LanguageId RecognizeConfidentSpokenLanguage(QStringView text) {
+	if (@available(macOS 10.14, *)) {
+		// NLLanguageRecognizer names a "best" language even for a couple of
+		// ambiguous Latin words; without a floor that low-confidence guess pins
+		// the wrong recogniser locale (a Chinese speaker's short Latin chat text
+		// was tagged Dutch, so the Chinese note came out as Dutch gibberish). A
+		// real sentence in any language scores well above this floor; only short
+		// ambiguous snippets fall through and defer to the interface language.
+		constexpr auto kMinConfidence = 0.65;
+		constexpr auto kMaxHypotheses = 3;
+		static thread_local auto recognizer = [] {
+			return [[NLLanguageRecognizer alloc] init];
+		}();
+		[recognizer processString:Platform::Q2NSString(text)];
+		NSDictionary<NLLanguage, NSNumber *> *hypotheses =
+			[recognizer languageHypothesesWithMaximum:kMaxHypotheses];
+		[recognizer reset];
+		auto bestProbability = 0.;
+		NLLanguage bestLanguage = nil;
+		for (NLLanguage language in hypotheses) {
+			const auto probability = [hypotheses[language] doubleValue];
+			if (probability > bestProbability) {
+				bestProbability = probability;
+				bestLanguage = language;
+			}
+		}
+		if (bestLanguage && bestProbability >= kMinConfidence) {
+			return { QLocale(Platform::NS2QString(bestLanguage)).language() };
+		}
+	}
+	return {};
+}
 
 std::unique_ptr<TranscribeEngine> MakeAppleSpeechEngine() {
 	if (@available(macOS 10.15, *)) {

@@ -8,6 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #pragma once
 
 #include "base/basic_types.h"
+#include "spellcheck/spellcheck_types.h"
 
 #include <rpl/producer.h>
 
@@ -16,6 +17,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QtCore/QByteArray>
 #include <QtCore/QString>
+#include <QtCore/QStringView>
 
 namespace Lumina {
 
@@ -58,6 +60,16 @@ namespace Lumina {
 // Whisper: it is the only one of the two that detects the spoken language on
 // its own, which is exactly what a cross-language chat needs.
 [[nodiscard]] QString DefaultTranscriberId();
+
+// LuminaGram: the language to HINT the speech recogniser with, but only when
+// the text detector is confident. NLLanguageRecognizer always names a "best"
+// language even for short ambiguous Latin text (it once tagged a Chinese
+// speaker's chat as Dutch, so the Chinese voice came out as Dutch gibberish).
+// Returns a language only when the top hypothesis clears a probability floor;
+// otherwise an empty LanguageId so the caller falls back to the UI language.
+// macOS reads real probabilities; other platforms use whisper (auto-detects,
+// ignores this hint) and delegate to the plain detector.
+[[nodiscard]] LanguageId RecognizeConfidentSpokenLanguage(QStringView text);
 
 struct TranscriberInfo {
 	QString id;
