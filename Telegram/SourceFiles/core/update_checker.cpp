@@ -2188,34 +2188,20 @@ bool checkReadyUpdate() {
 		if (mode == Platform::UpdateInstallMode::Refused) {
 			return reject();
 		} else if (packagePresent) {
-			if (!Platform::ClearUpdateData(cWorkingDir(), error, true)) {
-				return reject();
-			}
-			const auto package = Platform::ReadyUpdatePackagePath(cWorkingDir());
-			const auto content = Platform::ReadUpdatePackage(package, error);
-			if (!content) {
-				return reject();
-			} else if (mode == Platform::UpdateInstallMode::Protected) {
-				if (!Platform::ValidateProtectedUpdate(
-						*content,
-						cInstallBetaVersion(),
-						error)) {
-					return reject();
-				}
-				return true;
-			}
-#ifndef TDESKTOP_DISABLE_AUTOUPDATE
-			// LuminaGram: v1 or v2, see UnpackUpdateContent().
-			if (!UnpackUpdateContent(
-					package,
-					*content,
-					ManifestAdoption::Immediate)
-				|| (Platform::ReadyUpdatePackagePresent(cWorkingDir())
-					&& !QFile::remove(package))) {
-				error = u"Could not unpack and retire the ready update package."_q;
-				return reject();
-			}
-#endif // !TDESKTOP_DISABLE_AUTOUPDATE
+			// LuminaGram: never install tupdates/ready-package. Only
+			// PrepareProtectedUpdate() writes it, and only for a v2 package
+			// signed by Telegram; our feed serves v1 packages signed with our
+			// own key (UnpackUpdateV1()), so this fork never stages one. The
+			// default Linux working directory is shared with official
+			// Telegram Desktop (see the application name in
+			// Launcher::init()), so a package found here was staged by that
+			// app and would replace LuminaGram with Telegram: through the
+			// privileged installer in Protected mode, or through
+			// UnpackUpdateV2() and our own kReadyMarker in Writable mode.
+			// Upstream 7.3 added this branch; 7.2.x had nothing to bypass the
+			// marker with. Clear it like any other foreign update.
+			error = u"Refusing a ready update package from another app."_q;
+			return reject();
 		} else if (mode == Platform::UpdateInstallMode::Protected) {
 			error = u"An unpacked update cannot be installed with privilege."_q;
 			return reject();

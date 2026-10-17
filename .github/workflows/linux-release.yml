@@ -233,6 +233,10 @@ jobs:
         #    to cores+2; at -O3 the heavy translation units want far more
         #    memory than they do at -O0, and an out-of-memory kill three hours
         #    in reads as a random compiler crash.
+        #  - KEEP_GOING=1, which build.sh turns into "-- -k 0" (upstream
+        #    canary.yml does the same): one run reports every translation unit
+        #    that fails instead of stopping at the first, matching
+        #    win-release.yml. The step still fails when anything does.
         run: |
           ccache -z
 
@@ -241,6 +245,7 @@ jobs:
           -v $PWD:/usr/src/tdesktop \
           -v ${{ env.CCACHE_DIR }}:/var/cache/ccache \
           -e CONFIG=Release \
+          -e KEEP_GOING=1 \
           -e CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) \
           -e CCACHE_SLOPPINESS=pch_defines,time_macros \
           $IMAGE_TAG \
