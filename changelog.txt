@@ -1,3 +1,52 @@
+7.3.1 (18.10.26)
+
+- LuminaGram is now based on the official Telegram Desktop 7.3.1 (was 7.2.6).
+  This brings the built-in wallet exactly as Telegram ships it, emoji updated
+  to Unicode 17, the passcode checked in the background, image editor
+  improvements and many crash fixes; see the official entries below.
+- Automatic updates keep working. The official updater dropped the package
+  format our self-signed LuminaGram updates use; LuminaGram keeps accepting it.
+- The local passcode key file is converted once to the new official format.
+  After this update an older 7.2.x build may not open data protected by a
+  local passcode, so do not downgrade.
+- The fake-crash duress code still triggers from the lock screen with the new
+  background passcode check.
+
+7.3.1 (09.10.26)
+
+- Fix wallet encryption with Windows Hello sometimes failing.
+- Fix same passcode saving in wallet encryption.
+- Fix copy-restricted media reaching Downloads.
+- Fix bad date colors in some custom themes.
+- Remove attaching Link in photo editor.
+
+7.3 (08.10.26)
+
+- Money.
+
+7.2.10 beta (25.09.26)
+
+- Update emoji to Unicode 17.
+- Submit the rich messages editor with Ctrl+Enter.
+- Play audio tracks in a rich message as a playlist.
+- Improve screen reader support for message selection and the unread bar.
+- Fix empty lines lost when converting an article to plain text.
+- Fix shared media and pinned messages in topics and Saved Messages.
+- Fix animated emoji effects autoplaying on already read messages.
+- Fix many crashes.
+
+7.2.9 (16.09.26)
+
+- Fix some tlottie incorrect renderings.
+
+7.2.8 (09.09.26)
+
+- Fix some more crashes with bad lottie files.
+
+7.2.7 (07.09.26)
+
+- Fix crashes with invalid lottie files.
+
 7.0.19 (16.08.26)
 
 - Lock any chat behind a private-folder code; it stays hidden from the list until you type the code in the search box, then hides again.
