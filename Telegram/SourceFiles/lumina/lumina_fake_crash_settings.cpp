@@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "lumina/lumina_fake_crash_settings.h"
 
+#include "base/openssl_help.h"
 #include "core/application.h"
 #include "core/core_settings.h"
 #include "lang/lang_keys.h"
@@ -71,19 +72,46 @@ constexpr auto kCodeMaxLength = 64;
 	return domain.started() && domain.local().hasLocalPasscode();
 }
 
-// True when `code` would unlock the app.
+// Answers done(true) when `code` would unlock the app, on the main thread and
+// only while `guard` is alive.
 //
-// Storage::Domain::checkPasscode() asserts on key material that only exists
-// once the domain has started (storage/storage_domain.cpp:246-252), and there
-// is nothing to collide with when no passcode lock is set at all - hence both
-// guards, not just the obvious one.
-[[nodiscard]] bool CodeIsLocalPasscode(const QString &code) {
+// Since 7.3 the passcode check is a memory-hard derivation that upstream never
+// runs on the main thread: Storage::Domain::checkPasscode() takes a prepared
+// PasscodeDerivation, and the derivation itself runs on a worker through
+// Storage::DeriveOnWorker() - the same way the lock screen and the passcode
+// settings page check it now. So this answers later, not at once.
+//
+// checkPasscode() asserts on key material that only exists once the domain
+// has started (Expects(_localKey) in storage/storage_domain.cpp), and there is
+// nothing to collide with when no passcode lock is set at all - hence both
+// guards, not just the obvious one, checked again when the verdict arrives.
+// hasLocalPasscode() now means "the app lock is armed": a passcode kept only
+// for the wallet never shows the lock screen, so it cannot collide with a
+// duress code typed there either.
+void CheckCodeIsLocalPasscode(
+		const QString &code,
+		not_null<QObject*> guard,
+		Fn<void(bool)> done) {
 	if (code.isEmpty() || !HasLocalPasscode()) {
-		return false;
+		done(false);
+		return;
 	}
 	// Same conversion the lock screen applies to what the user typed
-	// (window/window_lock_widgets.cpp, PasscodeLockWidget::submit).
-	return Core::App().domain().local().checkPasscode(code.toUtf8());
+	// (window/window_lock_widgets.cpp, TryPasscode), cleansed the same way.
+	auto utf8 = code.toUtf8();
+	const auto cleanse = gsl::finally([&] {
+		if (!utf8.isEmpty()) {
+			OPENSSL_cleanse(utf8.data(), utf8.size());
+		}
+	});
+	const auto &local = Core::App().domain().local();
+	Storage::DeriveOnWorker(
+		local.prepareOpen(utf8),
+		crl::guard(guard, [done](Storage::PasscodeDerivation &&derived) {
+			done(HasLocalPasscode()
+				&& Core::App().domain().local().checkPasscode(
+					std::move(derived)));
+		}));
 }
 
 void AddToggleRow(
@@ -138,7 +166,14 @@ void EditCodeBox(not_null<Ui::GenericBox*> box) {
 		field->setFocusFast();
 	});
 
+	// The passcode comparison below derives on a worker (see
+	// CheckCodeIsLocalPasscode), so a second Save while it runs is ignored
+	// rather than starting a second derivation.
+	const auto checking = box->lifetime().make_state<bool>(false);
 	const auto submit = [=] {
+		if (*checking) {
+			return;
+		}
 		const auto entered = field->getLastText().trimmed();
 
 		// The duress code must not be the passcode. The lock screen would
@@ -146,13 +181,17 @@ void EditCodeBox(not_null<Ui::GenericBox*> box) {
 		// after the passcode has already been rejected, so a collision costs
 		// the feature, not the account - but a code that silently never fires
 		// is worth refusing at the one moment we can explain why.
-		if (CodeIsLocalPasscode(entered)) {
-			box->uiShow()->showBox(Ui::MakeInformBox(
-				Tr(u"LuminaSecurityFakeCrashCodeSameAsPasscode"_q)));
-			return;
-		}
-		SetFakeCrashCode(entered);
-		box->closeBox();
+		*checking = true;
+		CheckCodeIsLocalPasscode(entered, box, [=](bool clash) {
+			*checking = false;
+			if (clash) {
+				box->uiShow()->showBox(Ui::MakeInformBox(
+					Tr(u"LuminaSecurityFakeCrashCodeSameAsPasscode"_q)));
+				return;
+			}
+			SetFakeCrashCode(entered);
+			box->closeBox();
+		});
 	};
 	field->submits() | rpl::on_next(submit, field->lifetime());
 
@@ -166,7 +205,7 @@ void EditCodeBox(not_null<Ui::GenericBox*> box) {
 // warnings come and go as the code, the toggle and the passcode change, and a
 // block of dividers appearing and disappearing under the rows reads far worse
 // than a paragraph that grows a sentence.
-[[nodiscard]] QString AboutText() {
+[[nodiscard]] QString AboutText(bool codeIsPasscode) {
 	auto lines = QStringList();
 	lines.append(Tr(u"LuminaSecurityFakeCrashInfo"_q));
 
@@ -183,7 +222,7 @@ void EditCodeBox(not_null<Ui::GenericBox*> box) {
 	if (FakeCrashEnabled() && !HasLocalPasscode()) {
 		lines.append(Tr(u"LuminaSecurityFakeCrashNoPasscodeInfo"_q));
 	}
-	if (FakeCrashArmed() && CodeIsLocalPasscode(FakeCrashCode())) {
+	if (FakeCrashArmed() && codeIsPasscode) {
 		// Only reachable by changing the passcode lock to the duress code
 		// after setting it, which the passcode page knows nothing about.
 		lines.append(Tr(u"LuminaSecurityFakeCrashCodeClashInfo"_q));
@@ -226,8 +265,40 @@ void AddFakeCrashRows(
 		},
 		[=] { controller->show(Box(EditCodeBox)); });
 
+	// The clash warning needs a passcode derivation, which since 7.3 runs on
+	// a worker (see CheckCodeIsLocalPasscode): the paragraph shows the last
+	// verdict and is rebuilt when a new one arrives. Every change that can
+	// move it starts a new check; a generation counter drops a verdict that
+	// arrives for a state that has changed since.
+	const auto codeIsPasscode = container->lifetime().make_state<
+		rpl::variable<bool>>(false);
+	const auto generation = container->lifetime().make_state<int>(0);
+	rpl::single(
+		rpl::empty
+	) | rpl::then(
+		Changes()
+	) | rpl::on_next([=] {
+		const auto now = ++*generation;
+		if (!FakeCrashArmed()) {
+			*codeIsPasscode = false;
+			return;
+		}
+		CheckCodeIsLocalPasscode(FakeCrashCode(), container, [=](bool clash) {
+			if (*generation == now) {
+				*codeIsPasscode = clash;
+			}
+		});
+	}, container->lifetime());
+
 	Ui::AddSkip(container);
-	Ui::AddDividerText(container, LabelValue([] { return AboutText(); }));
+	Ui::AddDividerText(
+		container,
+		rpl::combine(
+			rpl::single(rpl::empty) | rpl::then(Changes()),
+			codeIsPasscode->value()
+		) | rpl::map([](rpl::empty_value, bool clash) {
+			return AboutText(clash);
+		}));
 }
 
 } // namespace Lumina
