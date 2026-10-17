@@ -69,7 +69,10 @@ jobs:
           rm -rf __pycache__
 
       - name: Free up some disk space.
-        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+        # 7.3: the same pin upstream's linux.yml and canary.yml moved to. The
+        # image now also builds Rust (tlottie, wallet-engine) on top of every
+        # library, so the room matters more than before.
+        uses: jlumbroso/free-disk-space@ceedf095f4ec1a097402bc6bd80831f2e1a6fde6
         with:
           tool-cache: true
 

@@ -42,6 +42,15 @@ jobs:
       # in. publish-desktop.sh looks for exactly this name.
       BINARY_NAME: "LuminaGram"
       BUNDLE_NAME: "LuminaGram.app"
+      # 7.3: prepare.py imports build_mac.py, and in its default "auto" mode
+      # it switches to Telegram's own release toolchain (Command Line Tools
+      # 26.6 in Toolchains/) whenever a DesktopPrivate directory exists next to
+      # the checkout - and stops with an error when that toolchain is missing.
+      # This job never creates DesktopPrivate, but say so explicitly, the way
+      # upstream's canary.yml does, so that adding one later cannot break the
+      # build: the runner's own Xcode is the toolchain here.
+      TDESKTOP_MAC_TOOLCHAIN: system
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
 
     steps:
       - name: Get repository name.
@@ -59,7 +68,8 @@ jobs:
 
           brew update
           brew upgrade || true
-          brew install automake libtool meson nasm ninja pkg-config
+          # wget: prepare.py's 7.3 "rust" stage fetches rustup with it.
+          brew install automake libtool meson nasm ninja pkg-config wget
 
           # Disable spotlight.
           sudo mdutil -a -i off
@@ -67,6 +77,39 @@ jobs:
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
           sudo sed -i '' '/CMAKE_${lang}_FLAGS_DEBUG_INIT/s/ -g//' /opt/homebrew/share/cmake/Modules/Compiler/GNU.cmake
+
+      - name: Pick the macOS SDK and deployment target.
+        # 7.3's cmake submodule (f2e8f07) no longer hardcodes 10.13: with no
+        # CMAKE_OSX_DEPLOYMENT_TARGET it takes the SDK's minimum, and
+        # prepare.py does the same for every library when the environment
+        # does not say otherwise. Left implicit, a newer Xcode on
+        # macos-latest would quietly raise the oldest macOS LuminaGram runs
+        # on. So it is stated, once, here: 10.13 as before, unless this SDK
+        # cannot target it any more - then its minimum, with a warning, since
+        # prepare.py refuses a target below the SDK's minimum anyway. The same
+        # value goes to prepare.py (MACOSX_DEPLOYMENT_TARGET) and to CMake
+        # (CMAKE_OSX_DEPLOYMENT_TARGET) so libraries and app agree.
+        run: |
+          set -e
+          SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
+          SDK_MINIMUM=$(/usr/libexec/PlistBuddy -c 'Print :SupportedTargets:macosx:MinimumDeploymentTarget' "$SDKROOT/SDKSettings.plist")
+          WANTED=10.13
+          TARGET=$(printf '%s\n%s\n' "$WANTED" "$SDK_MINIMUM" | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)
+          if [ "$TARGET" != "$WANTED" ]; then
+            echo "::warning::This SDK cannot target macOS $WANTED; building for $TARGET, which raises the oldest macOS LuminaGram supports."
+          fi
+          {
+            echo "SDKROOT=$SDKROOT"
+            echo "MACOSX_DEPLOYMENT_TARGET=$TARGET"
+          } >> "$GITHUB_ENV"
+          {
+            xcodebuild -version
+            xcrun clang --version
+            echo "SDK $(xcrun --sdk macosx --show-sdk-version), minimum $SDK_MINIMUM"
+            echo "MACOSX_DEPLOYMENT_TARGET=$TARGET"
+          } > MACOS_TOOLCHAIN.txt
+          cat MACOS_TOOLCHAIN.txt
+          echo "MACOS_TOOLCHAIN_KEY=$(shasum -a 256 MACOS_TOOLCHAIN.txt | awk '{ print $1 }')" >> "$GITHUB_ENV"
 
       - name: Make room for the Release halves.
         # The runner image starts with roughly 14 GB free and mac.yml already
@@ -103,7 +146,13 @@ jobs:
           path: |
             Libraries
             ThirdParty
-          key: ${{ runner.OS }}-release-libs-v1-${{ hashFiles(format('{0}/{1}', env.REPO_NAME, env.PREPARE_PATH)) }}
+          #
+          # 7.3: the key also covers the rest of Telegram/build/prepare, the Qt
+          # version, build_mac.py (which prepare.py now imports) and the
+          # toolchain picked above, as upstream's canary.yml does - prepare.py
+          # rebuilds a stage whose inputs changed either way, this only stops a
+          # stale tree from being saved under a key that claims otherwise.
+          key: ${{ runner.OS }}-release-libs-v1-${{ env.MACOS_TOOLCHAIN_KEY }}-${{ hashFiles(format('{0}/Telegram/build/prepare/**', env.REPO_NAME), format('{0}/Telegram/build/qt_version.py', env.REPO_NAME), format('{0}/Telegram/build/build_mac.py', env.REPO_NAME)) }}
           restore-keys: ${{ runner.OS }}-release-libs-v1-
 
       - name: Libraries.
@@ -117,7 +166,18 @@ jobs:
           ./$REPO_NAME/Telegram/build/prepare/mac.sh silent
 
       - name: Free up some disk space.
-        run: find Libraries '(' '(' ! '(' -name '*.a' -o -name '*.h' -o -name '*.hpp' -o -name '*.inc' -o -name '*.cmake' -o -path '*/include/*' -o -path '*/objects-*' -o -path '*/cache_keys/*' -o -path '*/patches/*' -o -perm +111 ')' -type f ')' -o -empty ')' -delete
+        # 7.3, from upstream's canary.yml: local/src/wallet_engine holds the
+        # UniFFI-generated wallet_engine.cpp, which cmake/external/
+        # wallet_engine compiles into the app - a build input, not a leftover,
+        # and it matches none of the kept extensions, so without its own
+        # pattern this step deletes it and the app build fails. The tlottie and
+        # wallet-engine checkouts are kept too: they are the sources the
+        # tdesktop_rust stage compiles, so a restored tree that lost them can
+        # carry a valid stage key and still fail to rebuild that stage. Their
+        # cargo target trees are still dropped, and -empty skips them as well
+        # (an empty .rs file is a legal module). macos_toolchain.json is
+        # prepare.py's record of which toolchain the tree was built for.
+        run: find Libraries '(' '(' ! '(' -name '*.a' -o -name '*.h' -o -name '*.hpp' -o -name '*.inc' -o -name '*.cmake' -o -name '*.pc' -o -name 'macos_toolchain.json' -o -path '*/include/*' -o -path '*/objects-*' -o -path '*/cache_keys/*' -o -path '*/patches/*' -o -path '*/src/wallet_engine/*' -o '(' '(' -path '*/tlottie/*' -o -path '*/wallet-engine/*' ')' ! -path '*/target/*' ')' -o -perm +111 ')' -type f ')' -o '(' -empty ! -path '*/tlottie/*' ! -path '*/wallet-engine/*' ')' ')' -delete
 
       - name: Read the API credentials.
         run: |
@@ -217,6 +277,8 @@ jobs:
           -D CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=NO \
           -D CMAKE_XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS=NO \
           -D CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT=dwarf \
+          -D CMAKE_OSX_SYSROOT="$SDKROOT" \
+          -D CMAKE_OSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET" \
           $TDESKTOP_BUILD_API \
           -D DESKTOP_APP_DISABLE_AUTOUPDATE=OFF \
           -D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF

@@ -442,9 +442,20 @@ jobs:
 
       - name: Free up some disk space.
         shell: bash
+        # 7.3, from upstream's canary.yml: tdesktop_rust/out/src/wallet_engine
+        # holds the UniFFI-generated wallet_engine.cpp, which cmake/external/
+        # wallet_engine compiles into the app - a build input, not a leftover,
+        # and it matches none of the kept extensions, so without its own
+        # pattern this step deletes it and the app build fails. The tlottie and
+        # wallet-engine checkouts are kept too: they are the sources the
+        # tdesktop_rust stage compiles, so a restored tree that lost them can
+        # carry a valid stage key and still fail to rebuild that stage. Their
+        # cargo target trees are still dropped, and -empty skips them as well
+        # (an empty .rs file is a legal module).
         run: |
           df -h /c
-          find $LibrariesPath '(' '(' ! '(' -name '*.lib' -o -name '*.a' -o -name '*.exe' -o -name '*.h' -o -name '*.hpp' -o -name '*.inc' -o -name '*.cmake' -o -name '*.pc' -o -path '*/include/*' -o -path '*/objects-*' -o -path '*/cache_keys/*' -o -path '*/patches/*' -o -path '*/nv-codec-headers/*' ')' -type f ')' -o -empty ')' -delete
+          find $LibrariesPath '(' '(' ! '(' -name '*.lib' -o -name '*.a' -o -name '*.exe' -o -name '*.h' -o -name '*.hpp' -o -name '*.inc' -o -name '*.cmake' -o -name '*.pc' -o -path '*/include/*' -o -path '*/objects-*' -o -path '*/cache_keys/*' -o -path '*/patches/*' -o -path '*/nv-codec-headers/*' -o -path '*/src/wallet_engine/*' -o '(' '(' -path '*/tlottie/*' -o -path '*/wallet-engine/*' ')' ! -path '*/target/*' ')' ')' -type f ')' -o '(' -empty ! -path '*/tlottie/*' ! -path '*/wallet-engine/*' ')' ')' -delete
+          df -h /c
 
       - name: LuminaGram build.
         if: env.ONLY_CACHE == 'false'
