@@ -280,6 +280,24 @@ bool TranslateTracker::add(
 		bool skipDependencies) {
 	Expects(_addedInBunch >= 0);
 
+	// LuminaGram: keep a message from a chat that automatic processing must
+	// not touch (Saved Messages, 777000, Telegram's own accounts; see
+	// Lumina::AutomaticProcessingBlocked()) out of a tracker that serves an
+	// ordinary chat. Its provider was chosen for this chat's peer
+	// (Lumina::CreateChatTranslateProvider()), and requestSome() sends every
+	// batch with it whatever peer the batch belongs to. The way in is a reply
+	// from another chat: its replied-to message (resolvedMessage below) is
+	// added as a dependency and would otherwise go out, in full, to this
+	// chat's provider. Checked here, before _switchTranslations and
+	// _itemsForRecognize, so the message never reaches _itemsToRequest. A
+	// tracker of a protected chat already has a provider that sends nothing to
+	// a third party (Telegram, on-device or local refusal), so it keeps such
+	// messages as before.
+	if (item->history() != _history
+		&& Lumina::AutomaticProcessingBlocked(item->history()->peer)
+		&& !Lumina::AutomaticProcessingBlocked(_history->peer)) {
+		return false;
+	}
 	if ((item->out() && !item->history()->peer->autoTranslation())
 		|| item->isService()
 		|| !item->isRegular()
