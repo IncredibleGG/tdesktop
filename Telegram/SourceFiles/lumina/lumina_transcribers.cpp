@@ -8,6 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_transcribers.h"
 
 #include "base/random.h"
+#include "lumina/lumina_http_guard.h"
 #include "lumina/lumina_locale.h"
 #include "lumina/lumina_settings.h"
 #ifdef Q_OS_MAC
@@ -26,7 +27,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtCore/QJsonParseError>
 #include <QtCore/QJsonValue>
 #include <QtCore/QUrl>
-#include <QtCore/QUrlQuery>
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkReply>
 #include <QtNetwork/QNetworkRequest>
@@ -107,10 +107,16 @@ void SendPost(
 	for (const auto &header : headers) {
 		request.setRawHeader(header.name, header.value);
 	}
+	// Every request here carries the user's key, so none of them follows a
+	// redirect to another host or down to http. See lumina_http_guard.h.
+	KeyedRequest(request);
 	const auto reply = network->post(request, body);
+	WatchKeyedRedirects(reply, url);
 	QObject::connect(reply, &QNetworkReply::finished, [=] {
-		const auto status = reply->attribute(
-			QNetworkRequest::HttpStatusCodeAttribute).toInt();
+		const auto status = KeyedRedirectRefused(reply)
+			? 0
+			: reply->attribute(
+				QNetworkRequest::HttpStatusCodeAttribute).toInt();
 		const auto failure = reply->error();
 		auto received = reply->readAll();
 		reply->deleteLater();
@@ -141,10 +147,14 @@ void SendGet(
 	for (const auto &header : headers) {
 		request.setRawHeader(header.name, header.value);
 	}
+	KeyedRequest(request);
 	const auto reply = network->get(request);
+	WatchKeyedRedirects(reply, url);
 	QObject::connect(reply, &QNetworkReply::finished, [=] {
-		const auto status = reply->attribute(
-			QNetworkRequest::HttpStatusCodeAttribute).toInt();
+		const auto status = KeyedRedirectRefused(reply)
+			? 0
+			: reply->attribute(
+				QNetworkRequest::HttpStatusCodeAttribute).toInt();
 		const auto failure = reply->error();
 		auto received = reply->readAll();
 		reply->deleteLater();
@@ -354,9 +364,11 @@ private:
 // endpoint cannot read one, and sending it anyway would spend the user's
 // quota to be told so.
 //
-// The API key travels in the query string because that is Google's documented
-// API-key auth for this endpoint. It is never logged, and errors carry the
-// HTTP status only.
+// The API key travels in the X-goog-api-key header, which Google Cloud accepts
+// for every API-key-authenticated endpoint, and never in the query string: a
+// URL ends up in proxy logs, crash reports and error text far more readily
+// than a header does. It is never logged, and errors carry the HTTP status
+// only.
 class GoogleEngine final : public TranscribeEngine {
 public:
 	QString id() const override {
@@ -394,15 +406,14 @@ public:
 		root.insert(u"config"_q, config);
 		root.insert(u"audio"_q, audio);
 
-		auto url = QUrl(u"https://speech.googleapis.com/v1/speech:recognize"_q);
-		auto query = QUrlQuery();
-		query.addQueryItem(u"key"_q, key);
-		url.setQuery(query);
+		const auto url = QUrl(
+			u"https://speech.googleapis.com/v1/speech:recognize"_q);
 
 		SendPost(
 			&_network,
 			url,
-			{ { "Content-Type", "application/json; charset=utf-8" } },
+			{ { "Content-Type", "application/json; charset=utf-8" },
+				{ "X-goog-api-key", key.toUtf8() } },
 			QJsonDocument(root).toJson(QJsonDocument::Compact),
 			[done](QByteArray body, TranscribeError error, int status) {
 				if (error != TranscribeError::None) {

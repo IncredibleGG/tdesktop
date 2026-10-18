@@ -11,6 +11,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_keys.h"
 #include "lumina/lumina_locale.h"
 #include "lumina/lumina_transcribers.h"
+#include "lumina/lumina_translate_settings.h" // ShowApiKeyEditor.
 #include "lumina/lumina_voice_to_text.h"
 #include "lumina/lumina_whisper_model.h"
 #include "settings/settings_common.h"
@@ -34,7 +35,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 namespace Settings {
 namespace {
 
-constexpr auto kApiKeyMaxLength = 512;
+// The key row's length cap lives with the shared key editor
+// (Lumina::ShowApiKeyEditor, lumina_translate_settings.cpp).
 constexpr auto kBaseUrlMaxLength = 512;
 constexpr auto kModelMaxLength = 128;
 
@@ -192,11 +194,14 @@ not_null<Ui::FlatLabel*> AddRightLabel(
 [[nodiscard]] QString MaskedApiKey(const QString &key) {
 	if (key.isEmpty()) {
 		return Lumina::Tr(u"LuminaTranslateApiKeyNotSet"_q);
-	} else if (key.size() <= kApiKeyTailShown) {
-		return QString(kApiKeyDotsShown, QChar(0x2022));
 	}
-	return QString(kApiKeyDotsShown, QChar(0x2022))
-		+ key.right(kApiKeyTailShown);
+	// Same rule as the translation page: the tail is shown only for a key
+	// long enough that four characters of it give nothing away. Showing the
+	// last four of a five-character key printed most of the secret.
+	const auto tail = (int(key.size()) > kApiKeyTailShown + kApiKeyDotsShown)
+		? kApiKeyTailShown
+		: 0;
+	return QString(kApiKeyDotsShown, QChar(0x2022)) + key.right(tail);
 }
 
 // Both row builders below make DEPENDENT rows: everything they add is gated on
@@ -443,12 +448,13 @@ void AddEngineRows(
 				Lumina::TranscriberApiKey(Lumina::CurrentTranscriberId()));
 		},
 		[=] {
+			// The key is a secret: masked, never prefilled as visible text.
+			// Same editor as the translation key (lumina_translate_settings).
 			const auto id = Lumina::CurrentTranscriberId();
-			ShowTextEditor(
+			Lumina::ShowApiKeyEditor(
 				controller,
 				Lumina::Tr(u"LuminaSttKey"_q),
 				Lumina::TranscriberApiKey(id),
-				kApiKeyMaxLength,
 				[=](QString value) {
 					Lumina::SetTranscriberApiKey(id, value);
 				});

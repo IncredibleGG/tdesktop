@@ -8,7 +8,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #pragma once
 
 #include <QtCore/QByteArray>
+#include <QtCore/QJsonObject>
 #include <QtCore/QString>
+
+#include <vector>
 
 namespace Lumina {
 
@@ -66,6 +69,18 @@ namespace Lumina {
 // restored. The write itself then goes through Settings::importAll() followed
 // by saveNow(). Keys the backup does not carry are left alone; keys it does
 // carry are overwritten - the same rule Android states in its own info text.
+//
+// WHERE YOUR TEXT GOES IS NOT RESTORED SILENTLY. A backup is a file somebody
+// can hand you, and the provider settings decide where every translated
+// message, every explained message and every transcribed voice note is sent.
+// So import runs in two steps: DecryptBackup() yields the payload without
+// writing anything, BackupProviderRouteChanges() says whether applying it
+// would change a translation / AI / speech-to-text endpoint or base URL,
+// select a custom-endpoint provider, or set or replace an API key - and which
+// destinations that would send data to - and the UI asks before
+// ApplyBackupPayload(). Declining applies everything else and keeps the
+// current provider selection, endpoints, models and keys
+// (DropProviderRouteKeys()). Export is unchanged.
 //
 // Each of the three store files is replaced atomically by QSaveFile, but the
 // three of them are not replaced atomically as a SET: if the second write fails
@@ -127,20 +142,45 @@ struct BackupRead {
 [[nodiscard]] BackupRead ReadBackupFile(const QString &path);
 [[nodiscard]] BackupRead ReadBackupBytes(const QByteArray &content);
 
-// Authenticates, decrypts and applies. BackupError::None means the in-memory
-// store has been updated and a flush was requested.
-//
-// !! IT DOES NOT MEAN THE FLUSH SUCCEEDED. Settings::saveNow() returns void and
-// only logs a store it could not write, so a read-only or full tdata directory
-// produces "Backup restored" while the three JSON files still hold the old
-// values - and Settings::saveNow() cancels the debounce timer without
-// rescheduling it, so nothing retries until the next unrelated write or the
-// destructor. Fixing this needs one change in lumina_settings: make saveNow()
-// return whether every dirty store was written, and return WriteFailed here
-// when it says no. See the comment at the saveNow() call in ApplyBackup().
-[[nodiscard]] BackupError ApplyBackup(
+// Authenticates and decrypts. BackupError::None means `payload` now holds the
+// restored settings - parked keys already dropped - and that NOTHING has been
+// written yet: the store is untouched until ApplyBackupPayload().
+[[nodiscard]] BackupError DecryptBackup(
 	const BackupEnvelope &envelope,
-	const QString &passphrase);
+	const QString &passphrase,
+	QJsonObject &payload);
+
+// What applying `payload` would do to where LuminaGram sends text and voice.
+// `changed` is true when it would change the translation or speech-to-text
+// endpoint / base URL, select a custom-endpoint provider (the OpenAI-compatible
+// translation / Explain endpoint, the OpenAI-compatible Whisper endpoint), or
+// set or replace an API key. `destinations` names where the data would then
+// go - scheme, host and port of each endpoint, the fixed host of a vendor
+// whose key is being set, or the bare provider id for a key this build has no
+// engine for - without duplicates and in a stable order.
+struct ProviderRouteChanges {
+	bool changed = false;
+	std::vector<QString> destinations;
+};
+[[nodiscard]] ProviderRouteChanges BackupProviderRouteChanges(
+	const QJsonObject &payload);
+
+// Removes every key that decides where text and voice are sent - provider
+// selections, base URLs, models and API keys of translation and speech-to-text
+// - so that applying what is left keeps the current ones exactly as they are.
+void DropProviderRouteKeys(QJsonObject &payload);
+
+// Writes `payload` into the store and requests a flush.
+//
+// !! IT DOES NOT REPORT WHETHER THE FLUSH SUCCEEDED. Settings::saveNow()
+// returns void and only logs a store it could not write, so a read-only or
+// full tdata directory produces "Backup restored" while the three JSON files
+// still hold the old values - and Settings::saveNow() cancels the debounce
+// timer without rescheduling it, so nothing retries until the next unrelated
+// write or the destructor. Fixing this needs one change in lumina_settings:
+// make saveNow() return whether every dirty store was written, and report
+// WriteFailed when it says no.
+void ApplyBackupPayload(const QJsonObject &payload);
 
 // The message to show for a failure, in the current in-app language. Empty for
 // BackupError::None.

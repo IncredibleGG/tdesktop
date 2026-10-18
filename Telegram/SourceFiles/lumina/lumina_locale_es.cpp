@@ -350,6 +350,10 @@ namespace {
 		{ u"LuminaBackupExportPassphraseTitle"_q, u"Establece una frase de "
 			u"contraseña"_q },
 		{ u"LuminaBackupFileFilter"_q, u"Copia de LuminaGram (*.lgbak)"_q },
+		{ u"LuminaBackupProviderTitle"_q, u"Servicios de traducción e IA"_q },
+		{ u"LuminaBackupProviderText"_q, u"Esta copia cambia adónde envía LuminaGram texto y voz para traducir, usar IA y transcribir, o sustituye tus claves de API. Con ella, esos datos irían a:\n\n{1}\n\n¿Aplicar estos ajustes de servicio? Si mantienes los actuales, el resto de la copia se restaura igualmente."_q },
+		{ u"LuminaBackupProviderApply"_q, u"Aplicar"_q },
+		{ u"LuminaBackupProviderKeep"_q, u"Mantener actuales"_q },
 		{ u"LuminaBackupImport"_q, u"Importar copia"_q },
 		{ u"LuminaBackupImportFailed"_q, u"No se pudo leer el archivo de "
 			u"copia."_q },

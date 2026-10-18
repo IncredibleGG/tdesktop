@@ -11,6 +11,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "core/core_settings.h"
 #include "data/data_peer.h"
 #include "data/data_peer_values.h" // Data::AmPremiumValue.
+#include "data/data_user.h" // UserData::isSupport.
 #include "history/history.h"
 #include "lang/lang_keys.h" // Lang::Id.
 #include "lumina/lumina_settings.h"
@@ -147,6 +148,26 @@ rpl::producer<> TranslateOfferPolicyChanges() {
 		Core::App().settings().translateToValue()
 			| rpl::skip(1)
 			| rpl::to_empty);
+}
+
+bool AutomaticProcessingBlocked(not_null<PeerData*> peer) {
+	// Well-known Telegram accounts that are not service ids (not a multiple
+	// of 1000) and may not carry the support flag on every profile.
+	constexpr auto kTelegramTipsId = peerFromUser(42777);
+	constexpr auto kBotFatherId = peerFromUser(93372553);
+
+	if (peer->isSelf()
+		|| peer->isNotificationsUser()
+		|| peer->isServiceUser()
+		|| peer->isVerifyCodes()
+		|| (peer->id == PeerData::kServiceNotificationsId)
+		|| (peer->id == kTelegramTipsId)
+		|| (peer->id == kBotFatherId)) {
+		return true;
+	} else if (const auto user = peer->asUser()) {
+		return user->isSupport();
+	}
+	return false;
 }
 
 } // namespace Lumina

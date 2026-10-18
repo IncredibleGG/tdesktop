@@ -331,6 +331,10 @@ namespace {
 			u"沒有它就無法開啟這個檔案，也沒有任何方式可以救回。"_q },
 		{ u"LuminaBackupExportPassphraseTitle"_q, u"設定密碼"_q },
 		{ u"LuminaBackupFileFilter"_q, u"LuminaGram 備份 (*.lgbak)"_q },
+		{ u"LuminaBackupProviderTitle"_q, u"翻譯與 AI 服務"_q },
+		{ u"LuminaBackupProviderText"_q, u"這個備份會變更 LuminaGram 傳送文字與語音以進行翻譯、AI 與轉文字的去處，或取代你的 API 金鑰。套用後，這些資料會傳送到：\n\n{1}\n\n要套用這些服務設定嗎？若保留目前的設定，備份中的其他內容仍會照常還原。"_q },
+		{ u"LuminaBackupProviderApply"_q, u"套用"_q },
+		{ u"LuminaBackupProviderKeep"_q, u"保留目前設定"_q },
 		{ u"LuminaBackupImport"_q, u"匯入備份"_q },
 		{ u"LuminaBackupImportFailed"_q, u"無法讀取備份檔案。"_q },
 		{ u"LuminaBackupImportInfo"_q, u"選擇一個備份檔案並輸入它的密碼，"

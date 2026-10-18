@@ -9,15 +9,20 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_translate_providers.h"
 
 #include "base/random.h"
+#include "core/application.h"
+#include "core/core_settings.h"
+#include "history/history.h"
 #include "lang/lang_keys.h"
 #include "lang/lang_text_entity.h"
 #include "lang/translate_mtproto_provider.h"
 #include "lang/translate_provider.h"
 #include "lumina/lumina_glossary.h"
+#include "lumina/lumina_http_guard.h"
 #include "lumina/lumina_locale.h"
 #include "lumina/lumina_register.h"
 #include "lumina/lumina_settings.h"
 #include "main/main_session.h"
+#include "platform/platform_translate_provider.h"
 
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
@@ -137,6 +142,11 @@ struct HttpHeader {
 	QByteArray value;
 };
 
+[[nodiscard]] bool IsCredentialHeader(const QByteArray &name) {
+	return (name.compare("Authorization", Qt::CaseInsensitive) == 0)
+		|| (name.compare("X-goog-api-key", Qt::CaseInsensitive) == 0);
+}
+
 // An empty `body` sends a GET, anything else a POST.
 //
 // `done` is handed the response body, the mapped error and the raw HTTP status
@@ -157,15 +167,31 @@ void SendHttp(
 	}
 	auto request = QNetworkRequest(url);
 	request.setTransferTimeout(kRequestTimeoutMs);
+	auto keyed = false;
 	for (const auto &header : headers) {
 		request.setRawHeader(header.name, header.value);
+		if (IsCredentialHeader(header.name)) {
+			keyed = true;
+		}
+	}
+	// A request that carries the user's key never follows a redirect to
+	// another host or down to http. See lumina/lumina_http_guard.h.
+	if (keyed) {
+		KeyedRequest(request);
 	}
 	const auto reply = body.isEmpty()
 		? network->get(request)
 		: network->post(request, body);
+	if (keyed) {
+		WatchKeyedRedirects(reply, url);
+	}
 	QObject::connect(reply, &QNetworkReply::finished, [=] {
-		const auto status = reply->attribute(
-			QNetworkRequest::HttpStatusCodeAttribute).toInt();
+		// A refused redirect is a transport failure, not an answer: its 3xx
+		// status would otherwise read as "the service rejected the key".
+		const auto status = KeyedRedirectRefused(reply)
+			? 0
+			: reply->attribute(
+				QNetworkRequest::HttpStatusCodeAttribute).toInt();
 		const auto failure = reply->error();
 		auto received = reply->readAll();
 		reply->deleteLater();
@@ -811,6 +837,26 @@ private:
 
 };
 
+// What CreateChatTranslateProvider() hands the whole-chat stream of a chat
+// whose content may not reach a third-party service, when no first-party
+// engine can serve it. Every request fails here, locally, with no network
+// call: HistoryItem::translationDone() marks such a message failed, so it is
+// shown as its original and never re-requested.
+class LocalOnlyRefusalProvider final : public Ui::TranslateProvider {
+public:
+	[[nodiscard]] bool supportsMessageId() const override {
+		return false;
+	}
+
+	void request(
+			Ui::TranslateProviderRequest,
+			LanguageId,
+			Fn<void(Ui::TranslateProviderResult)> done) override {
+		done({ .error = Ui::TranslateProviderError::Unknown });
+	}
+
+};
+
 } // namespace
 
 QString TelegramProviderId() {
@@ -1297,6 +1343,33 @@ std::unique_ptr<Ui::TranslateProvider> CreateTranslateProvider(
 		return nullptr;
 	}
 	return std::make_unique<EngineProvider>(session, std::move(engine));
+}
+
+std::unique_ptr<Ui::TranslateProvider> CreateChatTranslateProvider(
+		not_null<History*> history) {
+	const auto session = &history->session();
+	if (!AutomaticProcessingBlocked(history->peer)) {
+		return Ui::CreateTranslateProvider(session);
+	}
+#ifdef Q_OS_MAC
+	// The macOS translator runs on the device, so nothing leaves it. On Linux
+	// the "platform" translator is Crow Translate, which calls online engines,
+	// and Windows has none - neither may serve this chat.
+	if (Core::App().settings().usePlatformTranslation()
+		&& Platform::IsTranslateProviderAvailable()) {
+		if (auto result = Platform::CreateTranslateProvider()) {
+			return result;
+		}
+	}
+#endif // Q_OS_MAC
+	// Telegram's own translation for an account entitled to whole-chat
+	// translation: the text never leaves Telegram. A non-Premium account must
+	// not drive the paid endpoint continuously (see ContinuousProviderId()),
+	// so it gets the local refusal below instead.
+	if (session->premium()) {
+		return Ui::CreateMTProtoTranslateProvider(session);
+	}
+	return std::make_unique<LocalOnlyRefusalProvider>();
 }
 
 } // namespace Lumina

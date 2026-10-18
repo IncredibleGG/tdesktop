@@ -15,6 +15,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <memory>
 #include <vector>
 
+class History;
+
 namespace Main {
 class Session;
 } // namespace Main
@@ -302,5 +304,20 @@ void TranslateText(
 // whichever chat happens to be on screen.
 [[nodiscard]] std::unique_ptr<Ui::TranslateProvider> CreateTranslateProvider(
 	not_null<Main::Session*> session);
+
+// The provider for one chat's whole-chat / continuous translation stream -
+// what history/view/history_view_translate_tracker.cpp builds, instead of
+// calling Ui::CreateTranslateProvider() directly.
+//
+// For an ordinary chat it IS Ui::CreateTranslateProvider(), unchanged. For a
+// chat AutomaticProcessingBlocked() names (777000, Saved Messages, Telegram's
+// system and official accounts) the stream is automatic by definition, so its
+// text must not reach a third-party service: such a chat is translated by the
+// on-device macOS translator when that is the chosen engine, by Telegram's own
+// MTProto translation for a Premium account, and otherwise not at all - every
+// request then fails locally, without a network call, and the messages simply
+// stay as they are.
+[[nodiscard]] std::unique_ptr<Ui::TranslateProvider> CreateChatTranslateProvider(
+	not_null<History*> history);
 
 } // namespace Lumina

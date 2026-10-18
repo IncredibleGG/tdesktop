@@ -11,6 +11,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/history.h"
 #include "history/history_item.h"
 #include "lang/lang_keys.h"
+#include "lumina/lumina_http_guard.h"
 #include "lumina/lumina_locale.h"
 #include "lumina/lumina_message_menu.h"
 #include "lumina/lumina_settings.h"
@@ -154,8 +155,12 @@ void RequestExplain(
 	request.setTransferTimeout(kRequestTimeoutMs);
 	request.setRawHeader("Authorization", "Bearer " + key.toUtf8());
 	request.setRawHeader("Content-Type", "application/json");
+	// The key never follows a redirect to another host or down to http.
+	// See lumina/lumina_http_guard.h.
+	KeyedRequest(request);
 
 	const auto reply = state->network.post(request, body);
+	WatchKeyedRedirects(reply, url);
 	QObject::connect(reply, &QNetworkReply::finished, crl::guard(box, [=] {
 		const auto status = reply->attribute(
 			QNetworkRequest::HttpStatusCodeAttribute).toInt();

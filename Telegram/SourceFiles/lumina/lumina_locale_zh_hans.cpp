@@ -339,6 +339,10 @@ namespace {
 			u"保管：没有它就打不开这个文件，也没有任何办法找回。"_q },
 		{ u"LuminaBackupExportPassphraseTitle"_q, u"设置口令"_q },
 		{ u"LuminaBackupFileFilter"_q, u"LuminaGram 备份 (*.lgbak)"_q },
+		{ u"LuminaBackupProviderTitle"_q, u"翻译与 AI 服务"_q },
+		{ u"LuminaBackupProviderText"_q, u"这个备份会更改 LuminaGram 发送文字和语音以进行翻译、AI 和转文字的去处，或替换你的 API 密钥。应用后，这些数据会发送到：\n\n{1}\n\n要应用这些服务设置吗？如果保留当前设置，备份中的其他内容仍会照常恢复。"_q },
+		{ u"LuminaBackupProviderApply"_q, u"应用"_q },
+		{ u"LuminaBackupProviderKeep"_q, u"保留当前设置"_q },
 		{ u"LuminaBackupImport"_q, u"导入备份"_q },
 		{ u"LuminaBackupImportFailed"_q, u"无法读取备份文件。"_q },
 		{ u"LuminaBackupImportInfo"_q, u"选择一个备份文件并输入它的口令，"

@@ -2016,6 +2016,7 @@ PRIVATE
     lumina/lumina_homoglyph.h
     lumina/lumina_homoglyph_settings.cpp
     lumina/lumina_homoglyph_settings.h
+    lumina/lumina_http_guard.h
     lumina/lumina_link_preview.cpp
     lumina/lumina_link_preview.h
     lumina/lumina_link_preview_settings.cpp

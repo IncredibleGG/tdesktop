@@ -25,7 +25,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/vertical_list.h"
 #include "ui/widgets/buttons.h"
 #include "ui/widgets/fields/input_field.h"
+#include "ui/widgets/fields/password_input.h"
 #include "ui/widgets/labels.h"
+#include "ui/qt_object_factory.h"
+#include "ui/rp_widget.h"
 #include "ui/wrap/slide_wrap.h"
 #include "ui/wrap/vertical_layout.h"
 #include "window/window_session_controller.h"
@@ -612,6 +615,63 @@ void ShowTextEditor(
 		std::move(save)));
 }
 
+// The editor for an API key. A key is a secret, so unlike every other text
+// row on these pages the stored value is never put into the field: the field
+// echoes as a password and starts empty, and the placeholder only says
+// whether a key is set (the same dots-and-tail the row itself shows). Typing
+// a value and saving replaces the key; saving an empty field changes nothing,
+// so an accidental Save cannot wipe a working key; Remove - offered only
+// while a key is set - clears it.
+//
+// Ui::PasswordInput is a MaskedInputField, which is not a Ui::RpWidget, so it
+// goes into the box the same way lumina_backup_settings.cpp adds its
+// passphrase fields.
+void EditApiKeyBox(
+		not_null<Ui::GenericBox*> box,
+		QString title,
+		QString current,
+		Fn<void(QString)> save) {
+	box->setTitle(rpl::single(title));
+
+	const auto &st = st::defaultInputField;
+	auto owned = object_ptr<Ui::RpWidget>(box);
+	const auto wrap = owned.data();
+	wrap->resize(wrap->width(), st.heightMin);
+	const auto field = Ui::CreateChild<Ui::PasswordInput>(
+		wrap,
+		st,
+		rpl::single(current.isEmpty() ? title : MaskedApiKey(current)));
+	field->setMaxLength(kApiKeyMaxLength);
+	wrap->sizeValue(
+	) | rpl::on_next([=](QSize size) {
+		field->resize(size.width(), size.height());
+		field->moveToLeft(0, 0);
+	}, wrap->lifetime());
+	box->addRow(std::move(owned));
+	box->setFocusCallback([=] {
+		field->setFocusFast();
+	});
+
+	const auto submit = [=] {
+		const auto value = field->getLastText().trimmed();
+		if (!value.isEmpty()) {
+			save(value);
+		}
+		box->closeBox();
+	};
+	QObject::connect(field, &Ui::MaskedInputField::submitted, submit);
+	box->addButton(tr::lng_settings_save(), submit);
+	box->addButton(tr::lng_cancel(), [=] {
+		box->closeBox();
+	});
+	if (!current.isEmpty()) {
+		box->addLeftButton(tr::lng_box_remove(), [=] {
+			save(QString());
+			box->closeBox();
+		});
+	}
+}
+
 void ShowProviderPicker(not_null<Window::SessionController*> controller) {
 	const auto &providers = TranslateProviders();
 	auto options = std::vector<QString>();
@@ -885,13 +945,10 @@ void AddProviderRows(
 		[] { return MaskedApiKey(ProviderApiKey(CurrentProviderId())); },
 		[=] {
 			const auto id = CurrentProviderId();
-			ShowTextEditor(
+			ShowApiKeyEditor(
 				controller,
 				Tr(u"LuminaTranslateApiKey"_q),
-				Tr(u"LuminaTranslateApiKey"_q),
 				ProviderApiKey(id),
-				kApiKeyMaxLength,
-				false,
 				[id](QString value) { SetProviderApiKey(id, value); });
 		});
 
@@ -1173,6 +1230,14 @@ void ShowLanguagePicker(
 			},
 		});
 	}));
+}
+
+void ShowApiKeyEditor(
+		not_null<Window::SessionController*> controller,
+		const QString &title,
+		const QString &current,
+		Fn<void(QString)> save) {
+	controller->show(Box(EditApiKeyBox, title, current, std::move(save)));
 }
 
 bool TranslateBeforeSend() {

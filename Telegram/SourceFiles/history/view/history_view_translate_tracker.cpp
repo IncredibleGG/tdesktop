@@ -23,7 +23,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "iv/iv_rich_page.h"
 #include "lang/translate_provider.h"
 #include "lumina/lumina_translate_gating.h"
-#include "lumina/lumina_translate_providers.h" // TranslateProviderChanges.
+#include "lumina/lumina_translate_providers.h" // CreateChatTranslateProvider.
 #include "lumina/lumina_translate_send.h" // Lumina::DialogReadTranslateOn.
 #include "lumina/lumina_translate_toggle.h" // Lumina::SetChatTranslating.
 #include "lumina/lumina_voice_to_text.h" // Lumina::MaybeRetranslateInlineTranscript.
@@ -58,7 +58,7 @@ using OfferSkip = std::optional<std::vector<LanguageId>>;
 
 TranslateTracker::TranslateTracker(not_null<History*> history)
 : _history(history)
-, _provider(Ui::CreateTranslateProvider(&_history->session()))
+, _provider(Lumina::CreateChatTranslateProvider(_history))
 , _api(&_history->session().mtp())
 , _limit(kEnoughForRecognition) {
 	setup();
@@ -247,7 +247,7 @@ void TranslateTracker::setup() {
 	Lumina::TranslateProviderChanges(
 	) | rpl::on_next([=] {
 		cancelSentRequest();
-		_provider = Ui::CreateTranslateProvider(&_history->session());
+		_provider = Lumina::CreateChatTranslateProvider(_history);
 		requestSome();
 	}, _lifetime);
 }

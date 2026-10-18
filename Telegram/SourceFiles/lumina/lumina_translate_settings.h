@@ -166,6 +166,18 @@ void AddTranslateRows(
 	not_null<Ui::VerticalLayout*> container,
 	not_null<Window::SessionController*> controller);
 
+// The API key editor every key row in LuminaGram's settings opens - the
+// translation service key here and the cloud speech-to-text key on the voice
+// page. The key is a secret: the field echoes as a password and is never
+// prefilled with it, an empty Save keeps the stored key, and a Remove button
+// (shown only while a key is set) clears it by calling `save` with an empty
+// string. `current` is used only to say whether a key is set.
+void ShowApiKeyEditor(
+	not_null<Window::SessionController*> controller,
+	const QString &title,
+	const QString &current,
+	Fn<void(QString)> save);
+
 // The language list this page's two language rows open, shared so that the
 // translate button in a chat's title bar edits the very same two values
 // through the very same list. A second list built somewhere else is a second

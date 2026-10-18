@@ -11,12 +11,15 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/random.h"
 #include "lumina/lumina_locale.h"
 #include "lumina/lumina_settings.h"
+#include "lumina/lumina_transcribers.h"
+#include "lumina/lumina_translate_providers.h"
 
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
 #include <QtCore/QJsonParseError>
 #include <QtCore/QSaveFile>
+#include <QtCore/QUrl>
 
 namespace Lumina {
 namespace {
@@ -258,6 +261,90 @@ void RemoveParkedKeys(QJsonObject &data) {
 	data.remove(u"stealthReadReceipts"_q);
 }
 
+// The keys that decide where text and voice are sent. Each is owned elsewhere -
+// the translate* ones by lumina_translate_providers.cpp (also read by
+// lumina_explain.cpp), the stt* ones by lumina_transcribers.cpp - and is
+// private there, so the names are spelled out here. Renaming one there means
+// renaming it here, or a backup could set it again without being asked.
+const auto kTranslateProviderKey = u"translateProvider"_q;
+const auto kTranslateBaseUrlKey = u"translateBaseUrl"_q;
+const auto kTranslateModelKey = u"translateModel"_q;
+const auto kTranslateApiKeyPrefix = u"translateKey_"_q;
+const auto kSttEngineKey = u"sttEngine"_q;
+const auto kSttBaseUrlKey = u"sttCloudBaseUrl"_q;
+const auto kSttModelKey = u"sttModel"_q;
+const auto kSttApiKeyPrefix = u"sttKey_"_q;
+
+// A destination is shown to the user, and the file is untrusted: an endpoint
+// that does not even parse is shown as written, but never at any length.
+constexpr auto kMaxDestinationLength = 80;
+
+[[nodiscard]] bool IsProviderRouteKey(const QString &key) {
+	return (key == kTranslateProviderKey)
+		|| (key == kTranslateBaseUrlKey)
+		|| (key == kTranslateModelKey)
+		|| key.startsWith(kTranslateApiKeyPrefix)
+		|| (key == kSttEngineKey)
+		|| (key == kSttBaseUrlKey)
+		|| (key == kSttModelKey)
+		|| key.startsWith(kSttApiKeyPrefix);
+}
+
+[[nodiscard]] QString NormalizedEndpoint(const QString &url) {
+	auto result = url.trimmed();
+	while (result.endsWith(QChar('/'))) {
+		result.chop(1);
+	}
+	return result;
+}
+
+// What a request to `url` would actually connect to: scheme, host, port -
+// QUrl's own reading of it, which is the one the request uses, so a
+// "https://trusted@attacker" style URL is shown as the attacker's host.
+[[nodiscard]] QString DestinationLabel(const QString &url) {
+	const auto trimmed = url.trimmed();
+	const auto parsed = QUrl(trimmed);
+	if (!parsed.isValid() || parsed.host().isEmpty()) {
+		return trimmed.left(kMaxDestinationLength);
+	}
+	auto result = parsed.scheme().isEmpty()
+		? QString()
+		: (parsed.scheme() + u"://"_q);
+	result += parsed.host();
+	if (parsed.port() != -1) {
+		result += QChar(':') + QString::number(parsed.port());
+	}
+	return result.left(kMaxDestinationLength);
+}
+
+// The value a payload carries for `key`, if it carries the key at all. A value
+// that is not a string reads back as empty, exactly as Settings::getString()
+// would read it once imported.
+[[nodiscard]] std::optional<QString> PayloadString(
+		const QJsonObject &payload,
+		const QString &key) {
+	const auto i = payload.constFind(key);
+	if (i == payload.constEnd()) {
+		return std::nullopt;
+	}
+	return i.value().toString().trimmed();
+}
+
+// The base URL in effect once `payload` is applied: the imported one when the
+// payload carries the key (blank meaning the default, as the getters read it),
+// the current one otherwise.
+[[nodiscard]] QString BaseUrlAfterImport(
+		const QJsonObject &payload,
+		const QString &key,
+		const QString &current,
+		const QString &fallback) {
+	const auto imported = PayloadString(payload, key);
+	if (!imported) {
+		return current;
+	}
+	return imported->isEmpty() ? fallback : *imported;
+}
+
 [[nodiscard]] bool EnvelopeShapeIsPossible(const BackupEnvelope &envelope) {
 	return (envelope.version == kFormatVersion)
 		&& (envelope.iterations >= kMinIterations)
@@ -415,9 +502,10 @@ BackupRead ReadBackupBytes(const QByteArray &content) {
 	return result;
 }
 
-BackupError ApplyBackup(
+BackupError DecryptBackup(
 		const BackupEnvelope &envelope,
-		const QString &passphrase) {
+		const QString &passphrase,
+		QJsonObject &payload) {
 	if (passphrase.size() < kMinPassphraseLength) {
 		return BackupError::PassphraseTooShort;
 	} else if (!EnvelopeShapeIsPossible(envelope)) {
@@ -449,39 +537,128 @@ BackupError ApplyBackup(
 		return BackupError::Damaged;
 	}
 
-	// `padded` is wiped only once nothing can still be reading it. Qt's parser
-	// copies, so the document does not alias this buffer - but if that were
-	// ever to stop being true, wiping it here rather than at the end of every
-	// path would mean writing zeroed strings into the store, which is exactly
-	// the failure this feature must not have.
+	// Qt's parser copies: QJsonDocument::fromJson() builds its own storage
+	// and the object taken from it does not alias this buffer. That is what
+	// makes it safe to wipe `padded` before the payload is used - and the
+	// payload now outlives this function (it waits for the user to confirm
+	// the provider settings), so the buffer cannot wait for it.
 	auto error = QJsonParseError{ 0, QJsonParseError::NoError };
 	const auto document = QJsonDocument::fromJson(padded, &error);
+	Wipe(padded);
 	if (error.error != QJsonParseError::NoError || !document.isObject()) {
-		Wipe(padded);
 		return BackupError::Damaged;
 	}
 
-	auto restored = document.object();
-	RemoveParkedKeys(restored);
+	// Nothing here touched the store, which is what makes a wrong passphrase
+	// incapable of half-restoring anything.
+	payload = document.object();
+	RemoveParkedKeys(payload);
+	return BackupError::None;
+}
 
-	// Nothing above this line touched the store, which is what makes a wrong
-	// passphrase incapable of half-restoring anything. saveNow() then replaces
-	// each of the three store files atomically instead of leaving the restored
-	// values sitting in the debounce window.
+ProviderRouteChanges BackupProviderRouteChanges(const QJsonObject &payload) {
+	auto result = ProviderRouteChanges();
+	const auto add = [&](const QString &destination) {
+		result.changed = true;
+		if (!destination.isEmpty()
+			&& !ranges::contains(result.destinations, destination)) {
+			result.destinations.push_back(destination);
+		}
+	};
+
+	// Translation, and Explain, which shares the translation LLM settings.
+	const auto llmBaseAfter = BaseUrlAfterImport(
+		payload,
+		kTranslateBaseUrlKey,
+		LlmBaseUrl(),
+		DefaultLlmBaseUrl());
+	if (payload.contains(kTranslateBaseUrlKey)
+		&& (NormalizedEndpoint(llmBaseAfter)
+			!= NormalizedEndpoint(LlmBaseUrl()))) {
+		add(DestinationLabel(llmBaseAfter));
+	}
+	if (const auto provider = PayloadString(payload, kTranslateProviderKey)) {
+		if ((*provider == LlmProviderId())
+			&& (CurrentProviderId() != LlmProviderId())) {
+			add(DestinationLabel(llmBaseAfter));
+		}
+	}
+
+	// Speech to text.
+	const auto sttBaseAfter = BaseUrlAfterImport(
+		payload,
+		kSttBaseUrlKey,
+		SttBaseUrl(),
+		DefaultSttBaseUrl());
+	if (payload.contains(kSttBaseUrlKey)
+		&& (NormalizedEndpoint(sttBaseAfter)
+			!= NormalizedEndpoint(SttBaseUrl()))) {
+		add(DestinationLabel(sttBaseAfter));
+	}
+	if (const auto engine = PayloadString(payload, kSttEngineKey)) {
+		if ((*engine == WhisperTranscriberId())
+			&& (CurrentTranscriberId() != WhisperTranscriberId())) {
+			add(DestinationLabel(sttBaseAfter));
+		}
+	}
+
+	// API keys. A key that is blank sends nothing anywhere, and the same key
+	// again changes nothing; any other value is a key being set or replaced.
+	for (auto i = payload.constBegin(); i != payload.constEnd(); ++i) {
+		const auto key = i.key();
+		const auto value = i.value().toString().trimmed();
+		if (value.isEmpty()) {
+			continue;
+		} else if (key.startsWith(kTranslateApiKeyPrefix)) {
+			const auto id = key.mid(kTranslateApiKeyPrefix.size());
+			if (value == ProviderApiKey(id)) {
+				continue;
+			} else if (id == DeepLProviderId()) {
+				// DeepL picks its host from the key itself.
+				add(value.endsWith(u":fx"_q)
+					? u"https://api-free.deepl.com"_q
+					: u"https://api.deepl.com"_q);
+			} else if (id == LlmProviderId()) {
+				add(DestinationLabel(llmBaseAfter));
+			} else {
+				add((id.isEmpty() ? key : id).left(kMaxDestinationLength));
+			}
+		} else if (key.startsWith(kSttApiKeyPrefix)) {
+			const auto id = key.mid(kSttApiKeyPrefix.size());
+			if (value == TranscriberApiKey(id)) {
+				continue;
+			} else if (id == WhisperTranscriberId()) {
+				add(DestinationLabel(sttBaseAfter));
+			} else if (id == GoogleTranscriberId()) {
+				add(u"https://speech.googleapis.com"_q);
+			} else {
+				add((id.isEmpty() ? key : id).left(kMaxDestinationLength));
+			}
+		}
+	}
+	return result;
+}
+
+void DropProviderRouteKeys(QJsonObject &payload) {
+	for (auto i = payload.begin(); i != payload.end();) {
+		if (IsProviderRouteKey(i.key())) {
+			i = payload.erase(i);
+		} else {
+			++i;
+		}
+	}
+}
+
+void ApplyBackupPayload(const QJsonObject &payload) {
+	// saveNow() replaces each of the three store files atomically instead of
+	// leaving the restored values sitting in the debounce window.
 	//
 	// saveNow() returns void and swallows a store it could not write, so this
-	// function cannot tell a flushed import from one that only reached memory
-	// and reports success either way. When Settings::saveNow() is changed to
-	// report whether every dirty store was written, this becomes:
-	//
-	//   Settings::Instance().importAll(restored);
-	//   const auto saved = Settings::Instance().saveNow();
-	//   Wipe(padded);
-	//   return saved ? BackupError::None : BackupError::WriteFailed;
-	Settings::Instance().importAll(restored);
+	// cannot tell a flushed import from one that only reached memory. When
+	// Settings::saveNow() is changed to report whether every dirty store was
+	// written, this should return that.
+	Settings::Instance().importAll(payload);
 	Settings::Instance().saveNow();
-	Wipe(padded);
-	return BackupError::None;
 }
 
 QString BackupErrorText(BackupError error) {

@@ -139,6 +139,54 @@ void ImportPassphraseBox(
 	});
 }
 
+void ShowImportDone(base::weak_ptr<Window::SessionController> weak) {
+	if (const auto strong = weak.get()) {
+		strong->show(Ui::MakeInformBox(Tr(u"LuminaBackupImportSuccess"_q)));
+	}
+}
+
+// The backup would change where translation, Explain or voice transcription
+// sends its data, or replace an API key. Nothing has been written yet; the
+// user sees every destination and decides. Apply restores the whole backup.
+// Keep current - and closing the box any other way, which is the same answer
+// - restores everything else and leaves the provider selection, endpoints,
+// models and keys exactly as they are on this device.
+void ConfirmProviderRoutes(
+		not_null<Window::SessionController*> controller,
+		QJsonObject payload,
+		const ProviderRouteChanges &changes) {
+	const auto weak = base::make_weak(controller);
+	auto lines = QStringList();
+	for (const auto &destination : changes.destinations) {
+		auto line = QString(QChar(0x2022));
+		line += QChar(' ');
+		line += destination;
+		lines.push_back(line);
+	}
+	const auto finish = [=](bool applyRoutes) {
+		auto data = payload;
+		if (!applyRoutes) {
+			DropProviderRouteKeys(data);
+		}
+		ApplyBackupPayload(data);
+		ShowImportDone(weak);
+	};
+	controller->show(Ui::MakeConfirmBox({
+		.text = Tr(u"LuminaBackupProviderText"_q, lines.join(QChar('\n'))),
+		.confirmed = [=](Fn<void()> close) {
+			close();
+			finish(true);
+		},
+		.cancelled = [=](Fn<void()> close) {
+			close();
+			finish(false);
+		},
+		.confirmText = Tr(u"LuminaBackupProviderApply"_q),
+		.cancelText = Tr(u"LuminaBackupProviderKeep"_q),
+		.title = Tr(u"LuminaBackupProviderTitle"_q),
+	}));
+}
+
 // Both file dialogs are queued (core/file_utilities.cpp InvokeQueued), so every
 // callback below has to survive the controller going away before it runs.
 void ExportBackup(not_null<Window::SessionController*> controller) {
@@ -198,12 +246,29 @@ void ImportBackup(not_null<Window::SessionController*> controller) {
 
 			const auto envelope = read.envelope;
 			strong->show(Box(ImportPassphraseBox, [=](QString passphrase) {
-				const auto error = ApplyBackup(envelope, passphrase);
-				if (const auto again = weak.get()) {
-					again->show(Ui::MakeInformBox(
-						(error == BackupError::None)
-							? Tr(u"LuminaBackupImportSuccess"_q)
-							: BackupErrorText(error)));
+				auto payload = QJsonObject();
+				const auto error = DecryptBackup(
+					envelope,
+					passphrase,
+					payload);
+				const auto again = weak.get();
+				if (error != BackupError::None) {
+					if (again) {
+						again->show(Ui::MakeInformBox(BackupErrorText(error)));
+					}
+					return;
+				}
+				const auto changes = BackupProviderRouteChanges(payload);
+				if (!changes.changed) {
+					ApplyBackupPayload(payload);
+					ShowImportDone(weak);
+				} else if (!again) {
+					// Nobody left to ask: restore everything except where
+					// text and voice are sent, which is the safe answer.
+					DropProviderRouteKeys(payload);
+					ApplyBackupPayload(payload);
+				} else {
+					ConfirmProviderRoutes(again, payload, changes);
 				}
 			}));
 		});

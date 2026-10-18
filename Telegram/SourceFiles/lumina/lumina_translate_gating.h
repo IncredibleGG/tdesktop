@@ -15,6 +15,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <vector>
 
 class History;
+class PeerData;
 
 namespace Main {
 class Session;
@@ -225,5 +226,26 @@ namespace Lumina {
 // not work: two of the three need a Main::Session and the third a PeerData,
 // and this producer is per-application.
 [[nodiscard]] rpl::producer<> TranslateOfferPolicyChanges();
+
+// The chats whose content no AUTOMATIC flow may hand to a third-party
+// translation, AI or speech-to-text service: the service-notification account
+// 777000 (login codes), the user's own Saved Messages, and Telegram's own
+// system / official accounts - any user carrying the `support` flag, every
+// service user id (a multiple of 1000: 777000, 333000, 489000 Verification
+// Codes, 2666000), plus the well-known 42777 and 93372553 (BotFather).
+//
+// Automatic means nobody pointed at this one message: whole-chat translation
+// and the batch it sends for every visible message, the dual-language line it
+// feeds, the per-chat switch re-armed when the chat is opened, and the
+// translation that follows a voice transcript on its own. A MANUAL action on a
+// specific message - Translate, Explain, Transcribe - is the user's own choice
+// and is not gated here.
+//
+// Telegram's own server-side translation is not a third party: it already has
+// the text. The whole-chat stream of such a chat is therefore still served
+// for a Premium account, through Telegram's MTProto translation (or the
+// on-device macOS translator when that is the chosen engine) instead of the
+// selected provider; see Lumina::CreateChatTranslateProvider().
+[[nodiscard]] bool AutomaticProcessingBlocked(not_null<PeerData*> peer);
 
 } // namespace Lumina

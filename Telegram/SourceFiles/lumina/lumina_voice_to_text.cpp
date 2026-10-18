@@ -27,6 +27,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_message_menu.h"
 #include "lumina/lumina_settings.h"
 #include "lumina/lumina_transcribers.h"
+#include "lumina/lumina_translate_gating.h" // AutomaticProcessingBlocked.
 #include "lumina/lumina_translate_providers.h"
 #include "lumina/lumina_translate_readlang.h"
 #include "main/main_session.h"
@@ -239,11 +240,18 @@ struct State {
 // NOT being translated does the standalone STT auto-translate setting apply
 // (default off) - which is what keeps a chat the user never asked to translate
 // from sprouting a surprise translation under its voice notes.
+//
+// The translation that follows a transcript is AUTOMATIC - the user asked for
+// the transcript, not for a second request to the translation provider - so a
+// chat whose content no automatic flow may hand to a third party (777000,
+// Saved Messages, Telegram's own accounts; see AutomaticProcessingBlocked())
+// never gets one, and neither does a message that is gone and can no longer
+// say which chat it was in. The transcript itself is unaffected.
 [[nodiscard]] QString TranslationTargetForItem(HistoryItem *item) {
-	if (item) {
-		if (const auto to = item->history()->translatedTo()) {
-			return to.twoLetterCode();
-		}
+	if (!item || AutomaticProcessingBlocked(item->history()->peer)) {
+		return QString();
+	} else if (const auto to = item->history()->translatedTo()) {
+		return to.twoLetterCode();
 	}
 	return VoiceToTextAutoTranslate() ? ReadingLanguage() : QString();
 }

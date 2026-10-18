@@ -1,3 +1,22 @@
+7.3.2 (18.10.26)
+
+- Automatic translation no longer sends anything from the Telegram service
+  account (login codes), your Saved Messages or Telegram's own official
+  accounts to a translation service: whole-chat translation there uses
+  Telegram's own translation for Premium accounts (or the on-device macOS
+  translator) and otherwise leaves the messages as they are, and voice
+  transcripts in those chats are no longer translated automatically. Tapping
+  Translate, Explain or Transcribe on a message works as before.
+- Importing a backup that would change where translation, Explain or voice
+  transcription sends data, or replace an API key, now lists the destination
+  servers and asks first. Choosing to keep the current settings still restores
+  everything else in the backup.
+- API key fields are masked and no longer show the stored key. Leave the field
+  empty to keep the key, or use Remove to clear it.
+- The Google Speech key is sent in a request header instead of the URL.
+- Requests that carry an API key no longer follow a redirect to another server
+  or from https to http.
+
 7.3.1 (18.10.26)
 
 - LuminaGram is now based on the official Telegram Desktop 7.3.1 (was 7.2.6).
