@@ -169,32 +169,37 @@ struct Registration {
 		// The provider test. Every failure has to name the thing to go and
 		// change: "it doesn't translate" covers a service that was never
 		// reachable, a key that was never saved, a key the service turned
-		// down and a quota that ran out, and those are four different
-		// afternoons.
+		// down, a model it does not have and a quota that ran out, and those
+		// are five different afternoons. The reasons themselves are the
+		// LuminaTranslateErr* rows below, shared with the translate box and
+		// Explain.
 		{ u"LuminaTranslateTest"_q, u"Test translation"_q },
 		{ u"LuminaTranslateTestRunning"_q, u"Testing..."_q },
 		{ u"LuminaTranslateTestSuccess"_q, u"Translation works."_q },
 		{ u"LuminaTranslateTestFailed"_q, u"Test failed"_q },
 		{ u"LuminaTranslateNoKey"_q, u"API key required"_q },
-		{ u"LuminaTranslateTestKeyRejected"_q, u"The service could not be "
-			"reached, or it turned this API key down. Check the key first, "
-			"then the base URL and your connection."_q },
-		{ u"LuminaTranslateTestNetwork"_q, u"The service could not be "
-			"reached. Check your internet connection and any proxy, then try "
-			"again."_q },
 		{ u"LuminaTranslateTestNoChange"_q, u"The service returned the sample unchanged, so nothing was translated. Check the key, the model and the system prompt."_q },
 		{ u"LuminaTranslateTestQuota"_q, u"The service refused the request - "
 			"too many requests, or this key's quota is used up. Try again "
 			"later."_q },
-		{ u"LuminaTranslateTestQuotaKeyed"_q, u"The service refused the "
-			"request - it turned this API key down, the key's quota is used "
-			"up, or there were too many requests. Check the key first, then "
-			"try again later."_q },
 		{ u"LuminaTranslateTestBadResponse"_q, u"The service answered with "
 			"something LuminaGram could not read, or with nothing at all. "
 			"Check the base URL and the model."_q },
 		{ u"LuminaTranslateTestUnavailable"_q, u"This service cannot run "
 			"here. Choose another one above."_q },
+		// "Detect available models" and the reasons a request to a
+		// translation / Explain service failed.
+		{ u"LuminaTranslateErrModelNotFound"_q, u"The model “{1}” does not exist on this service. Click “Detect available models” to pick one."_q },
+		{ u"LuminaTranslateErrKeyRejected"_q, u"The service rejected this API key. Check the key and try again."_q },
+		{ u"LuminaTranslateErrNetwork"_q, u"Cannot connect to the service. Check the base URL and your network."_q },
+		{ u"LuminaTranslateErrServer"_q, u"The service had a temporary error (HTTP {1}). Try again later."_q },
+		{ u"LuminaTranslateErrRejected"_q, u"The service rejected the request (HTTP {1}). Check the base URL and the model."_q },
+		{ u"LuminaLlmDetectModels"_q, u"Detect available models"_q },
+		{ u"LuminaLlmModelsRunning"_q, u"Detecting..."_q },
+		{ u"LuminaLlmModelsTitle"_q, u"Available models"_q },
+		{ u"LuminaLlmModelsNoKey"_q, u"Set the API key first, then detect models."_q },
+		{ u"LuminaLlmModelsNoList"_q, u"This service does not provide a model list. Type the model name manually."_q },
+		{ u"LuminaLlmModelsEmpty"_q, u"The service returned no models."_q },
 
 		{ u"LuminaTranslateProviderSecurityInfo"_q, u"Keys are kept on this "
 			"device only, in a separate file from the rest of the settings, "
@@ -829,9 +834,9 @@ struct Registration {
 		{ u"LuminaVoiceConfirmSendVideo"_q, u"Send this video message?"_q },
 		{ u"LuminaVoiceConfirmSendVoice"_q, u"Send this voice message?"_q },
 		{ u"LuminaVoiceConfirmBoxTitle"_q, u"Send this message?"_q },
-		{ u"LuminaBrandAboutIntro"_q, u"An independent fork of Telegram Desktop.\nNot affiliated with or endorsed by Telegram."_q },
-		{ u"LuminaBrandAboutSummaryPre"_q, u"An independent fork of Telegram Desktop, built on the "_q },
-		{ u"LuminaBrandAboutSummaryPost"_q, u".\nNot affiliated with, endorsed by or sponsored by Telegram."_q },
+		{ u"LuminaBrandAboutIntro"_q, u"Translation, privacy and safety, all in one.\nPowered by the Telegram API, part of the Telegram ecosystem."_q },
+		{ u"LuminaBrandAboutSummaryPre"_q, u"LuminaGram is a free messaging app built on the "_q },
+		{ u"LuminaBrandAboutSummaryPost"_q, u", part of the Telegram ecosystem."_q },
 
 		// LuminaGram message-display gates (appearance sub-page).
 		{ u"LuminaBubbleGatesTitle"_q, u"Message bubbles"_q },

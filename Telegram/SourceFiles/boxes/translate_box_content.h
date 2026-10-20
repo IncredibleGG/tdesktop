@@ -26,6 +26,10 @@ enum class TranslateBoxContentError {
 struct TranslateBoxContentResult {
 	std::optional<TextWithEntities> text;
 	TranslateBoxContentError error = TranslateBoxContentError::None;
+
+	// LuminaGram: what went wrong, in words, when the provider can say -
+	// shown instead of the generic error. Empty keeps the stock text.
+	QString errorText;
 };
 
 class GenericBox;

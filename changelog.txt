@@ -1,3 +1,25 @@
+7.3.3 (20.10.26)
+
+- Translation settings: a new "Detect available models" row under Model asks
+  your OpenAI-compatible service for its model list and lets you pick one
+  instead of typing it.
+- Test translation, the translate window and Explain now say what actually
+  went wrong: a model the service does not have (with a link to detect the
+  available ones), a rejected API key, a used-up quota or too many requests, a
+  temporary server error, or no connection. The service's reply, the address
+  and the key are never shown.
+- Explain reads the message in its conversation: up to 8 earlier messages
+  from the same chat and the message it replies to go along (about 1500
+  characters, speakers shown only as "Me" and A, B, C...), so slang, references
+  and what "it" or "that" means are explained correctly. In Saved Messages and
+  Telegram's own accounts only the message itself is sent, as before.
+- The account that delivers login codes for other services (489001) is now
+  protected like Telegram's other system accounts.
+- Settings rows that show a value (base URL, model, API key...) open their
+  editor when you click the value itself, not only the empty part of the row.
+- The welcome screen and the About box describe LuminaGram as built on the
+  Telegram API and part of the Telegram ecosystem.
+
 7.3.2 (18.10.26)
 
 - Automatic translation no longer sends anything from the Telegram service

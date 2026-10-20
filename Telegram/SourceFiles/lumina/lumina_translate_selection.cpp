@@ -45,7 +45,12 @@ constexpr auto kFirstChunk = 100;
 // false for the reason spelled out on CreateTranslateProvider() in
 // lumina_translate_providers.h: a true here would leave the request carrying a
 // message id and no text, which our engines cannot use.
-class OnDemandEngineProvider final : public Ui::TranslateProvider {
+//
+// LuminaGram: it also reports why its last request failed, exactly as that
+// file's adapter does, so the translate box can name the reason.
+class OnDemandEngineProvider final
+	: public Ui::TranslateProvider
+	, public TranslateFailureReporter {
 public:
 	explicit OnDemandEngineProvider(std::unique_ptr<TranslateEngine> engine)
 	: _engine(std::move(engine)) {
@@ -64,19 +69,32 @@ public:
 			done({ .error = Ui::TranslateProviderError::Unknown });
 			return;
 		}
+		// `this` outlives the callback: the engine is ours, and a destroyed
+		// engine never runs its callbacks (see TranslateEngine).
 		_engine->translate(
 			text,
 			TargetLanguageCode(to),
-			[done](TranslateResult result) {
+			[this, done](TranslateResult result) {
 				if (result.failed()) {
+					_lastFailure = TranslateFailureText(
+						result,
+						TranslateProviderKeyed(_engine->id()));
 					done({ .error = Ui::TranslateProviderError::Unknown });
 				} else {
+					_lastFailure = QString();
 					done({ .text = tr::marked(result.text) });
 				}
 			});
 	}
 
+	[[nodiscard]] QString lastFailureText() const override {
+		return _lastFailure;
+	}
+
 private:
+	// Before the engine, so that it is still alive while the engine is
+	// being destroyed.
+	QString _lastFailure;
 	const std::unique_ptr<TranslateEngine> _engine;
 
 };

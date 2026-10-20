@@ -127,21 +127,24 @@ namespace {
 		{ u"LuminaTranslateTestSuccess"_q, u"翻譯可以正常運作。"_q },
 		{ u"LuminaTranslateTestFailed"_q, u"測試失敗"_q },
 		{ u"LuminaTranslateNoKey"_q, u"需要 API 金鑰"_q },
-		{ u"LuminaTranslateTestKeyRejected"_q, u"無法連線到這個服務，或是"
-			u"服務拒絕了這組 API 金鑰。請先檢查金鑰，再檢查基礎 URL 與你的"
-			u"網路連線。"_q },
-		{ u"LuminaTranslateTestNetwork"_q, u"無法連線到這個服務。請檢查你的"
-			u"網路連線與代理伺服器設定，然後再試一次。"_q },
 		{ u"LuminaTranslateTestNoChange"_q, u"服務把原文原封不動地退了回來，等於沒有翻譯。請檢查金鑰、模型與系統提示詞。"_q },
 		{ u"LuminaTranslateTestQuota"_q, u"服務拒絕了這次請求：請求太過"
 			u"頻繁，或這組金鑰的額度已經用完。請稍後再試。"_q },
-		{ u"LuminaTranslateTestQuotaKeyed"_q, u"服務拒絕了這次請求：服務"
-			u"拒絕了這組 API 金鑰，或這組金鑰的額度已經用完，也可能是請求"
-			u"太過頻繁。請先檢查金鑰，然後稍後再試。"_q },
 		{ u"LuminaTranslateTestBadResponse"_q, u"服務回覆了 LuminaGram 無法"
 			u"解讀的內容，或根本沒有內容。請檢查基礎 URL 與模型。"_q },
 		{ u"LuminaTranslateTestUnavailable"_q, u"這個服務無法在這裡執行。"
 			u"請在上面改選其他服務。"_q },
+		{ u"LuminaTranslateErrModelNotFound"_q, u"模型「{1}」在這個服務不存在，點「偵測可用模型」選一個。"_q },
+		{ u"LuminaTranslateErrKeyRejected"_q, u"服務拒絕了這個 API 金鑰。請檢查金鑰後再試一次。"_q },
+		{ u"LuminaTranslateErrNetwork"_q, u"無法連線到這個服務。請檢查基礎 URL 與網路。"_q },
+		{ u"LuminaTranslateErrServer"_q, u"服務暫時發生錯誤（HTTP {1}），請稍後再試。"_q },
+		{ u"LuminaTranslateErrRejected"_q, u"服務拒絕了這次請求（HTTP {1}）。請檢查基礎 URL 與模型。"_q },
+		{ u"LuminaLlmDetectModels"_q, u"偵測可用模型"_q },
+		{ u"LuminaLlmModelsRunning"_q, u"偵測中…"_q },
+		{ u"LuminaLlmModelsTitle"_q, u"可用模型"_q },
+		{ u"LuminaLlmModelsNoKey"_q, u"請先設定 API 金鑰，再偵測可用模型。"_q },
+		{ u"LuminaLlmModelsNoList"_q, u"這個服務沒有提供模型清單，請手動輸入模型名稱。"_q },
+		{ u"LuminaLlmModelsEmpty"_q, u"這個服務沒有回傳任何模型。"_q },
 		{ u"LuminaTranslateProviderSecurityInfo"_q, u"金鑰只會保存在這台裝置"
 			u"上，存放在與其他設定分開的檔案裡，絕不會傳送給 Telegram。你"
 			u"翻譯的所有內容都會送到這裡選擇的服務，請挑一個你信任的。"_q },
@@ -878,9 +881,9 @@ namespace {
 		{ u"LuminaVoiceConfirmSendVideo"_q, u"傳送這則視訊訊息？"_q },
 		{ u"LuminaVoiceConfirmSendVoice"_q, u"傳送這則語音訊息？"_q },
 		{ u"LuminaVoiceConfirmBoxTitle"_q, u"傳送這則訊息？"_q },
-		{ u"LuminaBrandAboutIntro"_q, u"Telegram Desktop 的獨立分支。\n與 Telegram 無關聯，也未獲其認可。"_q },
-		{ u"LuminaBrandAboutSummaryPre"_q, u"Telegram Desktop 的獨立分支，建構於 "_q },
-		{ u"LuminaBrandAboutSummaryPost"_q, u"。\n與 Telegram 無關聯、未獲其認可，也未獲其贊助。"_q },
+		{ u"LuminaBrandAboutIntro"_q, u"翻譯、隱私、安全，一應俱全。\n以 Telegram API 打造，Telegram 生態的一員。"_q },
+		{ u"LuminaBrandAboutSummaryPre"_q, u"LuminaGram 是以 "_q },
+		{ u"LuminaBrandAboutSummaryPost"_q, u" 打造的免費通訊應用，屬於 Telegram 生態。"_q },
 
 		// LuminaGram 訊息顯示開關（外觀子頁）。
 		{ u"LuminaBubbleGatesTitle"_q, u"訊息氣泡"_q },

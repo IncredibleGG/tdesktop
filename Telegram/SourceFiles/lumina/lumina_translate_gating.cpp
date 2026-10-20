@@ -152,9 +152,12 @@ rpl::producer<> TranslateOfferPolicyChanges() {
 
 bool AutomaticProcessingBlocked(not_null<PeerData*> peer) {
 	// Well-known Telegram accounts that are not service ids (not a multiple
-	// of 1000) and may not carry the support flag on every profile.
+	// of 1000) and may not carry the support flag on every profile. 489001
+	// delivers login codes for other services next to 489000 (Verification
+	// Codes); Android's LuminaPrivacyGate lists it as UserObject.OAUTH.
 	constexpr auto kTelegramTipsId = peerFromUser(42777);
 	constexpr auto kBotFatherId = peerFromUser(93372553);
+	constexpr auto kLoginCodesId = peerFromUser(489001);
 
 	if (peer->isSelf()
 		|| peer->isNotificationsUser()
@@ -162,7 +165,8 @@ bool AutomaticProcessingBlocked(not_null<PeerData*> peer) {
 		|| peer->isVerifyCodes()
 		|| (peer->id == PeerData::kServiceNotificationsId)
 		|| (peer->id == kTelegramTipsId)
-		|| (peer->id == kBotFatherId)) {
+		|| (peer->id == kBotFatherId)
+		|| (peer->id == kLoginCodesId)) {
 		return true;
 	} else if (const auto user = peer->asUser()) {
 		return user->isSupport();

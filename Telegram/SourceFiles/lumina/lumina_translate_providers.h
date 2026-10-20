@@ -196,10 +196,65 @@ struct TranslateResult {
 	// Nothing on the message paths reads it; nothing has to.
 	int httpStatus = 0;
 
+	// The model name the request asked for, set only when the service
+	// answered that this model does not exist there (see
+	// LlmModelNotFound()). It is the user's own setting echoed back, never
+	// anything read from the response, so it is safe to show.
+	QString missingModel;
+
 	[[nodiscard]] bool failed() const {
 		return (error != TranslateError::None) || text.isEmpty();
 	}
 };
+
+// Whether an error reply from an OpenAI-compatible endpoint says that the
+// requested model does not exist there: HTTP 400 or 404 whose error type or
+// code is model_not_found, or whose message says the model was not found /
+// does not exist / is not supported. `body` is only inspected, never kept,
+// shown or logged.
+[[nodiscard]] bool LlmModelNotFound(
+	int status,
+	const QByteArray &body,
+	const QString &model);
+
+// The user-facing reason a request failed, in the in-app language, for the
+// settings test row, the translate box and Explain. It is built from the
+// error category, the HTTP status number and, for a missing model, the model
+// name the user typed - never from the response body, the URL or the key.
+//
+// `keyed` is whether the request carried an API key: a 403 from a keyed
+// service means the key was turned down, from the keyless one a rate limit.
+[[nodiscard]] QString TranslateFailureText(
+	const TranslateResult &result,
+	bool keyed);
+
+// Whether the provider `id` sends an API key with its requests.
+[[nodiscard]] bool TranslateProviderKeyed(const QString &id);
+
+// "Detect models": GET {LLM base URL}/models with the translation LLM's key,
+// under the same timeout and redirect rules as every keyed request. `done`
+// runs once on the main thread with the model ids, ordered with likely chat
+// models first and with image / speech / embedding / moderation / realtime
+// models left out unless nothing else is listed, or with an empty list and a
+// user-facing error text.
+void FetchLlmModels(Fn<void(std::vector<QString> models, QString error)> done);
+
+// Implemented by LuminaGram's Ui::TranslateProvider adapters, so that
+// tdesktop's translate box can name what went wrong instead of its generic
+// "could not translate". The text belongs to the last request that failed and
+// is cleared by the next one that succeeds.
+class TranslateFailureReporter {
+public:
+	virtual ~TranslateFailureReporter() = default;
+
+	[[nodiscard]] virtual QString lastFailureText() const = 0;
+
+};
+
+// Empty for a provider that is not one of ours (MTProto, the OS translator)
+// or whose last request did not fail.
+[[nodiscard]] QString TranslateProviderFailureText(
+	not_null<const Ui::TranslateProvider*> provider);
 
 // The LuminaGram-native translation interface.
 //

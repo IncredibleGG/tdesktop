@@ -109,25 +109,26 @@ namespace {
 		{ u"LuminaTranslateTestSuccess"_q, u"Çeviri çalışıyor."_q },
 		{ u"LuminaTranslateTestFailed"_q, u"Test başarısız"_q },
 		{ u"LuminaTranslateNoKey"_q, u"API anahtarı gerekli"_q },
-		{ u"LuminaTranslateTestKeyRejected"_q, u"Hizmete ulaşılamadı ya da "
-			u"hizmet bu API anahtarını kabul etmedi. Önce anahtarı, sonra "
-			u"temel URL'yi ve bağlantınızı denetleyin."_q },
-		{ u"LuminaTranslateTestNetwork"_q, u"Hizmete ulaşılamadı. İnternet "
-			u"bağlantınızı ve varsa vekil sunucu ayarlarınızı denetleyip "
-			u"yeniden deneyin."_q },
 		{ u"LuminaTranslateTestNoChange"_q, u"Servis örnek metni değiştirmeden geri gönderdi, yani hiçbir şey çevrilmedi. Anahtarı, modeli ve sistem istemini kontrol edin."_q },
 		{ u"LuminaTranslateTestQuota"_q, u"Hizmet isteği geri çevirdi: çok "
 			u"fazla istek gönderildi ya da bu anahtarın kotası doldu. Daha "
 			u"sonra yeniden deneyin."_q },
-		{ u"LuminaTranslateTestQuotaKeyed"_q, u"Hizmet isteği geri çevirdi: "
-			u"bu API anahtarını kabul etmedi, anahtarın kotası doldu ya da "
-			u"çok fazla istek gönderildi. Önce anahtarı denetleyin, sonra "
-			u"daha sonra yeniden deneyin."_q },
 		{ u"LuminaTranslateTestBadResponse"_q, u"Hizmet, LuminaGram'ın "
 			u"okuyamadığı bir yanıt verdi ya da hiçbir şey döndürmedi. Temel "
 			u"URL'yi ve modeli denetleyin."_q },
 		{ u"LuminaTranslateTestUnavailable"_q, u"Bu hizmet burada "
 			u"çalışamıyor. Yukarıdan başka bir hizmet seçin."_q },
+		{ u"LuminaTranslateErrModelNotFound"_q, u"“{1}” modeli bu hizmette yok. Birini seçmek için “Kullanılabilir modelleri algıla”ya tıklayın."_q },
+		{ u"LuminaTranslateErrKeyRejected"_q, u"Hizmet bu API anahtarını reddetti. Anahtarı kontrol edip tekrar deneyin."_q },
+		{ u"LuminaTranslateErrNetwork"_q, u"Hizmete bağlanılamıyor. Temel URL’yi ve ağınızı kontrol edin."_q },
+		{ u"LuminaTranslateErrServer"_q, u"Hizmette geçici bir hata oluştu (HTTP {1}). Daha sonra tekrar deneyin."_q },
+		{ u"LuminaTranslateErrRejected"_q, u"Hizmet isteği reddetti (HTTP {1}). Temel URL’yi ve modeli kontrol edin."_q },
+		{ u"LuminaLlmDetectModels"_q, u"Kullanılabilir modelleri algıla"_q },
+		{ u"LuminaLlmModelsRunning"_q, u"Algılanıyor…"_q },
+		{ u"LuminaLlmModelsTitle"_q, u"Kullanılabilir modeller"_q },
+		{ u"LuminaLlmModelsNoKey"_q, u"Önce API anahtarını ayarlayın, ardından modelleri algılayın."_q },
+		{ u"LuminaLlmModelsNoList"_q, u"Bu hizmet bir model listesi sunmuyor. Model adını elle yazın."_q },
+		{ u"LuminaLlmModelsEmpty"_q, u"Hizmet hiç model döndürmedi."_q },
 		{ u"LuminaTranslateProviderSecurityInfo"_q, u"Anahtarlar yalnızca bu "
 			u"cihazda, diğer ayarlardan ayrı bir dosyada saklanır ve hiçbir "
 			u"zaman Telegram'a gönderilmez. Çevirdiğiniz her şey burada "
@@ -658,9 +659,9 @@ namespace {
 		{ u"LuminaVoiceConfirmSendVideo"_q, u"Bu görüntülü mesaj gönderilsin mi?"_q },
 		{ u"LuminaVoiceConfirmSendVoice"_q, u"Bu sesli mesaj gönderilsin mi?"_q },
 		{ u"LuminaVoiceConfirmBoxTitle"_q, u"Bu mesaj gönderilsin mi?"_q },
-		{ u"LuminaBrandAboutIntro"_q, u"Telegram Desktop’un bağımsız bir çatalı.\nTelegram ile bağlantılı değildir ve onaylanmamıştır."_q },
-		{ u"LuminaBrandAboutSummaryPre"_q, u"Telegram Desktop’un bağımsız bir çatalı, şunun üzerine kuruludur: "_q },
-		{ u"LuminaBrandAboutSummaryPost"_q, u".\nTelegram ile bağlantılı, onaylanmış ya da sponsorlanmış değildir."_q },
+		{ u"LuminaBrandAboutIntro"_q, u"Çeviri, gizlilik ve güvenlik bir arada.\nTelegram API ile geliştirildi, Telegram ekosisteminin bir parçası."_q },
+		{ u"LuminaBrandAboutSummaryPre"_q, u"LuminaGram, "_q },
+		{ u"LuminaBrandAboutSummaryPost"_q, u" üzerine kurulu ücretsiz bir mesajlaşma uygulamasıdır ve Telegram ekosisteminin bir parçasıdır."_q },
 		// LuminaGram Batch 4 (#14 double-tap edit, #16 call confirm, #17 menu, #22 keyword filter).
 		{ u"LuminaDoubleTapEditTitle"_q, u"Düzenleme"_q },
 		{ u"LuminaDoubleTapEditRow"_q, u"Düzenlemek için kendi mesajınıza çift dokunun"_q },

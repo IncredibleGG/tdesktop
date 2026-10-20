@@ -39,6 +39,14 @@ struct MessageMenuContext;
 // (lumina/lumina_translate_providers.h), so nothing about the LLM is
 // configured twice and nothing new is stored. With no key set it does not run
 // and does not crash - the box says to add one on that page.
+//
+// The message is read in its conversation: up to 8 text messages from just
+// before it in the same chat (topic), and the message it replies to, go along
+// as context - about 1500 characters at most, the oldest dropped first, with
+// speakers named only "Me" and A, B, C... In Saved Messages and Telegram's
+// own accounts (Lumina::AutomaticProcessingBlocked()) only the message itself
+// is sent, as before. A failure names its reason, and a model the service
+// does not have comes with a "Detect available models" link.
 
 // Master switch, Android's `explainMessage`, default ON as there.
 [[nodiscard]] bool ExplainMessageEnabled();

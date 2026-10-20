@@ -109,25 +109,26 @@ namespace {
 		{ u"LuminaTranslateTestSuccess"_q, u"الترجمة تعمل."_q },
 		{ u"LuminaTranslateTestFailed"_q, u"فشل الاختبار"_q },
 		{ u"LuminaTranslateNoKey"_q, u"مفتاح API مطلوب"_q },
-		{ u"LuminaTranslateTestKeyRejected"_q,
-			u"تعذّر الوصول إلى الخدمة، أو أنها رفضت مفتاح API هذا. تحقق من "
-			u"المفتاح أولًا، ثم من الرابط الأساسي ومن اتصالك."_q },
-		{ u"LuminaTranslateTestNetwork"_q,
-			u"تعذّر الوصول إلى الخدمة. تحقق من اتصالك بالإنترنت ومن أي وكيل "
-			u"بروكسي، ثم أعد المحاولة."_q },
 		{ u"LuminaTranslateTestNoChange"_q, u"أعادت الخدمة النص كما هو دون تغيير، أي أنه لم تتم ترجمة أي شيء. تحقق من المفتاح والنموذج وموجّه النظام."_q },
 		{ u"LuminaTranslateTestQuota"_q,
 			u"رفضت الخدمة الطلب: طلبات كثيرة جدًا، أو نفدت حصة هذا المفتاح. "
-			u"أعد المحاولة لاحقًا."_q },
-		{ u"LuminaTranslateTestQuotaKeyed"_q,
-			u"رفضت الخدمة الطلب: فقد رفضت مفتاح API هذا، أو نفدت حصة "
-			u"المفتاح، أو كانت الطلبات كثيرة جدًا. تحقق من المفتاح أولًا، ثم "
 			u"أعد المحاولة لاحقًا."_q },
 		{ u"LuminaTranslateTestBadResponse"_q,
 			u"ردّت الخدمة بشيء لم يستطع LuminaGram قراءته، أو لم تردّ بشيء "
 			u"على الإطلاق. تحقق من الرابط الأساسي ومن النموذج."_q },
 		{ u"LuminaTranslateTestUnavailable"_q,
 			u"لا يمكن تشغيل هذه الخدمة هنا. اختر خدمة أخرى في الأعلى."_q },
+		{ u"LuminaTranslateErrModelNotFound"_q, u"النموذج «{1}» غير موجود في هذه الخدمة. انقر «اكتشاف النماذج المتاحة» لاختيار نموذج."_q },
+		{ u"LuminaTranslateErrKeyRejected"_q, u"رفضت الخدمة مفتاح API هذا. تحقق من المفتاح ثم أعد المحاولة."_q },
+		{ u"LuminaTranslateErrNetwork"_q, u"تعذّر الاتصال بالخدمة. تحقق من عنوان URL الأساسي ومن الشبكة."_q },
+		{ u"LuminaTranslateErrServer"_q, u"حدث خطأ مؤقت في الخدمة (HTTP {1}). أعد المحاولة لاحقًا."_q },
+		{ u"LuminaTranslateErrRejected"_q, u"رفضت الخدمة الطلب (HTTP {1}). تحقق من عنوان URL الأساسي ومن النموذج."_q },
+		{ u"LuminaLlmDetectModels"_q, u"اكتشاف النماذج المتاحة"_q },
+		{ u"LuminaLlmModelsRunning"_q, u"جارٍ الاكتشاف…"_q },
+		{ u"LuminaLlmModelsTitle"_q, u"النماذج المتاحة"_q },
+		{ u"LuminaLlmModelsNoKey"_q, u"عيّن مفتاح API أولًا، ثم اكتشف النماذج."_q },
+		{ u"LuminaLlmModelsNoList"_q, u"لا توفّر هذه الخدمة قائمة نماذج. اكتب اسم النموذج يدويًا."_q },
+		{ u"LuminaLlmModelsEmpty"_q, u"لم تُرجع الخدمة أي نموذج."_q },
 		{ u"LuminaTranslateProviderSecurityInfo"_q,
 			u"تُحفظ المفاتيح على هذا الجهاز فقط، في ملف منفصل عن بقية "
 			u"الإعدادات، ولا تُرسَل إلى Telegram أبدًا. وكل ما تترجمه يُرسَل "
@@ -655,9 +656,9 @@ namespace {
 		{ u"LuminaVoiceConfirmSendVideo"_q, u"إرسال رسالة الفيديو هذه؟"_q },
 		{ u"LuminaVoiceConfirmSendVoice"_q, u"إرسال الرسالة الصوتية هذه؟"_q },
 		{ u"LuminaVoiceConfirmBoxTitle"_q, u"إرسال هذه الرسالة؟"_q },
-		{ u"LuminaBrandAboutIntro"_q, u"نسخة مستقلة مشتقّة من Telegram Desktop.\nغير تابعة لـ Telegram ولا معتمَدة منها."_q },
-		{ u"LuminaBrandAboutSummaryPre"_q, u"نسخة مستقلة مشتقّة من Telegram Desktop، مبنية على "_q },
-		{ u"LuminaBrandAboutSummaryPost"_q, u".\nغير تابعة لـ Telegram ولا معتمَدة منها ولا برعايتها."_q },
+		{ u"LuminaBrandAboutIntro"_q, u"الترجمة والخصوصية والأمان في تطبيق واحد.\nمبني على Telegram API، وجزء من منظومة Telegram."_q },
+		{ u"LuminaBrandAboutSummaryPre"_q, u"LuminaGram تطبيق مراسلة مجاني مبني على "_q },
+		{ u"LuminaBrandAboutSummaryPost"_q, u"، وهو جزء من منظومة Telegram."_q },
 		// LuminaGram Batch 4 (#14 double-tap edit, #16 call confirm, #17 menu, #22 keyword filter).
 		{ u"LuminaDoubleTapEditTitle"_q, u"التعديل"_q },
 		{ u"LuminaDoubleTapEditRow"_q, u"انقر مرتين على رسالتك للتعديل"_q },

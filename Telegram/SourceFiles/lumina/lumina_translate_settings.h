@@ -11,9 +11,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QtCore/QString>
 
+#include <memory>
 #include <vector>
 
 namespace Ui {
+class Show;
 class VerticalLayout;
 } // namespace Ui
 
@@ -177,6 +179,20 @@ void ShowApiKeyEditor(
 	const QString &title,
 	const QString &current,
 	Fn<void(QString)> save);
+
+// "Detect available models": asks the OpenAI-compatible service configured on
+// this page for its model list (Lumina::FetchLlmModels()) and offers it as a
+// picker on `show`; a pick is saved as the LLM model. A failure is a toast
+// naming the reason. Used by the row under Model, by the test row's "model
+// does not exist" toast and by the Explain box.
+//
+// `chosen` runs after a pick with the model saved; `finished` runs once the
+// request has answered either way, before anything is shown. Both are
+// optional and both must be guarded by their caller.
+void DetectLlmModels(
+	std::shared_ptr<Ui::Show> show,
+	Fn<void(QString)> chosen = nullptr,
+	Fn<void()> finished = nullptr);
 
 // The language list this page's two language rows open, shared so that the
 // translate button in a chat's title bar edits the very same two values

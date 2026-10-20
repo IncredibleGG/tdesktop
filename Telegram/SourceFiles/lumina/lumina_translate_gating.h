@@ -232,14 +232,18 @@ namespace Lumina {
 // 777000 (login codes), the user's own Saved Messages, and Telegram's own
 // system / official accounts - any user carrying the `support` flag, every
 // service user id (a multiple of 1000: 777000, 333000, 489000 Verification
-// Codes, 2666000), plus the well-known 42777 and 93372553 (BotFather).
+// Codes, 2666000), plus the well-known 42777, 489001 (login codes for other
+// services) and 93372553 (BotFather) - the list Android's
+// LuminaPrivacyGate.isProtectedDialog() checks.
 //
 // Automatic means nobody pointed at this one message: whole-chat translation
 // and the batch it sends for every visible message, the dual-language line it
 // feeds, the per-chat switch re-armed when the chat is opened, and the
 // translation that follows a voice transcript on its own. A MANUAL action on a
 // specific message - Translate, Explain, Transcribe - is the user's own choice
-// and is not gated here.
+// and is not gated here. Explain does consult it for one thing: in these chats
+// it sends the one message the user pointed at and none of the conversation
+// around it (lumina/lumina_explain.cpp).
 //
 // Telegram's own server-side translation is not a third party: it already has
 // the text. The whole-chat stream of such a chat is therefore still served

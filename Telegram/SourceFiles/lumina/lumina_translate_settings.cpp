@@ -322,6 +322,12 @@ not_null<Ui::FlatLabel*> AddRightLabel(
 		label->resizeToNaturalWidth(available);
 		label->moveToRight(st::settingsButtonRightSkip, st.padding.top());
 	}, label->lifetime());
+	// A press on the value itself - the base URL, the model, the masked key -
+	// has to open the row's editor like a press anywhere else on the row. A
+	// FlatLabel takes mouse events for text selection and links, so without
+	// this only the blank part of the row responded. Upstream's
+	// CreateRightLabel() and the voice page's copy of this helper do the same.
+	label->setAttribute(Qt::WA_TransparentForMouseEvents);
 	return label;
 }
 
@@ -403,62 +409,17 @@ not_null<Ui::FlatLabel*> AddRightLabel(
 	return Tr(u"LuminaTranslateTestFailed"_q) + u": "_q + reason;
 }
 
-// `keyed` is true when the request went out carrying an API key, and `status`
-// is the HTTP status it came back with - 0 when it never got one, and also 0
-// for a failure that never reached HTTP at all.
-//
-// Both are needed because ErrorForStatus() maps every status onto three
-// enumerators, and the failures this row exists to tell apart land in only two
-// of them: a rejected key is 401, or on DeepL 403; an exhausted quota is 429
-// or 456, or again on DeepL 403; a host that never answered carries no status
-// whatsoever. The enum alone therefore cannot separate "your key is wrong"
-// from "your wifi is off", which is the single most common pair of afternoons
-// this row is pressed on.
+// `keyed` is true when the request went out carrying an API key. The reason
+// itself comes from TranslateFailureText() (lumina_translate_providers.h), the
+// same mapping the translate box and Explain use, so that one failure reads
+// the same everywhere: a model the service does not have, a rejected key, an
+// exhausted quota, a server error and a host that never answered are five
+// different fixes, and the row used to fold several of them into "could not
+// connect, or the key was turned down".
 [[nodiscard]] QString TestFailureText(
-		TranslateError error,
-		bool keyed,
-		int status) {
-	const auto reason = [&] {
-		switch (error) {
-		case TranslateError::NoKey:
-			return Tr(u"LuminaTranslateNoKey"_q);
-		case TranslateError::RateLimited:
-			// 429 and 456 are quota codes and nothing else, so they say so
-			// whether or not a key was involved. 403 is the ambiguous one: it
-			// is also what DeepL answers for a key it does not accept, so
-			// with a key in play it has to name the key first - otherwise the
-			// likeliest reason a user presses this row, a mistyped key, is
-			// answered with "try again later" and they wait instead of
-			// fixing it.
-			return (keyed && (status != 429) && (status != 456))
-				? Tr(u"LuminaTranslateTestQuotaKeyed"_q)
-				: Tr(u"LuminaTranslateTestQuota"_q);
-		case TranslateError::Network:
-			// Everything that is not a quota code arrives here, so this is
-			// where the status earns its keep.
-			if (status == 401) {
-				return Tr(u"LuminaTranslateTestKeyRejected"_q);
-			} else if (!status || (status >= 500)) {
-				// Nothing answered at all, or the service answered that it
-				// is broken. Neither has anything to do with the key, and
-				// blaming the key here sends the user off to re-enter a key
-				// that was fine.
-				return Tr(u"LuminaTranslateTestNetwork"_q);
-			}
-			return keyed
-				? Tr(u"LuminaTranslateTestKeyRejected"_q)
-				: Tr(u"LuminaTranslateTestNetwork"_q);
-		case TranslateError::Unavailable:
-			return Tr(u"LuminaTranslateTestUnavailable"_q);
-		case TranslateError::BadResponse:
-		case TranslateError::None:
-			// None with an empty text is TranslateResult::failed() too: the
-			// service answered, and the answer had no translation in it.
-			return Tr(u"LuminaTranslateTestBadResponse"_q);
-		}
-		return Tr(u"LuminaTranslateTestUnavailable"_q);
-	}();
-	return TestFailedWith(reason);
+		const TranslateResult &result,
+		bool keyed) {
+	return TestFailedWith(TranslateFailureText(result, keyed));
 }
 
 [[nodiscard]] QString TestSuccessText(
@@ -481,11 +442,27 @@ not_null<Ui::FlatLabel*> AddRightLabel(
 		+ u")"_q;
 }
 
+// `detect`, when set, adds a "Detect available models" link under the text
+// that runs it - offered when the service said the model does not exist.
 void ShowTestToast(
 		not_null<Window::SessionController*> controller,
-		const QString &text) {
+		const QString &text,
+		Fn<void()> detect = nullptr) {
+	auto marked = TextWithEntities{ text };
+	auto filter = Ui::Toast::ClickHandlerFilter();
+	if (detect) {
+		marked.append(QChar('\n')).append(
+			tr::link(Tr(u"LuminaLlmDetectModels"_q)));
+		filter = [=](const ClickHandlerPtr &, Qt::MouseButton button) {
+			if (button == Qt::LeftButton) {
+				detect();
+			}
+			return false;
+		};
+	}
 	controller->showToast(Ui::Toast::Config{
-		.text = TextWithEntities{ text },
+		.text = std::move(marked),
+		.filter = std::move(filter),
 		.duration = kTestToastDuration,
 	});
 }
@@ -849,7 +826,7 @@ void AddTestRow(
 		if (keyed && ProviderApiKey(provider.id).isEmpty()) {
 			ShowTestToast(
 				controller,
-				TestFailureText(TranslateError::NoKey, false, 0));
+				TestFailureText({ .error = TranslateError::NoKey }, false));
 			return;
 		}
 
@@ -862,7 +839,9 @@ void AddTestRow(
 		if (!engine) {
 			ShowTestToast(
 				controller,
-				TestFailureText(TranslateError::Unavailable, false, 0));
+				TestFailureText(
+					{ .error = TranslateError::Unavailable },
+					false));
 			return;
 		}
 		state->engine = std::move(engine);
@@ -889,7 +868,7 @@ void AddTestRow(
 			state->engine = nullptr;
 			ShowTestToast(
 				controller,
-				TestFailureText(TranslateError::Network, keyed, 0));
+				TestFailureText({ .error = TranslateError::Network }, keyed));
 		});
 		state->watchdog.callOnce(kTestTimeoutMs);
 
@@ -900,14 +879,22 @@ void AddTestRow(
 			state->watchdog.cancel();
 			state->running = false;
 			state->label.fire(QString());
+			// A model the service does not have is fixed by picking one it
+			// does, so that toast carries the way to do it.
+			const auto detect = (result.failed()
+				&& !result.missingModel.isEmpty())
+				? Fn<void()>([=] {
+					DetectLlmModels(controller->uiShow());
+				})
+				: Fn<void()>();
 			ShowTestToast(controller, result.failed()
-				? TestFailureText(result.error, keyed, result.httpStatus)
+				? TestFailureText(result, keyed)
 				: LooksUntranslated(sample, result.text)
 				? TestFailedWith(Tr(u"LuminaTranslateTestNoChange"_q))
 				: TestSuccessText(
 					sample,
 					result.text,
-					TranslateLanguageName(target)));
+					TranslateLanguageName(target)), detect);
 
 			// This runs inside the engine's own network reply, so the engine
 			// cannot be dropped from here - that would delete the reply, and
@@ -920,6 +907,45 @@ void AddTestRow(
 				}
 			});
 		});
+	});
+}
+
+// "Detect available models", right under the Model row and in the same fold,
+// so it is there exactly when a model can be typed. It asks the service for
+// its model list with the key and base URL above and offers it as a picker;
+// a pick is saved as the model, which the row above then shows. One request
+// at a time: a press while one is running is ignored, and the row says so.
+void AddDetectModelsRow(
+		not_null<Ui::VerticalLayout*> container,
+		not_null<Window::SessionController*> controller) {
+	struct DetectState {
+		rpl::event_stream<QString> label;
+		bool running = false;
+	};
+	const auto button = ::Settings::AddButtonWithIcon(
+		container,
+		TrValue(u"LuminaLlmDetectModels"_q),
+		st::settingsButtonNoIcon);
+	const auto state = button->lifetime().make_state<DetectState>();
+	GateRow(button, AddRightLabel(
+		button,
+		TrValue(u"LuminaLlmDetectModels"_q),
+		rpl::single(QString()) | rpl::then(state->label.events())));
+	button->setClickedCallback([=] {
+		if (state->running) {
+			return;
+		}
+		state->running = true;
+		state->label.fire(Tr(u"LuminaLlmModelsRunning"_q));
+		// Guarded on the row: if the page closes first, `state` died with it
+		// and only the picker (or the error toast) is still worth showing.
+		DetectLlmModels(
+			controller->uiShow(),
+			nullptr,
+			crl::guard(button, [=] {
+				state->running = false;
+				state->label.fire(QString());
+			}));
 	});
 }
 
@@ -987,6 +1013,7 @@ void AddProviderRows(
 				false,
 				[](QString value) { SetLlmModel(value); });
 		});
+	AddDetectModelsRow(modelBlock, controller);
 
 	const auto promptBlock = AddConditionalBlock(container, [] {
 		return CurrentProvider().needsPrompt;
@@ -1238,6 +1265,51 @@ void ShowApiKeyEditor(
 		const QString &current,
 		Fn<void(QString)> save) {
 	controller->show(Box(EditApiKeyBox, title, current, std::move(save)));
+}
+
+void DetectLlmModels(
+		std::shared_ptr<Ui::Show> show,
+		Fn<void(QString)> chosen,
+		Fn<void()> finished) {
+	FetchLlmModels([=](std::vector<QString> models, QString error) {
+		if (finished) {
+			finished();
+		}
+		if (!show->valid()) {
+			return;
+		} else if (!error.isEmpty()) {
+			show->showToast(Ui::Toast::Config{
+				.text = TextWithEntities{ error },
+				.duration = kTestToastDuration,
+			});
+			return;
+		}
+		// The current model is preselected when the service lists it, and
+		// nothing is when it does not - which is the usual reason to be here.
+		const auto current = LlmModel();
+		auto selected = -1;
+		for (auto i = 0, count = int(models.size()); i != count; ++i) {
+			if (models[i] == current) {
+				selected = i;
+				break;
+			}
+		}
+		show->show(Box([=](not_null<Ui::GenericBox*> box) {
+			SingleChoiceBox(box, {
+				.title = TrValue(u"LuminaLlmModelsTitle"_q),
+				.options = models,
+				.initialSelection = selected,
+				.callback = [=](int index) {
+					if (index >= 0 && index < int(models.size())) {
+						SetLlmModel(models[index]);
+						if (chosen) {
+							chosen(models[index]);
+						}
+					}
+				},
+			});
+		}));
+	});
 }
 
 bool TranslateBeforeSend() {

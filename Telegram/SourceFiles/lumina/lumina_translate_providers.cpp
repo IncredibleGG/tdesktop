@@ -28,6 +28,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
 #include <QtCore/QJsonParseError>
+#include <QtCore/QSet>
 #include <QtCore/QUrl>
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkReply>
@@ -155,6 +156,11 @@ struct HttpHeader {
 // user's API key, and an error body can echo either one back. The status is
 // the one detail that is safe to carry out and that ErrorForStatus() throws
 // away, and the settings test row needs it to name what actually went wrong.
+//
+// An HTTP error (status 400 and up) hands over its body too, for exactly one
+// purpose: LlmModelNotFound() reads it to tell "this model does not exist" from
+// every other 400 / 404. A caller may classify it and must never show, store
+// or log it.
 void SendHttp(
 		not_null<QNetworkAccessManager*> network,
 		const QUrl &url,
@@ -196,13 +202,219 @@ void SendHttp(
 		auto received = reply->readAll();
 		reply->deleteLater();
 		if (status >= 400) {
-			done(QByteArray(), ErrorForStatus(status), status);
+			done(std::move(received), ErrorForStatus(status), status);
 		} else if (failure != QNetworkReply::NoError) {
 			done(QByteArray(), TranslateError::Network, status);
 		} else {
 			done(std::move(received), TranslateError::None, status);
 		}
 	});
+}
+
+// The base URL of the OpenAI-compatible service, without trailing slashes, so
+// that "/chat/completions" and "/models" can be appended to it.
+[[nodiscard]] QString LlmEndpointBase() {
+	auto result = LlmBaseUrl();
+	while (result.endsWith(QChar('/'))) {
+		result.chop(1);
+	}
+	return result.isEmpty() ? DefaultLlmBaseUrl() : result;
+}
+
+// What an error reply says about itself, lower-cased: `kind` gathers the
+// type / code / status strings and `message` the human-readable text. It
+// covers the shapes OpenAI-compatible services actually answer with -
+// {"error":{"message","type","code"}} (OpenAI and most relays),
+// {"error":"..."} (Ollama), "message" / "type" / "code" at the top level
+// (vLLM) and an array around the whole thing (Gemini).
+struct ErrorDescription {
+	QString kind;
+	QString message;
+};
+
+[[nodiscard]] ErrorDescription DescribeErrorBody(const QByteArray &body) {
+	auto error = QJsonParseError{ 0, QJsonParseError::NoError };
+	const auto document = QJsonDocument::fromJson(body, &error);
+	if (error.error != QJsonParseError::NoError) {
+		return {};
+	}
+	auto object = QJsonObject();
+	if (document.isObject()) {
+		object = document.object();
+	} else if (document.isArray() && !document.array().isEmpty()) {
+		object = document.array().at(0).toObject();
+	}
+	auto result = ErrorDescription();
+	const auto add = [](QString &to, const QJsonValue &value) {
+		if (value.isString()) {
+			to += value.toString().toLower() + QChar(' ');
+		}
+	};
+	const auto read = [&](const QJsonObject &from) {
+		add(result.kind, from.value(u"type"_q));
+		add(result.kind, from.value(u"code"_q));
+		add(result.kind, from.value(u"status"_q));
+		add(result.message, from.value(u"message"_q));
+	};
+	const auto inner = object.value(u"error"_q);
+	if (inner.isObject()) {
+		read(inner.toObject());
+	} else if (inner.isString()) {
+		add(result.message, inner);
+	}
+	read(object);
+	return result;
+}
+
+[[nodiscard]] bool ContainsAny(
+		const QString &text,
+		std::initializer_list<const char*> markers) {
+	for (const auto marker : markers) {
+		if (text.contains(QLatin1String(marker))) {
+			return true;
+		}
+	}
+	return false;
+}
+
+// "Detect models" filters and orders what /models lists. Speech, image,
+// embedding, moderation and realtime models cannot answer a chat completion,
+// so they are left out unless they are all there is.
+[[nodiscard]] bool NonChatModelId(const QString &lowered) {
+	return ContainsAny(lowered, {
+		"image",
+		"dall-e",
+		"tts",
+		"whisper",
+		"embedding",
+		"moderation",
+		"transcribe",
+		"audio",
+		"realtime",
+	});
+}
+
+[[nodiscard]] bool LikelyChatModelId(const QString &lowered) {
+	return ContainsAny(lowered, {
+		"gpt",
+		"chat",
+		"claude",
+		"gemini",
+		"llama",
+		"qwen",
+		"deepseek",
+		"mistral",
+		"mixtral",
+		"glm",
+		"kimi",
+		"moonshot",
+		"grok",
+		"command",
+		"instruct",
+	}) || lowered.startsWith(u"o1"_q)
+		|| lowered.startsWith(u"o3"_q)
+		|| lowered.startsWith(u"o4"_q);
+}
+
+// A list longer than this is cut: every entry becomes a radio button, and a
+// service that lists tens of thousands of ids would freeze the picker. The
+// reply itself is read no further than kModelListParseMax entries.
+constexpr auto kModelListMax = 500;
+constexpr auto kModelListParseMax = 5000;
+
+[[nodiscard]] std::optional<std::vector<QString>> ParseModelIds(
+		const QByteArray &body) {
+	auto error = QJsonParseError{ 0, QJsonParseError::NoError };
+	const auto document = QJsonDocument::fromJson(body, &error);
+	if (error.error != QJsonParseError::NoError) {
+		return std::nullopt;
+	}
+	auto list = QJsonArray();
+	if (document.isArray()) {
+		list = document.array();
+	} else if (document.isObject()) {
+		const auto object = document.object();
+		const auto data = object.value(u"data"_q);
+		const auto models = object.value(u"models"_q);
+		if (data.isArray()) {
+			list = data.toArray();
+		} else if (models.isArray()) {
+			list = models.toArray();
+		} else {
+			return std::nullopt;
+		}
+	} else {
+		return std::nullopt;
+	}
+	auto result = std::vector<QString>();
+	auto seen = QSet<QString>();
+	for (const auto &entry : list) {
+		if (int(result.size()) >= kModelListParseMax) {
+			break;
+		}
+		auto id = QString();
+		if (entry.isString()) {
+			id = entry.toString();
+		} else if (entry.isObject()) {
+			const auto object = entry.toObject();
+			id = object.value(u"id"_q).toString();
+			if (id.isEmpty()) {
+				id = object.value(u"name"_q).toString();
+			}
+		}
+		id = id.trimmed();
+		if (!id.isEmpty() && !seen.contains(id)) {
+			seen.insert(id);
+			result.push_back(id);
+		}
+	}
+	return result;
+}
+
+[[nodiscard]] std::vector<QString> OrderModelIds(std::vector<QString> ids) {
+	auto chat = std::vector<QString>();
+	for (const auto &id : ids) {
+		if (!NonChatModelId(id.toLower())) {
+			chat.push_back(id);
+		}
+	}
+	auto result = chat.empty() ? std::move(ids) : std::move(chat);
+	const auto rank = [](const QString &id) {
+		return LikelyChatModelId(id.toLower()) ? 0 : 1;
+	};
+	std::stable_sort(result.begin(), result.end(), [&](
+			const QString &a,
+			const QString &b) {
+		const auto ra = rank(a);
+		const auto rb = rank(b);
+		return (ra != rb)
+			? (ra < rb)
+			: (a.compare(b, Qt::CaseInsensitive) < 0);
+	});
+	if (int(result.size()) > kModelListMax) {
+		result.resize(kModelListMax);
+	}
+	return result;
+}
+
+// The reason a /models request failed. 404 and 405 are how a service that
+// has no model list at all answers, which is not an error in the setup: the
+// model name simply has to be typed.
+[[nodiscard]] QString ModelsFailureText(TranslateError error, int status) {
+	if (status == 401 || status == 403) {
+		return Tr(u"LuminaTranslateErrKeyRejected"_q);
+	} else if (status == 404 || status == 405) {
+		return Tr(u"LuminaLlmModelsNoList"_q);
+	} else if (status == 402 || status == 429) {
+		return Tr(u"LuminaTranslateTestQuota"_q);
+	} else if (status >= 500) {
+		return Tr(u"LuminaTranslateErrServer"_q, QString::number(status));
+	} else if (status >= 400) {
+		return Tr(u"LuminaTranslateErrRejected"_q, QString::number(status));
+	} else if (error == TranslateError::BadResponse) {
+		return Tr(u"LuminaTranslateTestBadResponse"_q);
+	}
+	return Tr(u"LuminaTranslateErrNetwork"_q);
 }
 
 [[nodiscard]] std::optional<QJsonObject> ParseJsonObject(
@@ -578,13 +790,8 @@ void LlmEngine::translate(
 		done({ .error = TranslateError::NoKey });
 		return;
 	}
-	auto baseUrl = LlmBaseUrl();
-	while (baseUrl.endsWith(QChar('/'))) {
-		baseUrl.chop(1);
-	}
-	if (baseUrl.isEmpty()) {
-		baseUrl = DefaultLlmBaseUrl();
-	}
+	const auto baseUrl = LlmEndpointBase();
+	const auto model = LlmModel();
 	// The chat's register is APPENDED to the user's own system prompt, never
 	// substituted for it: the global prompt keeps saying whatever it says
 	// about how this user wants things translated, and the register only adds
@@ -595,7 +802,7 @@ void LlmEngine::translate(
 		LanguageEnglishName(toCode))
 		+ RegisterPromptSuffix(ResolveRegisterDialog(registerDialog()));
 	const auto body = QJsonDocument(QJsonObject{
-		{ u"model"_q, LlmModel() },
+		{ u"model"_q, model },
 		{ u"temperature"_q, 0.2 },
 		{ u"messages"_q, QJsonArray{
 			QJsonObject{
@@ -617,9 +824,20 @@ void LlmEngine::translate(
 		QUrl(baseUrl + u"/chat/completions"_q),
 		headers,
 		body,
-		[done](QByteArray received, TranslateError error, int status) {
+		[done, model](
+				QByteArray received,
+				TranslateError error,
+				int status) {
 			if (error != TranslateError::None) {
-				done({ .error = error, .httpStatus = status });
+				// The body is classified here and dropped: only the model
+				// name the user typed travels on, never the reply.
+				done({
+					.error = error,
+					.httpStatus = status,
+					.missingModel = (LlmModelNotFound(status, received, model)
+						? model
+						: QString()),
+				});
 				return;
 			}
 			const auto object = ParseJsonObject(received);
@@ -722,9 +940,20 @@ public:
 		_primary->translate(text, toCode, [=](TranslateResult result) {
 			if (!result.failed()) {
 				done(std::move(result));
-			} else {
-				secondary->translate(text, toCode, done);
+				return;
 			}
+			// When the retry fails as well, the reason reported is the
+			// primary's: that is the service the user chose and can fix - a
+			// key, a model, a base URL - while the Telegram tier behind it
+			// has nothing to configure. Which result is reported is the only
+			// thing this changes; every caller still only asks failed().
+			secondary->translate(text, toCode, [=](TranslateResult retried) {
+				if (retried.failed()) {
+					done(result);
+				} else {
+					done(std::move(retried));
+				}
+			});
 		});
 	}
 
@@ -785,7 +1014,9 @@ private:
 
 // The adapter onto tdesktop's own interface. supportsMessageId() is false and
 // must stay false - see the note on CreateTranslateProvider() in the header.
-class EngineProvider final : public Ui::TranslateProvider {
+class EngineProvider final
+	: public Ui::TranslateProvider
+	, public TranslateFailureReporter {
 public:
 	EngineProvider(
 		not_null<Main::Session*> session,
@@ -819,20 +1050,33 @@ public:
 				.peerId = request.peerId,
 			}
 			: RegisterDialog());
+		// `this` outlives the callback: the engine is ours, and a destroyed
+		// engine never runs its callbacks (see TranslateEngine).
 		_engine->translate(
 			text,
 			TargetLanguageCode(to),
-			[done](TranslateResult result) {
+			[this, done](TranslateResult result) {
 				if (result.failed()) {
+					_lastFailure = TranslateFailureText(
+						result,
+						TranslateProviderKeyed(_engine->id()));
 					done({ .error = Ui::TranslateProviderError::Unknown });
 				} else {
+					_lastFailure = QString();
 					done({ .text = tr::marked(result.text) });
 				}
 			});
 	}
 
+	[[nodiscard]] QString lastFailureText() const override {
+		return _lastFailure;
+	}
+
 private:
 	const uint64 _sessionId = 0;
+	// Before the engine, so that it is still alive while the engine is
+	// being destroyed.
+	QString _lastFailure;
 	const std::unique_ptr<TranslateEngine> _engine;
 
 };
@@ -983,6 +1227,147 @@ rpl::producer<> TranslateProviderChanges() {
 			|| (key == FallbackKey())
 			|| key.startsWith(ApiKeyPrefix());
 	}) | rpl::to_empty;
+}
+
+bool LlmModelNotFound(
+		int status,
+		const QByteArray &body,
+		const QString &model) {
+	if ((status != 400 && status != 404) || body.isEmpty()) {
+		return false;
+	}
+	const auto described = DescribeErrorBody(body);
+	if (described.kind.contains(u"model_not_found"_q)) {
+		return true;
+	}
+	const auto &message = described.message;
+	if (message.isEmpty()) {
+		return false;
+	}
+	// Phrases that say on their own that the model is what is missing.
+	if (ContainsAny(message, {
+			"model_not_found",
+			"model not found",
+			"model not exist",
+			"model does not exist",
+			"model is not supported",
+			"model not supported",
+			"no such model",
+			"unknown model",
+			"invalid model",
+		})) {
+		return true;
+	}
+	// Otherwise the user's own model name next to a not-found phrase: "The
+	// model `x` does not exist", "Model "x" is not supported", "model 'x' not
+	// found, try pulling it first", "models/x is not found". Requiring the
+	// name keeps "'max_tokens' is not supported with this model" - a 400 that
+	// is about a parameter, not the model - out of it.
+	const auto name = model.trimmed().toLower();
+	if (name.isEmpty() || !message.contains(name)) {
+		return false;
+	}
+	return ContainsAny(message, {
+		"not found",
+		"does not exist",
+		"not exist",
+		"not supported",
+		"not a valid model",
+		"not available",
+	}) || ((status == 404) && described.kind.contains(u"not_found"_q));
+}
+
+bool TranslateProviderKeyed(const QString &id) {
+	const auto info = FindTranslateProvider(id);
+	return info && info->needsKey;
+}
+
+QString TranslateFailureText(const TranslateResult &result, bool keyed) {
+	if (!result.missingModel.isEmpty()) {
+		return Tr(u"LuminaTranslateErrModelNotFound"_q, result.missingModel);
+	}
+	const auto status = result.httpStatus;
+	switch (result.error) {
+	case TranslateError::NoKey:
+		return Tr(u"LuminaTranslateNoKey"_q);
+	case TranslateError::Unavailable:
+		return Tr(u"LuminaTranslateTestUnavailable"_q);
+	case TranslateError::RateLimited:
+	case TranslateError::Network:
+		if (status == 401 || (keyed && status == 403)) {
+			// 403 from a keyed service (DeepL's answer to a bad key, and
+			// what OpenAI-compatible relays send for a disabled one) names
+			// the key; from the keyless engine it is a rate limit.
+			return Tr(u"LuminaTranslateErrKeyRejected"_q);
+		} else if (status == 402
+			|| status == 403
+			|| status == 429
+			|| status == 456
+			|| (!status && result.error == TranslateError::RateLimited)) {
+			return Tr(u"LuminaTranslateTestQuota"_q);
+		} else if (status >= 500) {
+			return Tr(u"LuminaTranslateErrServer"_q, QString::number(status));
+		} else if (status >= 400) {
+			return Tr(
+				u"LuminaTranslateErrRejected"_q,
+				QString::number(status));
+		}
+		// No status at all: DNS, TLS, a refused connection, the timeout, or
+		// a redirect the key may not follow.
+		return Tr(u"LuminaTranslateErrNetwork"_q);
+	case TranslateError::BadResponse:
+	case TranslateError::None:
+		// None with an empty text is TranslateResult::failed() too: the
+		// service answered, and the answer had no translation in it.
+		return Tr(u"LuminaTranslateTestBadResponse"_q);
+	}
+	return Tr(u"LuminaTranslateTestUnavailable"_q);
+}
+
+void FetchLlmModels(
+		Fn<void(std::vector<QString> models, QString error)> done) {
+	const auto key = ProviderApiKey(LlmProviderId());
+	if (key.isEmpty()) {
+		done({}, Tr(u"LuminaLlmModelsNoKey"_q));
+		return;
+	}
+	// A free function has no engine to hang a QNetworkAccessManager off, so
+	// it owns one for this single request and drops it with deleteLater(),
+	// never from inside its own reply's signal. It is created on the calling
+	// (main) thread, so `done` runs there too - the same arrangement as
+	// FetchSttModels() in lumina_transcribers.cpp.
+	const auto network = new QNetworkAccessManager();
+	const auto headers = std::vector<HttpHeader>{
+		{ "Authorization", "Bearer " + key.toUtf8() },
+	};
+	SendHttp(
+		network,
+		QUrl(LlmEndpointBase() + u"/models"_q),
+		headers,
+		QByteArray(),
+		[network, done](QByteArray body, TranslateError error, int status) {
+			network->deleteLater();
+			if (error != TranslateError::None) {
+				done({}, ModelsFailureText(error, status));
+				return;
+			}
+			auto parsed = ParseModelIds(body);
+			if (!parsed) {
+				done({}, ModelsFailureText(TranslateError::BadResponse, 0));
+				return;
+			} else if (parsed->empty()) {
+				done({}, Tr(u"LuminaLlmModelsEmpty"_q));
+				return;
+			}
+			done(OrderModelIds(std::move(*parsed)), QString());
+		});
+}
+
+QString TranslateProviderFailureText(
+		not_null<const Ui::TranslateProvider*> provider) {
+	const auto reporter = dynamic_cast<const TranslateFailureReporter*>(
+		provider.get());
+	return reporter ? reporter->lastFailureText() : QString();
 }
 
 QString DefaultLlmBaseUrl() {

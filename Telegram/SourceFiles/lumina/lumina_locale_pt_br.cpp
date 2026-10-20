@@ -109,25 +109,26 @@ namespace {
 		{ u"LuminaTranslateTestSuccess"_q, u"A tradução funciona."_q },
 		{ u"LuminaTranslateTestFailed"_q, u"Falha no teste"_q },
 		{ u"LuminaTranslateNoKey"_q, u"Chave de API necessária"_q },
-		{ u"LuminaTranslateTestKeyRejected"_q, u"Não foi possível alcançar o "
-			u"serviço, ou ele recusou esta chave de API. Verifique primeiro "
-			u"a chave e depois a URL base e sua conexão."_q },
-		{ u"LuminaTranslateTestNetwork"_q, u"Não foi possível alcançar o "
-			u"serviço. Verifique sua conexão com a internet e o proxy, se "
-			u"houver, e tente de novo."_q },
 		{ u"LuminaTranslateTestNoChange"_q, u"O serviço devolveu o texto de exemplo sem alteração, ou seja, nada foi traduzido. Verifique a chave, o modelo e o prompt do sistema."_q },
 		{ u"LuminaTranslateTestQuota"_q, u"O serviço recusou a requisição: "
 			u"requisições demais, ou a cota desta chave acabou. Tente mais "
 			u"tarde."_q },
-		{ u"LuminaTranslateTestQuotaKeyed"_q, u"O serviço recusou a "
-			u"requisição: ele rejeitou esta chave de API, a cota da chave "
-			u"acabou, ou houve requisições demais. Confira primeiro a chave "
-			u"e depois tente mais tarde."_q },
 		{ u"LuminaTranslateTestBadResponse"_q, u"O serviço respondeu com "
 			u"algo que o LuminaGram não conseguiu ler, ou não respondeu "
 			u"nada. Verifique a URL base e o modelo."_q },
 		{ u"LuminaTranslateTestUnavailable"_q, u"Este serviço não pode "
 			u"funcionar aqui. Escolha outro acima."_q },
+		{ u"LuminaTranslateErrModelNotFound"_q, u"O modelo “{1}” não existe neste serviço. Clique em “Detectar modelos disponíveis” para escolher um."_q },
+		{ u"LuminaTranslateErrKeyRejected"_q, u"O serviço recusou esta chave de API. Verifique a chave e tente novamente."_q },
+		{ u"LuminaTranslateErrNetwork"_q, u"Não foi possível conectar ao serviço. Verifique a URL base e sua rede."_q },
+		{ u"LuminaTranslateErrServer"_q, u"O serviço teve um erro temporário (HTTP {1}). Tente novamente mais tarde."_q },
+		{ u"LuminaTranslateErrRejected"_q, u"O serviço recusou a requisição (HTTP {1}). Verifique a URL base e o modelo."_q },
+		{ u"LuminaLlmDetectModels"_q, u"Detectar modelos disponíveis"_q },
+		{ u"LuminaLlmModelsRunning"_q, u"Detectando…"_q },
+		{ u"LuminaLlmModelsTitle"_q, u"Modelos disponíveis"_q },
+		{ u"LuminaLlmModelsNoKey"_q, u"Defina a chave de API primeiro e depois detecte os modelos."_q },
+		{ u"LuminaLlmModelsNoList"_q, u"Este serviço não oferece uma lista de modelos. Digite o nome do modelo manualmente."_q },
+		{ u"LuminaLlmModelsEmpty"_q, u"O serviço não retornou nenhum modelo."_q },
 		{ u"LuminaTranslateProviderSecurityInfo"_q, u"As chaves ficam "
 			u"somente neste dispositivo, em um arquivo separado do resto das "
 			u"configurações, e nunca são enviadas ao Telegram. Tudo o que "
@@ -953,9 +954,9 @@ namespace {
 		{ u"LuminaVoiceConfirmSendVideo"_q, u"Enviar esta videomensagem?"_q },
 		{ u"LuminaVoiceConfirmSendVoice"_q, u"Enviar esta mensagem de voz?"_q },
 		{ u"LuminaVoiceConfirmBoxTitle"_q, u"Enviar esta mensagem?"_q },
-		{ u"LuminaBrandAboutIntro"_q, u"Uma bifurcação independente do Telegram Desktop.\nSem afiliação ou endosso do Telegram."_q },
-		{ u"LuminaBrandAboutSummaryPre"_q, u"Uma bifurcação independente do Telegram Desktop, baseada na "_q },
-		{ u"LuminaBrandAboutSummaryPost"_q, u".\nSem afiliação, endosso ou patrocínio do Telegram."_q },
+		{ u"LuminaBrandAboutIntro"_q, u"Tradução, privacidade e segurança, tudo em um só lugar.\nBaseado na API do Telegram, parte do ecossistema do Telegram."_q },
+		{ u"LuminaBrandAboutSummaryPre"_q, u"O LuminaGram é um app de mensagens gratuito baseado na "_q },
+		{ u"LuminaBrandAboutSummaryPost"_q, u", parte do ecossistema do Telegram."_q },
 		// LuminaGram Batch 4 (#14 double-tap edit, #16 call confirm, #17 menu, #22 keyword filter).
 		{ u"LuminaDoubleTapEditTitle"_q, u"Edição"_q },
 		{ u"LuminaDoubleTapEditRow"_q, u"Toque duplo na sua mensagem para editar"_q },

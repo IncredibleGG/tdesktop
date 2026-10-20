@@ -99,25 +99,26 @@ namespace {
 		{ u"LuminaTranslateTestSuccess"_q, u"ترجمه کار می‌کند."_q },
 		{ u"LuminaTranslateTestFailed"_q, u"آزمایش ناموفق بود"_q },
 		{ u"LuminaTranslateNoKey"_q, u"کلید API لازم است"_q },
-		{ u"LuminaTranslateTestKeyRejected"_q, u"دسترسی به سرویس ممکن نشد، "
-			u"یا سرویس این کلید API را نپذیرفت. اول کلید را بررسی کنید، سپس "
-			u"نشانی پایه و اتصال خود را."_q },
-		{ u"LuminaTranslateTestNetwork"_q, u"دسترسی به سرویس ممکن نشد. "
-			u"اتصال اینترنت و تنظیمات پروکسی خود را بررسی کنید و دوباره "
-			u"تلاش کنید."_q },
 		{ u"LuminaTranslateTestNoChange"_q, u"سرویس متن نمونه را بدون تغییر برگرداند، یعنی چیزی ترجمه نشد. کلید، مدل و پرامپت سیستم را بررسی کنید."_q },
 		{ u"LuminaTranslateTestQuota"_q, u"سرویس این درخواست را رد کرد: "
 			u"درخواست‌ها بیش از حد زیاد است، یا سهمیهٔ این کلید تمام شده "
 			u"است. بعداً دوباره تلاش کنید."_q },
-		{ u"LuminaTranslateTestQuotaKeyed"_q, u"سرویس این درخواست را رد کرد: "
-			u"این کلید API را نپذیرفت، یا سهمیهٔ کلید تمام شده است، یا "
-			u"درخواست‌ها بیش از حد زیاد بوده است. اول کلید را بررسی کنید، "
-			u"سپس بعداً دوباره تلاش کنید."_q },
 		{ u"LuminaTranslateTestBadResponse"_q, u"سرویس چیزی فرستاد که "
 			u"LuminaGram نتوانست بخواند، یا اصلاً چیزی نفرستاد. نشانی پایه و "
 			u"مدل را بررسی کنید."_q },
 		{ u"LuminaTranslateTestUnavailable"_q, u"این سرویس اینجا اجرا "
 			u"نمی‌شود. در بالا سرویس دیگری انتخاب کنید."_q },
+		{ u"LuminaTranslateErrModelNotFound"_q, u"مدل «{1}» در این سرویس وجود ندارد. برای انتخاب یک مدل روی «شناسایی مدل‌های موجود» بزنید."_q },
+		{ u"LuminaTranslateErrKeyRejected"_q, u"سرویس این کلید API را رد کرد. کلید را بررسی کنید و دوباره امتحان کنید."_q },
+		{ u"LuminaTranslateErrNetwork"_q, u"اتصال به سرویس ممکن نیست. URL پایه و شبکه را بررسی کنید."_q },
+		{ u"LuminaTranslateErrServer"_q, u"سرویس با خطای موقت روبه‌رو شد (HTTP {1}). بعداً دوباره امتحان کنید."_q },
+		{ u"LuminaTranslateErrRejected"_q, u"سرویس درخواست را رد کرد (HTTP {1}). URL پایه و مدل را بررسی کنید."_q },
+		{ u"LuminaLlmDetectModels"_q, u"شناسایی مدل‌های موجود"_q },
+		{ u"LuminaLlmModelsRunning"_q, u"در حال شناسایی…"_q },
+		{ u"LuminaLlmModelsTitle"_q, u"مدل‌های موجود"_q },
+		{ u"LuminaLlmModelsNoKey"_q, u"ابتدا کلید API را تنظیم کنید، سپس مدل‌ها را شناسایی کنید."_q },
+		{ u"LuminaLlmModelsNoList"_q, u"این سرویس فهرست مدل ارائه نمی‌دهد. نام مدل را دستی وارد کنید."_q },
+		{ u"LuminaLlmModelsEmpty"_q, u"سرویس هیچ مدلی برنگرداند."_q },
 		{ u"LuminaTranslateProviderSecurityInfo"_q, u"کلیدها فقط روی همین "
 			u"دستگاه و در فایلی جدا از بقیهٔ تنظیمات نگهداری می‌شوند و هرگز "
 			u"به Telegram فرستاده نمی‌شوند. هر چیزی که ترجمه می‌کنید به "
@@ -644,9 +645,9 @@ namespace {
 		{ u"LuminaVoiceConfirmSendVideo"_q, u"این پیام ویدیویی ارسال شود؟"_q },
 		{ u"LuminaVoiceConfirmSendVoice"_q, u"این پیام صوتی ارسال شود؟"_q },
 		{ u"LuminaVoiceConfirmBoxTitle"_q, u"این پیام ارسال شود؟"_q },
-		{ u"LuminaBrandAboutIntro"_q, u"یک انشعاب مستقل از Telegram Desktop.\nوابسته به Telegram نیست و از سوی آن تأیید نشده است."_q },
-		{ u"LuminaBrandAboutSummaryPre"_q, u"یک انشعاب مستقل از Telegram Desktop، ساخته‌شده بر پایهٔ "_q },
-		{ u"LuminaBrandAboutSummaryPost"_q, u".\nوابسته به Telegram نیست و از سوی آن تأیید یا حمایت مالی نشده است."_q },
+		{ u"LuminaBrandAboutIntro"_q, u"ترجمه، حریم خصوصی و امنیت، همه در یک‌جا.\nساخته‌شده با Telegram API و بخشی از اکوسیستم Telegram."_q },
+		{ u"LuminaBrandAboutSummaryPre"_q, u"LuminaGram یک پیام‌رسان رایگان است که بر پایهٔ "_q },
+		{ u"LuminaBrandAboutSummaryPost"_q, u" ساخته شده و بخشی از اکوسیستم Telegram است."_q },
 		// LuminaGram Batch 4 (#14 double-tap edit, #16 call confirm, #17 menu, #22 keyword filter).
 		{ u"LuminaDoubleTapEditTitle"_q, u"ویرایش"_q },
 		{ u"LuminaDoubleTapEditRow"_q, u"برای ویرایش، روی پیام خود دوبار ضربه بزنید"_q },

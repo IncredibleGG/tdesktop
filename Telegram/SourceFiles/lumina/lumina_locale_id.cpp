@@ -109,24 +109,26 @@ namespace {
 		{ u"LuminaTranslateTestSuccess"_q, u"Terjemahan berfungsi."_q },
 		{ u"LuminaTranslateTestFailed"_q, u"Pengujian gagal"_q },
 		{ u"LuminaTranslateNoKey"_q, u"Perlu kunci API"_q },
-		{ u"LuminaTranslateTestKeyRejected"_q, u"Layanan tidak dapat "
-			u"dihubungi, atau layanan menolak kunci API ini. Periksa kunci "
-			u"terlebih dahulu, lalu URL dasar dan koneksi Anda."_q },
-		{ u"LuminaTranslateTestNetwork"_q, u"Layanan tidak dapat dihubungi. "
-			u"Periksa koneksi internet dan proksi Anda, lalu coba lagi."_q },
 		{ u"LuminaTranslateTestNoChange"_q, u"Layanan mengembalikan teks contoh tanpa perubahan, jadi tidak ada yang diterjemahkan. Periksa kunci, model, dan prompt sistem."_q },
 		{ u"LuminaTranslateTestQuota"_q, u"Layanan menolak permintaan ini: "
 			u"terlalu banyak permintaan, atau kuota kunci ini sudah habis. "
 			u"Coba lagi nanti."_q },
-		{ u"LuminaTranslateTestQuotaKeyed"_q, u"Layanan menolak permintaan "
-			u"ini: layanan menolak kunci API ini, kuota kunci sudah habis, "
-			u"atau permintaannya terlalu banyak. Periksa kuncinya dulu, lalu "
-			u"coba lagi nanti."_q },
 		{ u"LuminaTranslateTestBadResponse"_q, u"Layanan menjawab dengan "
 			u"sesuatu yang tidak dapat dibaca LuminaGram, atau tidak "
 			u"menjawab sama sekali. Periksa URL dasar dan modelnya."_q },
 		{ u"LuminaTranslateTestUnavailable"_q, u"Layanan ini tidak dapat "
 			u"dijalankan di sini. Pilih layanan lain di atas."_q },
+		{ u"LuminaTranslateErrModelNotFound"_q, u"Model “{1}” tidak ada di layanan ini. Klik “Deteksi model yang tersedia” untuk memilih salah satu."_q },
+		{ u"LuminaTranslateErrKeyRejected"_q, u"Layanan menolak kunci API ini. Periksa kuncinya lalu coba lagi."_q },
+		{ u"LuminaTranslateErrNetwork"_q, u"Tidak dapat terhubung ke layanan. Periksa URL dasar dan jaringan Anda."_q },
+		{ u"LuminaTranslateErrServer"_q, u"Layanan mengalami galat sementara (HTTP {1}). Coba lagi nanti."_q },
+		{ u"LuminaTranslateErrRejected"_q, u"Layanan menolak permintaan ini (HTTP {1}). Periksa URL dasar dan modelnya."_q },
+		{ u"LuminaLlmDetectModels"_q, u"Deteksi model yang tersedia"_q },
+		{ u"LuminaLlmModelsRunning"_q, u"Mendeteksi…"_q },
+		{ u"LuminaLlmModelsTitle"_q, u"Model yang tersedia"_q },
+		{ u"LuminaLlmModelsNoKey"_q, u"Atur kunci API terlebih dahulu, lalu deteksi model."_q },
+		{ u"LuminaLlmModelsNoList"_q, u"Layanan ini tidak menyediakan daftar model. Ketik nama model secara manual."_q },
+		{ u"LuminaLlmModelsEmpty"_q, u"Layanan tidak mengembalikan model apa pun."_q },
 		{ u"LuminaTranslateProviderSecurityInfo"_q, u"Kunci hanya disimpan di "
 			u"perangkat ini, dalam berkas terpisah dari pengaturan lainnya, "
 			u"dan tidak pernah dikirim ke Telegram. Semua yang Anda "
@@ -950,9 +952,9 @@ namespace {
 		{ u"LuminaVoiceConfirmSendVideo"_q, u"Kirim pesan video ini?"_q },
 		{ u"LuminaVoiceConfirmSendVoice"_q, u"Kirim pesan suara ini?"_q },
 		{ u"LuminaVoiceConfirmBoxTitle"_q, u"Kirim pesan ini?"_q },
-		{ u"LuminaBrandAboutIntro"_q, u"Fork independen dari Telegram Desktop.\nTidak berafiliasi dengan atau didukung oleh Telegram."_q },
-		{ u"LuminaBrandAboutSummaryPre"_q, u"Fork independen dari Telegram Desktop, dibangun di atas "_q },
-		{ u"LuminaBrandAboutSummaryPost"_q, u".\nTidak berafiliasi dengan, didukung, atau disponsori oleh Telegram."_q },
+		{ u"LuminaBrandAboutIntro"_q, u"Terjemahan, privasi, dan keamanan dalam satu aplikasi.\nDidukung Telegram API, bagian dari ekosistem Telegram."_q },
+		{ u"LuminaBrandAboutSummaryPre"_q, u"LuminaGram adalah aplikasi perpesanan gratis yang dibangun di atas "_q },
+		{ u"LuminaBrandAboutSummaryPost"_q, u", bagian dari ekosistem Telegram."_q },
 		// LuminaGram Batch 4 (#14 double-tap edit, #16 call confirm, #17 menu, #22 keyword filter).
 		{ u"LuminaDoubleTapEditTitle"_q, u"Pengeditan"_q },
 		{ u"LuminaDoubleTapEditRow"_q, u"Ketuk dua kali pesan Anda untuk mengedit"_q },

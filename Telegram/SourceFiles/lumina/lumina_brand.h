@@ -100,8 +100,11 @@ namespace Lumina {
 // the internal tag encoding that Lang::ValueParser puts in place of {api_link},
 // and the sentence needs rebuilding anyway.
 //
-// English only, on purpose. These say what the app legally is, and a wrong
-// translation of that is worse than an untranslated one.
+// Both come from the LuminaGram locale tables (keys LuminaBrandAboutIntro,
+// LuminaBrandAboutSummaryPre / Post) in all ten languages. The wording is the
+// owner-approved copy: what the app offers, and that it is built on the
+// Telegram API and part of the Telegram ecosystem, which is what the Telegram
+// API terms ask an app's intro to say. It never claims to be official.
 [[nodiscard]] QString BrandIntroAbout();
 
 [[nodiscard]] TextWithEntities BrandAboutSummary(TextWithEntities apiLink);

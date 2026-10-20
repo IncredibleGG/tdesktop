@@ -26,6 +26,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "iv/iv_rich_page.h"
 #include "lang/lang_instance.h"
 #include "lang/lang_keys.h"
+#include "lumina/lumina_translate_providers.h"
 #include "lumina/lumina_translate_readlang.h"
 #include "lumina/lumina_translate_send.h"
 #include "lumina/lumina_translate_selection.h"
@@ -473,10 +474,14 @@ void TranslateBox(
 		.request = [=](
 				LanguageId to,
 				Fn<void(TranslateBoxContentResult)> done) {
-			state->provider->request(
+			// LuminaGram: the provider lives as long as the box, and so as
+			// long as any answer to this request.
+			const auto provider = state->provider.get();
+			provider->request(
 				*request,
 				to,
-				[done = std::move(done)](TranslateProviderResult result) {
+				[done = std::move(done), provider](
+						TranslateProviderResult result) {
 					using ProviderError = TranslateProviderError;
 					using UiError = TranslateBoxContentError;
 					// TranslateBoxContent() shows whatever text it is handed
@@ -500,6 +505,12 @@ void TranslateBox(
 							: failed
 							? UiError::Unknown
 							: UiError::None,
+						// LuminaGram: the reason our own engines give - a
+						// rejected key, a model the service does not have,
+						// no connection. Never any part of the reply.
+						.errorText = failed
+							? Lumina::TranslateProviderFailureText(provider)
+							: QString(),
 					});
 				});
 		},

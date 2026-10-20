@@ -110,25 +110,26 @@ namespace {
 		{ u"LuminaTranslateTestSuccess"_q, u"Перевод работает."_q },
 		{ u"LuminaTranslateTestFailed"_q, u"Проверка не удалась"_q },
 		{ u"LuminaTranslateNoKey"_q, u"Требуется ключ API"_q },
-		{ u"LuminaTranslateTestKeyRejected"_q, u"Сервис недоступен или "
-			u"отклонил этот ключ API. Сначала проверьте ключ, затем базовый "
-			u"URL и подключение."_q },
-		{ u"LuminaTranslateTestNetwork"_q, u"Не удалось связаться с "
-			u"сервисом. Проверьте подключение к интернету и настройки прокси, "
-			u"затем попробуйте снова."_q },
 		{ u"LuminaTranslateTestNoChange"_q, u"Сервис вернул исходный текст без изменений — перевода не было. Проверьте ключ, модель и системный промпт."_q },
 		{ u"LuminaTranslateTestQuota"_q, u"Сервис отклонил запрос: слишком "
 			u"много обращений или квота этого ключа исчерпана. Попробуйте "
-			u"позже."_q },
-		{ u"LuminaTranslateTestQuotaKeyed"_q, u"Сервис отклонил запрос: он "
-			u"отклонил этот ключ API, квота ключа исчерпана или обращений "
-			u"было слишком много. Сначала проверьте ключ, затем попробуйте "
 			u"позже."_q },
 		{ u"LuminaTranslateTestBadResponse"_q, u"Сервис ответил тем, что "
 			u"LuminaGram не смог прочитать, или не ответил вовсе. Проверьте "
 			u"базовый URL и модель."_q },
 		{ u"LuminaTranslateTestUnavailable"_q, u"Этот сервис здесь не "
 			u"работает. Выберите другой выше."_q },
+		{ u"LuminaTranslateErrModelNotFound"_q, u"Модели «{1}» нет в этом сервисе. Нажмите «Найти доступные модели», чтобы выбрать другую."_q },
+		{ u"LuminaTranslateErrKeyRejected"_q, u"Сервис отклонил этот ключ API. Проверьте ключ и попробуйте снова."_q },
+		{ u"LuminaTranslateErrNetwork"_q, u"Не удаётся подключиться к сервису. Проверьте базовый URL и сеть."_q },
+		{ u"LuminaTranslateErrServer"_q, u"Временная ошибка сервиса (HTTP {1}). Попробуйте позже."_q },
+		{ u"LuminaTranslateErrRejected"_q, u"Сервис отклонил запрос (HTTP {1}). Проверьте базовый URL и модель."_q },
+		{ u"LuminaLlmDetectModels"_q, u"Найти доступные модели"_q },
+		{ u"LuminaLlmModelsRunning"_q, u"Поиск…"_q },
+		{ u"LuminaLlmModelsTitle"_q, u"Доступные модели"_q },
+		{ u"LuminaLlmModelsNoKey"_q, u"Сначала укажите ключ API, затем найдите модели."_q },
+		{ u"LuminaLlmModelsNoList"_q, u"Этот сервис не предоставляет список моделей. Введите название модели вручную."_q },
+		{ u"LuminaLlmModelsEmpty"_q, u"Сервис не вернул ни одной модели."_q },
 		{ u"LuminaTranslateProviderSecurityInfo"_q, u"Ключи хранятся только "
 			u"на этом устройстве, в отдельном файле от остальных настроек, и "
 			u"никогда не отправляются в Telegram. Всё, что вы переводите, "
@@ -1022,9 +1023,9 @@ namespace {
 		{ u"LuminaVoiceConfirmSendVideo"_q, u"Отправить это видеосообщение?"_q },
 		{ u"LuminaVoiceConfirmSendVoice"_q, u"Отправить это голосовое сообщение?"_q },
 		{ u"LuminaVoiceConfirmBoxTitle"_q, u"Отправить это сообщение?"_q },
-		{ u"LuminaBrandAboutIntro"_q, u"Независимый форк Telegram Desktop.\nНе связан с Telegram и не одобрен им."_q },
-		{ u"LuminaBrandAboutSummaryPre"_q, u"Независимый форк Telegram Desktop, построенный на "_q },
-		{ u"LuminaBrandAboutSummaryPost"_q, u".\nНе связан с Telegram, не одобрен и не спонсируется им."_q },
+		{ u"LuminaBrandAboutIntro"_q, u"Перевод, приватность и безопасность — всё в одном.\nРаботает на Telegram API и входит в экосистему Telegram."_q },
+		{ u"LuminaBrandAboutSummaryPre"_q, u"LuminaGram — бесплатный мессенджер, построенный на "_q },
+		{ u"LuminaBrandAboutSummaryPost"_q, u" и входящий в экосистему Telegram."_q },
 		// LuminaGram Batch 4 (#14 double-tap edit, #16 call confirm, #17 menu, #22 keyword filter).
 		{ u"LuminaDoubleTapEditTitle"_q, u"Редактирование"_q },
 		{ u"LuminaDoubleTapEditRow"_q, u"Двойной тап по своему сообщению для редактирования"_q },

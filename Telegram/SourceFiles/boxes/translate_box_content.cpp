@@ -212,7 +212,9 @@ void TranslateBoxContent(
 	const auto showText = [=](TranslateBoxContentResult result) {
 		using UiError = TranslateBoxContentError;
 		auto value = result.text.value_or(
-			tr::italic(((result.error == UiError::LocalLanguagePackMissing)
+			!result.errorText.isEmpty()
+			? tr::italic(result.errorText)
+			: tr::italic(((result.error == UiError::LocalLanguagePackMissing)
 				? tr::lng_translate_box_error_language_pack_not_installed
 				: tr::lng_translate_box_error)(tr::now)));
 		translated->entity()->setMarkedText(value, textContext);
