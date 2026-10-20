@@ -107,6 +107,10 @@ private:
 	QString _translatedTo;
 	QString _translatedText;
 
+	// Why the last request failed, in words (TranslateFailureText()), shown
+	// in place of the translation; empty falls back to FailedText().
+	QString _failureText;
+
 	std::unique_ptr<TranslateEngine> _engine;
 	Main::Session *_engineSession = nullptr;
 	QString _engineProvider;
@@ -258,6 +262,7 @@ void PreviewBar::forgetTranslation() {
 	_translatedFor = QString();
 	_translatedTo = QString();
 	_translatedText = QString();
+	_failureText = QString();
 }
 
 void PreviewBar::scheduleLayoutNotify() {
@@ -295,9 +300,11 @@ QString PreviewBar::translationLine() const {
 		|| (_translatedFor != _original)
 		|| (_translatedTo != _language))
 		? TranslatingText()
-		: _translatedText.isEmpty()
-		? FailedText()
-		: _translatedText;
+		: !_translatedText.isEmpty()
+		? _translatedText
+		: !_failureText.isEmpty()
+		? _failureText
+		: FailedText();
 }
 
 TranslateEngine *PreviewBar::ensureEngine() {
@@ -332,6 +339,7 @@ void PreviewBar::requestTranslation() {
 	const auto source = _original;
 	const auto language = _language;
 	const auto weak = _history;
+	const auto keyed = TranslateProviderKeyed(engine->id());
 	engine->translate(source, language, crl::guard(this, [=](
 			TranslateResult result) {
 		if (generation != _generation) {
@@ -342,6 +350,16 @@ void PreviewBar::requestTranslation() {
 		_translatedText = result.failed()
 			? QString()
 			: result.text.trimmed();
+		// The reason, as the translate box and the settings test name it.
+		// A model the service does not have points at the settings page,
+		// where "Detect available models" is: this bar has nothing to click.
+		_failureText = !result.failed()
+			? QString()
+			: !result.missingModel.isEmpty()
+			? Tr(
+				u"LuminaTranslateErrModelNotFoundSettings"_q,
+				result.missingModel)
+			: TranslateFailureText(result, keyed);
 		noteForSendPath(weak.get(), source, language, _translatedText);
 		if ((_original == source) && (_language == language)) {
 			update();

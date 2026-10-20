@@ -119,6 +119,7 @@ namespace {
 		{ u"LuminaTranslateTestUnavailable"_q, u"Bu hizmet burada "
 			u"çalışamıyor. Yukarıdan başka bir hizmet seçin."_q },
 		{ u"LuminaTranslateErrModelNotFound"_q, u"“{1}” modeli bu hizmette yok. Birini seçmek için “Kullanılabilir modelleri algıla”ya tıklayın."_q },
+		{ u"LuminaTranslateErrModelNotFoundSettings"_q, u"“{1}” modeli bu hizmette yok. Çeviri ayarlarında “Kullanılabilir modelleri algıla” ile birini seçin."_q },
 		{ u"LuminaTranslateErrKeyRejected"_q, u"Hizmet bu API anahtarını reddetti. Anahtarı kontrol edip tekrar deneyin."_q },
 		{ u"LuminaTranslateErrNetwork"_q, u"Hizmete bağlanılamıyor. Temel URL’yi ve ağınızı kontrol edin."_q },
 		{ u"LuminaTranslateErrServer"_q, u"Hizmette geçici bir hata oluştu (HTTP {1}). Daha sonra tekrar deneyin."_q },

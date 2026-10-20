@@ -119,6 +119,7 @@ namespace {
 		{ u"LuminaTranslateTestUnavailable"_q, u"Este serviço não pode "
 			u"funcionar aqui. Escolha outro acima."_q },
 		{ u"LuminaTranslateErrModelNotFound"_q, u"O modelo “{1}” não existe neste serviço. Clique em “Detectar modelos disponíveis” para escolher um."_q },
+		{ u"LuminaTranslateErrModelNotFoundSettings"_q, u"O modelo “{1}” não existe neste serviço. Escolha um em “Detectar modelos disponíveis” nas configurações de Tradução."_q },
 		{ u"LuminaTranslateErrKeyRejected"_q, u"O serviço recusou esta chave de API. Verifique a chave e tente novamente."_q },
 		{ u"LuminaTranslateErrNetwork"_q, u"Não foi possível conectar ao serviço. Verifique a URL base e sua rede."_q },
 		{ u"LuminaTranslateErrServer"_q, u"O serviço teve um erro temporário (HTTP {1}). Tente novamente mais tarde."_q },

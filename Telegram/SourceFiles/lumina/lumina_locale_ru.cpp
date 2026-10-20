@@ -120,6 +120,7 @@ namespace {
 		{ u"LuminaTranslateTestUnavailable"_q, u"Этот сервис здесь не "
 			u"работает. Выберите другой выше."_q },
 		{ u"LuminaTranslateErrModelNotFound"_q, u"Модели «{1}» нет в этом сервисе. Нажмите «Найти доступные модели», чтобы выбрать другую."_q },
+		{ u"LuminaTranslateErrModelNotFoundSettings"_q, u"Модели «{1}» нет в этом сервисе. Выберите другую через «Найти доступные модели» в настройках перевода."_q },
 		{ u"LuminaTranslateErrKeyRejected"_q, u"Сервис отклонил этот ключ API. Проверьте ключ и попробуйте снова."_q },
 		{ u"LuminaTranslateErrNetwork"_q, u"Не удаётся подключиться к сервису. Проверьте базовый URL и сеть."_q },
 		{ u"LuminaTranslateErrServer"_q, u"Временная ошибка сервиса (HTTP {1}). Попробуйте позже."_q },

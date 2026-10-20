@@ -119,6 +119,7 @@ namespace {
 		{ u"LuminaTranslateTestUnavailable"_q,
 			u"لا يمكن تشغيل هذه الخدمة هنا. اختر خدمة أخرى في الأعلى."_q },
 		{ u"LuminaTranslateErrModelNotFound"_q, u"النموذج «{1}» غير موجود في هذه الخدمة. انقر «اكتشاف النماذج المتاحة» لاختيار نموذج."_q },
+		{ u"LuminaTranslateErrModelNotFoundSettings"_q, u"النموذج «{1}» غير موجود في هذه الخدمة. اختر نموذجًا عبر «اكتشاف النماذج المتاحة» في إعدادات الترجمة."_q },
 		{ u"LuminaTranslateErrKeyRejected"_q, u"رفضت الخدمة مفتاح API هذا. تحقق من المفتاح ثم أعد المحاولة."_q },
 		{ u"LuminaTranslateErrNetwork"_q, u"تعذّر الاتصال بالخدمة. تحقق من عنوان URL الأساسي ومن الشبكة."_q },
 		{ u"LuminaTranslateErrServer"_q, u"حدث خطأ مؤقت في الخدمة (HTTP {1}). أعد المحاولة لاحقًا."_q },

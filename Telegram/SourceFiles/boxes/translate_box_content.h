@@ -30,6 +30,13 @@ struct TranslateBoxContentResult {
 	// LuminaGram: what went wrong, in words, when the provider can say -
 	// shown instead of the generic error. Empty keeps the stock text.
 	QString errorText;
+
+	// LuminaGram: a link under that text which fixes the cause - "Detect
+	// available models" when the service does not have the model. A click
+	// calls `errorFix` with a callback that translates again; it is a no-op
+	// once the box is gone. Ignored unless both are set and there is no text.
+	QString errorFixText;
+	Fn<void(Fn<void()> again)> errorFix;
 };
 
 class GenericBox;

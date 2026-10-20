@@ -1060,9 +1060,11 @@ public:
 					_lastFailure = TranslateFailureText(
 						result,
 						TranslateProviderKeyed(_engine->id()));
+					_lastMissingModel = !result.missingModel.isEmpty();
 					done({ .error = Ui::TranslateProviderError::Unknown });
 				} else {
 					_lastFailure = QString();
+					_lastMissingModel = false;
 					done({ .text = tr::marked(result.text) });
 				}
 			});
@@ -1071,12 +1073,16 @@ public:
 	[[nodiscard]] QString lastFailureText() const override {
 		return _lastFailure;
 	}
+	[[nodiscard]] bool lastFailureMissingModel() const override {
+		return _lastMissingModel;
+	}
 
 private:
 	const uint64 _sessionId = 0;
 	// Before the engine, so that it is still alive while the engine is
 	// being destroyed.
 	QString _lastFailure;
+	bool _lastMissingModel = false;
 	const std::unique_ptr<TranslateEngine> _engine;
 
 };
@@ -1368,6 +1374,13 @@ QString TranslateProviderFailureText(
 	const auto reporter = dynamic_cast<const TranslateFailureReporter*>(
 		provider.get());
 	return reporter ? reporter->lastFailureText() : QString();
+}
+
+bool TranslateProviderMissingModel(
+		not_null<const Ui::TranslateProvider*> provider) {
+	const auto reporter = dynamic_cast<const TranslateFailureReporter*>(
+		provider.get());
+	return reporter && reporter->lastFailureMissingModel();
 }
 
 QString DefaultLlmBaseUrl() {

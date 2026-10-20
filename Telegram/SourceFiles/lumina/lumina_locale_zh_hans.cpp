@@ -141,6 +141,7 @@ namespace {
 		{ u"LuminaTranslateTestUnavailable"_q, u"这个服务无法在这里运行。"
 			u"请在上面改选其他服务。"_q },
 		{ u"LuminaTranslateErrModelNotFound"_q, u"模型“{1}”在这个服务中不存在，点“检测可用模型”选一个。"_q },
+		{ u"LuminaTranslateErrModelNotFoundSettings"_q, u"模型“{1}”在这个服务中不存在，请到翻译设置点“检测可用模型”选一个。"_q },
 		{ u"LuminaTranslateErrKeyRejected"_q, u"服务拒绝了这个 API 密钥。请检查密钥后再试一次。"_q },
 		{ u"LuminaTranslateErrNetwork"_q, u"无法连接到这个服务。请检查基础 URL 与网络。"_q },
 		{ u"LuminaTranslateErrServer"_q, u"服务暂时出错（HTTP {1}），请稍后再试。"_q },

@@ -26,10 +26,12 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "iv/iv_rich_page.h"
 #include "lang/lang_instance.h"
 #include "lang/lang_keys.h"
+#include "lumina/lumina_locale.h"
 #include "lumina/lumina_translate_providers.h"
 #include "lumina/lumina_translate_readlang.h"
 #include "lumina/lumina_translate_send.h"
 #include "lumina/lumina_translate_selection.h"
+#include "lumina/lumina_translate_settings.h" // DetectLlmModels.
 #include "main/main_session.h"
 #include "mtproto/sender.h"
 #include "spellcheck/platform/platform_language.h"
@@ -480,7 +482,7 @@ void TranslateBox(
 			provider->request(
 				*request,
 				to,
-				[done = std::move(done), provider](
+				[done = std::move(done), provider, box](
 						TranslateProviderResult result) {
 					using ProviderError = TranslateProviderError;
 					using UiError = TranslateBoxContentError;
@@ -497,6 +499,20 @@ void TranslateBox(
 					}
 					const auto failed = !text
 						|| (result.error != ProviderError::None);
+					// LuminaGram: a model the service does not have is fixed
+					// by picking one it does, so that reason carries the
+					// "Detect available models" link; a pick translates the
+					// same text again with it.
+					const auto missingModel = failed
+						&& Lumina::TranslateProviderMissingModel(provider);
+					// Only ever run from a click inside the box.
+					auto fix = missingModel
+						? Fn<void(Fn<void()>)>([=](Fn<void()> again) {
+							Lumina::DetectLlmModels(
+								box->uiShow(),
+								[=](QString) { again(); });
+						})
+						: Fn<void(Fn<void()>)>();
 					done(TranslateBoxContentResult{
 						.text = std::move(text),
 						.error = (result.error
@@ -511,6 +527,10 @@ void TranslateBox(
 						.errorText = failed
 							? Lumina::TranslateProviderFailureText(provider)
 							: QString(),
+						.errorFixText = missingModel
+							? Lumina::Tr(u"LuminaLlmDetectModels"_q)
+							: QString(),
+						.errorFix = std::move(fix),
 					});
 				});
 		},

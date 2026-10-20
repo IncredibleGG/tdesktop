@@ -119,6 +119,7 @@ namespace {
 		{ u"LuminaTranslateTestUnavailable"_q, u"Layanan ini tidak dapat "
 			u"dijalankan di sini. Pilih layanan lain di atas."_q },
 		{ u"LuminaTranslateErrModelNotFound"_q, u"Model “{1}” tidak ada di layanan ini. Klik “Deteksi model yang tersedia” untuk memilih salah satu."_q },
+		{ u"LuminaTranslateErrModelNotFoundSettings"_q, u"Model “{1}” tidak ada di layanan ini. Pilih salah satu lewat “Deteksi model yang tersedia” di pengaturan Terjemahan."_q },
 		{ u"LuminaTranslateErrKeyRejected"_q, u"Layanan menolak kunci API ini. Periksa kuncinya lalu coba lagi."_q },
 		{ u"LuminaTranslateErrNetwork"_q, u"Tidak dapat terhubung ke layanan. Periksa URL dasar dan jaringan Anda."_q },
 		{ u"LuminaTranslateErrServer"_q, u"Layanan mengalami galat sementara (HTTP {1}). Coba lagi nanti."_q },

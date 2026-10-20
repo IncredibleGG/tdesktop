@@ -242,18 +242,26 @@ void FetchLlmModels(Fn<void(std::vector<QString> models, QString error)> done);
 // Implemented by LuminaGram's Ui::TranslateProvider adapters, so that
 // tdesktop's translate box can name what went wrong instead of its generic
 // "could not translate". The text belongs to the last request that failed and
-// is cleared by the next one that succeeds.
+// is cleared by the next one that succeeds; so is the missing-model flag,
+// which tells the box to offer "Detect available models" under that text.
 class TranslateFailureReporter {
 public:
 	virtual ~TranslateFailureReporter() = default;
 
 	[[nodiscard]] virtual QString lastFailureText() const = 0;
+	[[nodiscard]] virtual bool lastFailureMissingModel() const = 0;
 
 };
 
 // Empty for a provider that is not one of ours (MTProto, the OS translator)
 // or whose last request did not fail.
 [[nodiscard]] QString TranslateProviderFailureText(
+	not_null<const Ui::TranslateProvider*> provider);
+
+// Whether the last request of `provider` failed because the service does not
+// have the model asked for (TranslateResult::missingModel). False for a
+// provider that is not one of ours.
+[[nodiscard]] bool TranslateProviderMissingModel(
 	not_null<const Ui::TranslateProvider*> provider);
 
 // The LuminaGram-native translation interface.

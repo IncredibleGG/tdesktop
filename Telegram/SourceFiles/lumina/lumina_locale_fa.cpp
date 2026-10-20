@@ -109,6 +109,7 @@ namespace {
 		{ u"LuminaTranslateTestUnavailable"_q, u"این سرویس اینجا اجرا "
 			u"نمی‌شود. در بالا سرویس دیگری انتخاب کنید."_q },
 		{ u"LuminaTranslateErrModelNotFound"_q, u"مدل «{1}» در این سرویس وجود ندارد. برای انتخاب یک مدل روی «شناسایی مدل‌های موجود» بزنید."_q },
+		{ u"LuminaTranslateErrModelNotFoundSettings"_q, u"مدل «{1}» در این سرویس وجود ندارد. در تنظیمات ترجمه با «شناسایی مدل‌های موجود» یک مدل انتخاب کنید."_q },
 		{ u"LuminaTranslateErrKeyRejected"_q, u"سرویس این کلید API را رد کرد. کلید را بررسی کنید و دوباره امتحان کنید."_q },
 		{ u"LuminaTranslateErrNetwork"_q, u"اتصال به سرویس ممکن نیست. URL پایه و شبکه را بررسی کنید."_q },
 		{ u"LuminaTranslateErrServer"_q, u"سرویس با خطای موقت روبه‌رو شد (HTTP {1}). بعداً دوباره امتحان کنید."_q },

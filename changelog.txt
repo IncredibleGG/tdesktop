@@ -3,11 +3,12 @@
 - Translation settings: a new "Detect available models" row under Model asks
   your OpenAI-compatible service for its model list and lets you pick one
   instead of typing it.
-- Test translation, the translate window and Explain now say what actually
-  went wrong: a model the service does not have (with a link to detect the
-  available ones), a rejected API key, a used-up quota or too many requests, a
-  temporary server error, or no connection. The service's reply, the address
-  and the key are never shown.
+- Test translation, the translate window, the translation preview above the
+  message field and Explain now say what actually went wrong: a model the
+  service does not have (with a link to detect the available ones), a
+  rejected API key, a used-up quota or too many requests, a temporary server
+  error, or no connection. The service's reply, the address and the key are
+  never shown.
 - Explain reads the message in its conversation: up to 8 earlier messages
   from the same chat and the message it replies to go along (about 1500
   characters, speakers shown only as "Me" and A, B, C...), so slang, references

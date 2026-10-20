@@ -182,13 +182,31 @@ constexpr auto kContextScanMax = 200;
 	const auto topicRootId = forum ? target->topicRootId() : MsgId();
 	const auto sublistPeerId = monoforum ? target->sublistPeerId() : PeerId();
 
+	// Shown outside the chat's own list in a group that is not a forum - the
+	// comments under a channel post, a reply thread - a message belongs to
+	// that thread, and its neighbours by id belong to other threads. Then
+	// only the thread is its conversation: the messages in it and the
+	// message it hangs off. That message itself (the channel post in its
+	// discussion group) starts its thread, so nothing comes before it.
+	const auto threadRootId = (!forum && !monoforum)
+		? target->replyToTop()
+		: MsgId();
+	const auto threadStart = !forum
+		&& !monoforum
+		&& !threadRootId
+		&& target->isDiscussionPost();
+
 	auto result = std::vector<not_null<HistoryItem*>>();
+	auto threadOnly = false;
 	const auto consider = [&](HistoryItem *item) {
 		if (!item
 			|| (item == target.get())
 			|| (item->history() != history)
 			|| (forum && item->topicRootId() != topicRootId)
 			|| (monoforum && item->sublistPeerId() != sublistPeerId)
+			|| (threadOnly
+				&& (item->id != threadRootId)
+				&& !item->inThread(threadRootId))
 			|| ContextText(item).isEmpty()) {
 			return;
 		}
@@ -205,7 +223,10 @@ constexpr auto kContextScanMax = 200;
 			++scanned;
 			consider(i->data());
 		}
-	} else if (history->peer->isChannel() && target->isRegular()) {
+	} else if (history->peer->isChannel()
+			&& target->isRegular()
+			&& !threadStart) {
+		threadOnly = (threadRootId != MsgId());
 		const auto &owner = history->owner();
 		const auto peerId = history->peer->id;
 		for (auto id = target->id - 1

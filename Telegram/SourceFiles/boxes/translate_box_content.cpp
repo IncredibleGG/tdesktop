@@ -206,6 +206,11 @@ void TranslateBoxContent(
 
 	struct State {
 		int requestId = 0;
+
+		// LuminaGram: the language last asked for, and the way to ask for it
+		// again - what an error's fix link runs once the fix is in.
+		LanguageId to;
+		Fn<void()> again;
 	};
 	const auto state = box->lifetime().make_state<State>();
 
@@ -217,6 +222,30 @@ void TranslateBoxContent(
 			: tr::italic(((result.error == UiError::LocalLanguagePackMissing)
 				? tr::lng_translate_box_error_language_pack_not_installed
 				: tr::lng_translate_box_error)(tr::now)));
+
+		// LuminaGram: the way to fix a failure, as a link under its reason.
+		auto fix = (!result.text
+			&& result.errorFix
+			&& !result.errorFixText.isEmpty())
+			? std::move(result.errorFix)
+			: Fn<void(Fn<void()>)>();
+		if (fix) {
+			value.append(QChar('\n')).append(tr::link(result.errorFixText));
+			translated->entity()->setClickHandlerFilter([=](
+					const ClickHandlerPtr &,
+					Qt::MouseButton button) {
+				if (button == Qt::LeftButton) {
+					fix(crl::guard(box, [=] {
+						if (const auto again = state->again) {
+							again();
+						}
+					}));
+				}
+				return false;
+			});
+		} else {
+			translated->entity()->setClickHandlerFilter(nullptr);
+		}
 		translated->entity()->setMarkedText(value, textContext);
 		translated->show(anim::type::instant);
 		loading->hide(anim::type::instant);
@@ -224,6 +253,7 @@ void TranslateBoxContent(
 	};
 	const auto send = [=](LanguageId id) {
 		const auto requestId = ++state->requestId;
+		state->to = id;
 		loading->show(anim::type::instant);
 		translated->hide(anim::type::instant);
 		setCopyText({});
@@ -233,6 +263,9 @@ void TranslateBoxContent(
 			}
 			showText(std::move(result));
 		});
+	};
+	state->again = [=] {
+		send(state->to);
 	};
 	std::move(to) | rpl::on_next(send, box->lifetime());
 

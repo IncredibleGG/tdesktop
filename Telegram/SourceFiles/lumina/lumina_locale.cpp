@@ -188,8 +188,11 @@ struct Registration {
 		{ u"LuminaTranslateTestUnavailable"_q, u"This service cannot run "
 			"here. Choose another one above."_q },
 		// "Detect available models" and the reasons a request to a
-		// translation / Explain service failed.
+		// translation / Explain service failed. ...Settings is the
+		// missing-model reason for the composer's translation preview,
+		// which has no link to click.
 		{ u"LuminaTranslateErrModelNotFound"_q, u"The model “{1}” does not exist on this service. Click “Detect available models” to pick one."_q },
+		{ u"LuminaTranslateErrModelNotFoundSettings"_q, u"The model “{1}” does not exist on this service. Pick one with “Detect available models” in Translation settings."_q },
 		{ u"LuminaTranslateErrKeyRejected"_q, u"The service rejected this API key. Check the key and try again."_q },
 		{ u"LuminaTranslateErrNetwork"_q, u"Cannot connect to the service. Check the base URL and your network."_q },
 		{ u"LuminaTranslateErrServer"_q, u"The service had a temporary error (HTTP {1}). Try again later."_q },
