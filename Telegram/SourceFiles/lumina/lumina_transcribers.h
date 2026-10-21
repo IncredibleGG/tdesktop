@@ -92,12 +92,11 @@ struct TranscriberInfo {
 void SetCurrentTranscriberId(const QString &id);
 
 // API keys live in Store::Private, one per engine id, under Android's
-// `sttKey_<id>` spelling.
+// `sttKey_<id>` spelling, sealed at rest where the platform allows it
+// (lumina_secret_store.h; Lumina::Settings seals and opens them).
 //
-// As with the translation keys: Lumina::Settings::set() defaults to
-// Store::Prefs, and passing that default for a key that lives in
-// Store::Private MOVES the value into the plaintext pref file.
-// SetTranscriberApiKey() is the only supported way to write one.
+// As with the translation keys, SetTranscriberApiKey() is the only supported
+// way to write one.
 [[nodiscard]] QString TranscriberApiKey(const QString &id);
 void SetTranscriberApiKey(const QString &id, const QString &key);
 

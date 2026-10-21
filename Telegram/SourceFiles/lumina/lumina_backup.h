@@ -21,13 +21,20 @@ namespace Lumina {
 // the passphrase boxes and the two file dialogs live in
 // lumina/lumina_backup_settings.h.
 //
-// WHAT TRAVELS. The plaintext is exactly Settings::Instance().exportAll() -
-// every key of all three stores plus the reserved `_luminaStores` map that says
-// which of them are not Store::Prefs. That deliberately includes the private
-// ones: translation API keys, the vault and fake-crash codes, the decoy note,
-// saved originals of outgoing messages. Nothing else is touched: tdesktop's own
-// settings, the accounts, the message database and the caches are not part of a
-// backup and are not restored from one.
+// WHAT TRAVELS. The plaintext is exactly Settings::Instance().exportForBackup()
+// - every key of all three stores plus the reserved `_luminaStores` map that
+// says which of them are not Store::Prefs, EXCEPT the translation and
+// speech-to-text API keys. Since 7.3.4 those never leave the device in a
+// backup (lumina_secret_store.h); the other private values do travel: the
+// vault and fake-crash codes, the decoy note, saved originals of outgoing
+// messages. Nothing else is touched: tdesktop's own settings, the accounts, the
+// message database and the caches are not part of a backup and are not
+// restored from one.
+//
+// A backup written by 7.3.3 or earlier still carries API keys in its
+// (encrypted) payload. Importing one keeps working: the keys go through the
+// provider confirmation below like any other route change, and on Windows the
+// store seals them on the way in.
 //
 // ONE EXCEPTION, in both directions: the parked ToS-grey keys (stealthOnline,
 // stealthTyping, stealthReadReceipts). F-02 removed every row that could set
@@ -80,7 +87,7 @@ namespace Lumina {
 // destinations that would send data to - and the UI asks before
 // ApplyBackupPayload(). Declining applies everything else and keeps the
 // current provider selection, endpoints, models and keys
-// (DropProviderRouteKeys()). Export is unchanged.
+// (DropProviderRouteKeys()).
 //
 // Each of the three store files is replaced atomically by QSaveFile, but the
 // three of them are not replaced atomically as a SET: if the second write fails

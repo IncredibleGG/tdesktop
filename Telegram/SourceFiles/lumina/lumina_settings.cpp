@@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "lumina/lumina_settings.h"
 
+#include "lumina/lumina_secret_store.h"
 #include "settings.h" // cWorkingDir()
 
 #include <QtCore/QDir>
@@ -107,6 +108,7 @@ void Settings::load() {
 		loadStore(static_cast<Store>(i));
 	}
 	migrateLegacyKeys();
+	migrateApiKeys();
 }
 
 void Settings::loadStore(Store store) {
@@ -184,6 +186,66 @@ void Settings::migrateLegacyKeys() {
 	scheduleSave();
 }
 
+// API keys written in plaintext - by 7.3.3 and earlier, or by a bare
+// set(key, value) that put one in Store::Prefs - are sealed here, once, and
+// moved to Store::Private. The plaintext is replaced only in memory first; it
+// leaves the disk with the next atomic rewrite of the file, and only for a
+// key whose sealed form was already checked to open back to the same value
+// (SealApiKey() returns nothing otherwise, and the plaintext stays).
+void Settings::migrateApiKeys() {
+	const auto privateIndex = StoreIndex(Store::Private);
+	if (_loadFailed[privateIndex]) {
+		// Moving a key into a store that refuses to write would take it out of
+		// the file it is in and put it nowhere.
+		return;
+	}
+	auto keys = std::vector<QString>();
+	for (const auto &entry : _where) {
+		if (IsApiKeySetting(entry.first)) {
+			keys.push_back(entry.first);
+		}
+	}
+	auto sealed = 0;
+	auto kept = 0;
+	for (const auto &key : keys) {
+		const auto was = StoreIndex(_where.find(key)->second);
+		const auto value = _data[was].value(key);
+		auto stored = value;
+		if (value.isString()
+			&& !value.toString().isEmpty()
+			&& !IsSealedApiKey(value.toString())) {
+			if (const auto result = SealApiKey(value.toString())) {
+				stored = QJsonValue(*result);
+				++sealed;
+			} else {
+				++kept;
+			}
+		}
+		if (was == privateIndex && stored == value) {
+			continue;
+		}
+		_data[was].remove(key);
+		_dirty[was] = true;
+		_data[privateIndex].insert(key, stored);
+		_dirty[privateIndex] = true;
+		if (was != privateIndex) {
+			_where.remove(key);
+			_where.emplace(key, Store::Private);
+		}
+	}
+	if (sealed || kept) {
+		LOG(("Lumina: API keys at rest - %1 sealed, %2 kept as plaintext%3."
+			).arg(sealed
+			).arg(kept
+			).arg(ApiKeySealingAvailable()
+				? QString()
+				: u" (no sealing on this platform)"_q));
+	}
+	if (_dirty[privateIndex]) {
+		scheduleSave();
+	}
+}
+
 QJsonValue Settings::lookup(const QString &key) const {
 	const auto i = _where.find(key);
 	if (i != _where.end()) {
@@ -209,7 +271,12 @@ int Settings::getInt(const QString &key, int def) const {
 
 QString Settings::getString(const QString &key, const QString &def) const {
 	const auto value = lookup(key);
-	return value.isString() ? value.toString() : def;
+	if (!value.isString()) {
+		return def;
+	}
+	return IsApiKeySetting(key)
+		? OpenApiKey(value.toString())
+		: value.toString();
 }
 
 QJsonArray Settings::getArray(const QString &key) const {
@@ -230,10 +297,35 @@ void Settings::set(const QString &key, QJsonValue value, Store store) {
 
 bool Settings::apply(
 		const QString &key,
-		const QJsonValue &value,
+		const QJsonValue &plain,
 		Store store) {
 	if (key.isEmpty() || key == StoresKey()) {
 		return false;
+	}
+	auto value = plain;
+	if (IsApiKeySetting(key)) {
+		store = Store::Private;
+		const auto text = plain.isString() ? plain.toString() : QString();
+		if (IsSealedApiKey(text)) {
+			// Sealed values are only ever produced right here, from plaintext,
+			// and no backup carries them: one arriving from outside was sealed
+			// for some other account or machine and could never be opened.
+			LOG(("Lumina Error: Refusing a pre-sealed value for '%1'."
+				).arg(key));
+			return false;
+		} else if (!text.isEmpty()) {
+			// The same key again: sealing would give a different string every
+			// time, so compare what the user sees instead.
+			const auto i = _where.find(key);
+			if (i != _where.end()
+				&& i->second == Store::Private
+				&& getString(key) == text) {
+				return false;
+			}
+			if (const auto sealed = SealApiKey(text)) {
+				value = QJsonValue(*sealed);
+			}
+		}
 	}
 	const auto index = StoreIndex(store);
 	const auto i = _where.find(key);
@@ -285,16 +377,27 @@ rpl::producer<> Settings::changesFor(QString key) const {
 }
 
 QJsonObject Settings::exportAll() const {
+	return exportStores(true);
+}
+
+QJsonObject Settings::exportForBackup() const {
+	return exportStores(false);
+}
+
+QJsonObject Settings::exportStores(bool withApiKeys) const {
 	auto result = QJsonObject();
 	for (auto i = 0; i != kStoreCount; ++i) {
 		const auto &data = _data[i];
 		for (auto j = data.constBegin(); j != data.constEnd(); ++j) {
-			result.insert(j.key(), j.value());
+			if (withApiKeys || !IsApiKeySetting(j.key())) {
+				result.insert(j.key(), j.value());
+			}
 		}
 	}
 	auto stores = QJsonObject();
 	for (const auto &[key, store] : _where) {
-		if (store != Store::Prefs) {
+		if (store != Store::Prefs
+			&& (withApiKeys || !IsApiKeySetting(key))) {
 			stores.insert(key, StoreName(store));
 		}
 	}

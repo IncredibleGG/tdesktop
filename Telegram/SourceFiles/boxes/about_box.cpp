@@ -44,16 +44,19 @@ rpl::producer<TextWithEntities> Text1() {
 	});
 }
 
+// LuminaGram: the GPL obliges us to point at OUR corresponding source, not
+// upstreams. HEAD resolves to the forks default branch, so the license link
+// keeps working when that branch is renamed for the next upstream sync.
 rpl::producer<TextWithEntities> Text2() {
 	return tr::lng_about_text2(
 		lt_gpl_link,
 		rpl::single(tr::link(
 			"GNU GPL",
-			"https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE")),
+			"https://github.com/IncredibleGG/tdesktop/blob/HEAD/LICENSE")),
 		lt_github_link,
 		rpl::single(tr::link(
 			"GitHub",
-			"https://github.com/telegramdesktop/tdesktop")),
+			"https://github.com/IncredibleGG/tdesktop")),
 		tr::marked);
 }
 

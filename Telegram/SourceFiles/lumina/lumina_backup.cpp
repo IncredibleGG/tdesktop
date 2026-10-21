@@ -386,7 +386,10 @@ BackupError WriteBackup(const QString &path, const QString &passphrase) {
 		kKeySize,
 		kMacSize);
 
-	auto payload = Settings::Instance().exportAll();
+	// API keys never travel in a backup (lumina_secret_store.h): the file is
+	// a thing people move between machines and hand to each other, and on
+	// Windows the stored keys are sealed to this account anyway.
+	auto payload = Settings::Instance().exportForBackup();
 	RemoveParkedKeys(payload);
 	auto plain = QJsonDocument(payload).toJson(QJsonDocument::Compact);
 	auto padded = AddPadding(plain);

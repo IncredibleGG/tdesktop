@@ -328,12 +328,14 @@ namespace {
 		{ u"LuminaBackupExport"_q, u"匯出加密備份"_q },
 		{ u"LuminaBackupExportDone"_q, u"備份已儲存。"_q },
 		{ u"LuminaBackupExportFailed"_q, u"無法建立備份檔案。"_q },
-		{ u"LuminaBackupExportInfo"_q, u"把 LuminaGram 存在這台裝置上的所有"
-			u"資料——書籤、備註、回覆範本、文字取代與每一項設定——存成一個"
-			u"檔案，並用你自己選的密碼加密。這個檔案裡也包含私密的內容："
-			u"翻譯的 API 金鑰、保險庫與假當機的密碼，以及誘餌記事本的內容。"
-			u"任何資料都不會傳送給 Telegram。請選一組夠長的密碼並妥善保管："
-			u"沒有它就無法開啟這個檔案，也沒有任何方式可以救回。"_q },
+		{ u"LuminaBackupExportInfo"_q, u"把 LuminaGram 存在這台裝置上的所有資料——書籤、"
+			u"備註、回覆範本、文字取代與每一項設定——存成一個檔案，"
+			u"並用你自己選的密碼加密。這個檔案裡也包含私密的內容："
+			u"保險庫與假當機的密碼，以及誘餌記事本的內容。"
+			u"翻譯與語音轉文字的 API 金鑰不會放進備份："
+			u"在另一台裝置上還原後，請重新輸入。任何資料都不會傳送給 Telegram"
+			u"。請選一組夠長的密碼並妥善保管：沒有它就無法開啟這個檔案，"
+			u"也沒有任何方式可以救回。"_q },
 		{ u"LuminaBackupExportPassphraseTitle"_q, u"設定密碼"_q },
 		{ u"LuminaBackupFileFilter"_q, u"LuminaGram 備份 (*.lgbak)"_q },
 		{ u"LuminaBackupProviderTitle"_q, u"翻譯與 AI 服務"_q },

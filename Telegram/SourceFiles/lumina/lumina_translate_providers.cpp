@@ -41,10 +41,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 namespace Lumina {
 namespace {
 
-// tdesktop's own HTTP translate template (lang/translate_url_provider.cpp)
-// sets no timeout at all, so a dead endpoint leaves the reply pending forever
-// and its callback never runs. Everything here goes through SendHttp(), which
-// always sets one.
+// tdesktop's own HTTP translate template (lang/translate_url_provider.cpp,
+// unreachable in LuminaGram since 7.3.4) set no timeout at all, so a dead
+// endpoint left the reply pending forever and its callback never ran.
+// Everything here goes through SendHttp(), which always sets one.
 constexpr auto kRequestTimeoutMs = 15000;
 
 // The free Google web endpoint is a GET, so the whole text travels in the

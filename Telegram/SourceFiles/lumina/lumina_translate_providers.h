@@ -115,12 +115,12 @@ void SetCurrentProviderId(const QString &id);
 [[nodiscard]] QString DefaultLlmModel();    // gpt-4o-mini
 [[nodiscard]] QString DefaultLlmPrompt();   // contains the {lang} placeholder
 
-// API keys live in Store::Private, one key per provider id.
+// API keys live in Store::Private, one key per provider id, sealed at rest
+// where the platform allows it (lumina_secret_store.h - Lumina::Settings does
+// the sealing and opening, so these two see plain text).
 //
-// Lumina::Settings::set() defaults to Store::Prefs, and passing that default
-// for a key that lives in Store::Private MOVES the value into the plaintext
-// pref file. SetProviderApiKey() is therefore the only supported way to write
-// one: never call Settings::set() on a "translateKey_*" key anywhere else.
+// SetProviderApiKey() is still the only supported way to write one: never
+// call Settings::set() on a "translateKey_*" key anywhere else.
 [[nodiscard]] QString ProviderApiKey(const QString &providerId);
 void SetProviderApiKey(const QString &providerId, const QString &key);
 

@@ -336,12 +336,14 @@ namespace {
 		{ u"LuminaBackupExport"_q, u"导出加密备份"_q },
 		{ u"LuminaBackupExportDone"_q, u"备份已保存。"_q },
 		{ u"LuminaBackupExportFailed"_q, u"无法创建备份文件。"_q },
-		{ u"LuminaBackupExportInfo"_q, u"把 LuminaGram 保存在这台设备上的"
-			u"所有内容——书签、备注、回复模板、文字替换以及全部设置——"
-			u"存入一个文件，并用你设定的口令加密。这个文件也包含私密的值："
-			u"翻译 API 密钥、保险箱与假崩溃密码，以及诱饵记事本里的笔记。"
-			u"任何内容都不会发送给 Telegram。请设置一个较长的口令并妥善"
-			u"保管：没有它就打不开这个文件，也没有任何办法找回。"_q },
+		{ u"LuminaBackupExportInfo"_q, u"把 LuminaGram 保存在这台设备上的所有内容——书签、"
+			u"备注、回复模板、文字替换以及全部设置——存入一个文件，"
+			u"并用你设定的口令加密。这个文件也包含私密的值："
+			u"保险箱与假崩溃密码，以及诱饵记事本里的笔记。"
+			u"翻译和语音转文字的 API 密钥不会放进备份："
+			u"在另一台设备上恢复后，请重新填写。任何内容都不会发送给 Telegram"
+			u"。请设置一个较长的口令并妥善保管：没有它就打不开这个文件，"
+			u"也没有任何办法找回。"_q },
 		{ u"LuminaBackupExportPassphraseTitle"_q, u"设置口令"_q },
 		{ u"LuminaBackupFileFilter"_q, u"LuminaGram 备份 (*.lgbak)"_q },
 		{ u"LuminaBackupProviderTitle"_q, u"翻译与 AI 服务"_q },

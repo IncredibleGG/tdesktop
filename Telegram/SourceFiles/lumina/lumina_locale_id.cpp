@@ -28,11 +28,46 @@ namespace {
 		{ u"LuminaSecurityTitle"_q, u"Keamanan"_q },
 		{ u"LuminaChatSettings"_q, u"Obrolan"_q },
 		{ u"LuminaGramChatList"_q, u"Daftar obrolan"_q },
+		{ u"ChatLockAdd"_q, u"Tambahkan ke Folder Pribadi"_q },
+		{ u"ChatLockRemove"_q, u"Keluarkan dari Folder Pribadi"_q },
+		{ u"ChatLockNeedCode"_q, u"Untuk memakai Folder Pribadi, Anda perlu kode "
+			u"rahasia terlebih dahulu. Atur di LuminaGram → Keamanan → Brankas "
+			u"penyamaran. Tanpa kode, obrolan yang terkunci tidak dapat "
+			u"ditampilkan lagi."_q },
 		{ u"LuminaAppearanceTitle"_q, u"Tampilan"_q },
 		{ u"LuminaToolsTitle"_q, u"Alat"_q },
 		{ u"LuminaGramStoredLocallyInfo"_q, u"Opsi LuminaGram hanya disimpan "
 			u"di perangkat ini dan tidak pernah disinkronkan dengan "
 			u"Telegram."_q },
+		{ u"LuminaCheckupTitle"_q, u"Pemeriksaan keamanan"_q },
+		{ u"LuminaCheckupSummaryChecking"_q, u"Memeriksa akun Anda…"_q },
+		{ u"LuminaCheckupSummaryOn"_q, u"Verifikasi dua langkah aktif, jadi akun "
+			u"Anda punya lapisan perlindungan tambahan. Tinjau sisanya di "
+			u"bawah."_q },
+		{ u"LuminaCheckupSummaryOff"_q, u"Verifikasi dua langkah nonaktif. "
+			u"Mengaktifkannya adalah hal terbaik yang bisa Anda lakukan untuk "
+			u"akun ini."_q },
+		{ u"LuminaCheckupTapToView"_q, u"Klik untuk melihat"_q },
+		{ u"LuminaCheckupOn"_q, u"Aktif"_q },
+		{ u"LuminaCheckupOff"_q, u"Nonaktif"_q },
+		{ u"LuminaCheckupUnconfirmed"_q, u"Belum dikonfirmasi"_q },
+		{ u"LuminaCheckupTwoStepHeader"_q, u"Verifikasi dua langkah"_q },
+		{ u"LuminaCheckupTwoStep"_q, u"Verifikasi dua langkah"_q },
+		{ u"LuminaCheckupRecoveryEmail"_q, u"Email pemulihan"_q },
+		{ u"LuminaCheckupRecoveryNoPassword"_q, u"Atur 2FA dulu"_q },
+		{ u"LuminaCheckupPrivacyHeader"_q, u"Siapa yang bisa menghubungi Anda"_q },
+		{ u"LuminaCheckupInvites"_q, u"Siapa yang bisa menambahkan saya ke grup"_q },
+		{ u"LuminaCheckupCalls"_q, u"Siapa yang bisa menelepon saya"_q },
+		{ u"LuminaCheckupPhone"_q, u"Siapa yang bisa melihat nomor telepon saya"_q },
+		{ u"LuminaCheckupEveryone"_q, u"Semua orang"_q },
+		{ u"LuminaCheckupContacts"_q, u"Kontak saya"_q },
+		{ u"LuminaCheckupCloseFriends"_q, u"Teman dekat"_q },
+		{ u"LuminaCheckupNobody"_q, u"Tidak ada"_q },
+		{ u"LuminaCheckupDevicesHeader"_q, u"Perangkat yang masuk"_q },
+		{ u"LuminaCheckupSessions"_q, u"Sesi aktif"_q },
+		{ u"LuminaCheckupFooter"_q, u"LuminaGram hanya menampilkan pengaturan "
+			u"ini, tidak pernah mengubahnya. Klik baris mana pun untuk membuka "
+			u"halaman resmi yang sesuai."_q },
 
 		// Sub-pages that have no rows yet.
 		{ u"LuminaAppearancePlaceholder"_q, u"Opsi pemformatan pesan, stiker, "
@@ -86,6 +121,8 @@ namespace {
 			u"Lipat teks asli di pesan panjang"_q },
 		{ u"LuminaFoldOriginalLongMessagesInfo"_q,
 			u"Pada pesan dwibahasa yang panjang, teks asli dilipat menjadi satu baris agar tidak memenuhi obrolan. Ketuk untuk membentangkan. Terjemahan selalu ditampilkan penuh."_q },
+		{ u"LuminaTranslateGroupSkipMyLanguages"_q, u"Di grup, lewati bahasa "
+			u"yang saya baca"_q },
 		{ u"LuminaExpandOriginal"_q, u"Tampilkan asli"_q },
 		{ u"LuminaTranslateReadLang"_q, u"Bahasa baca"_q },
 		{ u"LuminaTranslateReadLangFollow"_q, u"Bahasa antarmuka"_q },
@@ -135,6 +172,26 @@ namespace {
 			u"dan tidak pernah dikirim ke Telegram. Semua yang Anda "
 			u"terjemahkan dikirim ke layanan yang dipilih di sini, jadi "
 			u"pilihlah yang Anda percaya."_q },
+		{ u"LuminaTranslateMoreHeader"_q, u"Lainnya"_q },
+		{ u"LuminaGlossaryManage"_q, u"Daftar jangan diterjemahkan"_q },
+		{ u"LuminaGlossaryNone"_q, u"Tidak ada"_q },
+		{ u"LuminaTranslateMoreInfo"_q, u"«Jelaskan pesan ini» menambahkan opsi "
+			u"klik kanan yang menanyakan kepada LLM Anda sendiri arti "
+			u"sebenarnya sebuah pesan — nadanya, bahasa gaulnya, dan bagaimana "
+			u"Anda bisa membalasnya. Daftar jangan diterjemahkan membuat "
+			u"kata-kata di dalamnya tidak berubah saat pesan diterjemahkan."_q },
+		{ u"LuminaGlossaryTitle"_q, u"Daftar jangan diterjemahkan"_q },
+		{ u"LuminaGlossaryHeader"_q, u"Istilah"_q },
+		{ u"LuminaGlossaryAdd"_q, u"Tambah istilah"_q },
+		{ u"LuminaGlossaryEdit"_q, u"Ubah istilah"_q },
+		{ u"LuminaGlossaryTermPlaceholder"_q, u"Istilah"_q },
+		{ u"LuminaGlossaryEmpty"_q, u"Kata-kata di daftar ini dibiarkan tidak "
+			u"berubah saat pesan diterjemahkan — nama, merek, @nama pengguna, "
+			u"kode. Tautan dan @sebutan selalu dipertahankan, entah ada di "
+			u"daftar atau tidak."_q },
+		{ u"LuminaGlossaryListInfo"_q, u"Pencocokan tidak membedakan huruf besar "
+			u"dan kecil. Tautan dan @sebutan selalu dipertahankan, entah ada di "
+			u"daftar atau tidak."_q },
 
 		// Translate before sending: the boxes and the send menu.
 		{ u"LuminaTranslateOriginalLabel"_q, u"Asli"_q },
@@ -314,15 +371,17 @@ namespace {
 		{ u"LuminaBackupExportDone"_q, u"Cadangan disimpan."_q },
 		{ u"LuminaBackupExportFailed"_q,
 			u"Tidak dapat membuat berkas cadangan."_q },
-		{ u"LuminaBackupExportInfo"_q, u"Simpan semua yang disimpan "
-			u"LuminaGram di perangkat ini — penanda, catatan, templat "
-			u"balasan, penggantian teks, dan seluruh pengaturan — ke dalam "
-			u"satu berkas, terenkripsi dengan frasa sandi pilihan Anda. "
-			u"Berkas ini juga memuat nilai-nilai pribadi: kunci API "
-			u"terjemahan, kode brankas dan crash palsu, serta catatan umpan. "
-			u"Tidak ada yang dikirim ke Telegram. Pilih frasa sandi yang "
-			u"panjang dan simpan di tempat aman — tanpa frasa itu berkas "
-			u"tidak dapat dibuka, dan tidak ada cara untuk memulihkannya."_q },
+		{ u"LuminaBackupExportInfo"_q, u"Simpan semua yang disimpan LuminaGram "
+			u"di perangkat ini — penanda, catatan, templat balasan, penggantian "
+			u"teks, dan seluruh pengaturan — ke dalam satu berkas, terenkripsi "
+			u"dengan frasa sandi pilihan Anda. Berkas ini juga memuat "
+			u"nilai-nilai pribadi: kode brankas dan crash palsu, serta catatan "
+			u"umpan. Kunci API untuk terjemahan dan suara ke teks tidak pernah "
+			u"disertakan: setelah memulihkan di perangkat lain, masukkan "
+			u"kembali kunci tersebut. Tidak ada yang dikirim ke Telegram. Pilih "
+			u"frasa sandi yang panjang dan simpan di tempat aman — tanpa frasa "
+			u"itu berkas tidak dapat dibuka, dan tidak ada cara untuk "
+			u"memulihkannya."_q },
 		{ u"LuminaBackupExportPassphraseTitle"_q, u"Tetapkan frasa sandi"_q },
 		{ u"LuminaBackupFileFilter"_q, u"Cadangan LuminaGram (*.lgbak)"_q },
 		{ u"LuminaBackupProviderTitle"_q, u"Layanan terjemahan dan AI"_q },
@@ -388,6 +447,12 @@ namespace {
 		{ u"LuminaCompactListRowsInfo"_q, u"Menampilkan lebih banyak obrolan "
 			u"di layar dengan memendekkan setiap baris daftar obrolan. Foto "
 			u"profil dan pratinjau pesan tetap terlihat."_q },
+		{ u"LuminaPreviewLinesTitle"_q, u"Pratinjau pesan"_q },
+		{ u"LuminaPreviewLinesChoiceOne"_q, u"1 baris"_q },
+		{ u"LuminaPreviewLinesChoice"_q, u"{1} baris"_q },
+		{ u"LuminaPreviewLinesInfo"_q, u"Tampilkan hingga sebanyak ini baris "
+			u"pesan terakhir di bawah nama setiap obrolan. Makin banyak baris, "
+			u"makin tinggi setiap baris daftar obrolan."_q },
 		{ u"LuminaChatListDotsTitle"_q, u"Titik avatar"_q },
 		{ u"LuminaChatListOnlineDot"_q, u"Titik daring"_q },
 		{ u"LuminaChatListOnlineDotInfo"_q, u"Menampilkan titik hijau kecil "
@@ -472,6 +537,29 @@ namespace {
 			u"meninggalkan perangkat ini."_q },
 		{ u"LuminaLinkSafetyRow"_q, u"Pemeriksa keamanan tautan"_q },
 		{ u"LuminaLinkSafetyTitle"_q, u"Buka tautan eksternal?"_q },
+		{ u"LuminaFileGuardTitle"_q, u"Buka berkas ini?"_q },
+		{ u"LuminaFileGuardName"_q, u"Nama berkas"_q },
+		{ u"LuminaFileGuardOpen"_q, u"Tetap buka"_q },
+		{ u"LuminaFileGuardWarnBidi"_q, u"Nama berkas ini memakai karakter "
+			u"kontrol arah teks, trik untuk menyembunyikan ekstensi aslinya — "
+			u"akhir namanya bisa sangat berbeda dari yang terlihat."_q },
+		{ u"LuminaFileGuardWarnDouble"_q, u"Berkas ini memakai ekstensi ganda "
+			u"agar terlihat seperti dokumen atau berkas media, tetapi ekstensi "
+			u"aslinya, yang terakhir, menjadikannya sebuah program."_q },
+		{ u"LuminaFileGuardWarnMismatch"_q, u"Ekstensi berkas ini tidak cocok "
+			u"dengan jenis yang dinyatakan. Bisa jadi ini program yang "
+			u"disamarkan sebagai foto, video, atau dokumen."_q },
+		{ u"LuminaFileGuardRow"_q, u"Peringatkan tentang berkas yang disamarkan"_q },
+		{ u"LuminaFileGuardInfo"_q, u"Tanyakan dulu sebelum membuka berkas yang "
+			u"namanya disamarkan untuk menyembunyikan jati dirinya. Ini "
+			u"menangkap nama yang memakai karakter kontrol arah teks untuk "
+			u"menyamarkan ekstensinya, ekstensi ganda seperti invoice.pdf.exe, "
+			u"dan berkas yang ekstensi serta jenis yang dinyatakannya tidak "
+			u"cocok antara program dan media. Pemeriksaan hanya membaca nama "
+			u"dan jenis yang dinyatakan — tidak ada yang dipindai dan tidak ada "
+			u"berkas yang keluar dari perangkat ini. Telegram Desktop tetap "
+			u"memberi peringatan sendiri sebelum menjalankan berkas yang dapat "
+			u"dieksekusi."_q },
 		{ u"LuminaLinkSafetyWarnMismatch"_q, u"Tautan ini menyembunyikan "
 			u"tujuan aslinya di balik teks sebelum tanda «@»."_q },
 		{ u"LuminaLinkSafetyWarnPunycode"_q, u"Alamat ini memakai karakter "
@@ -560,9 +648,14 @@ namespace {
 			u"Kalimat singkat tentang diri Anda"_q },
 		{ u"LuminaProfileCardTitle"_q, u"Kartu profil"_q },
 		{ u"LuminaProfileChatCreated"_q, u"Dibuat"_q },
+		{ u"LuminaProfileGroupSettings"_q, u"Pengaturan Grup"_q },
+		{ u"LuminaProfileRecentActions"_q, u"Tindakan Terbaru"_q },
 		{ u"LuminaProfileDcId"_q, u"Pusat data"_q },
 		{ u"LuminaProfileUserId"_q, u"ID pengguna"_q },
+		{ u"LuminaProfileChatId"_q, u"ID obrolan"_q },
 		{ u"LuminaProfileDcIdValue"_q, u"DC{1}"_q },
+		{ u"LuminaProfileNameWarning"_q, u"Kemungkinan peniruan identitas"_q },
+		{ u"LuminaProfileNameWarningLabel"_q, u"Nama memakai karakter yang mirip"_q },
 		{ u"LuminaProfileInfoHeader"_q, u"Profil"_q },
 		{ u"LuminaProfileInfoInfo"_q, u"Baris tambahan di halaman profil, "
 			u"semuanya dihitung di perangkat ini — tidak ada yang diminta "
@@ -730,6 +823,13 @@ namespace {
 		{ u"LuminaOtpGuardSendAnyway"_q, u"Saya paham risikonya, tetap kirim"_q },
 		{ u"LuminaOtpGuard"_q, u"Perlindungan kode masuk"_q },
 		{ u"LuminaOtpGuardInfo"_q, u"Memperingatkan sebelum Anda mengirim pesan yang berisi kode masuk, jika Telegram baru saja mengirimkannya kepada Anda. Pemeriksaan berjalan sepenuhnya di perangkat Anda: tidak ada yang diunggah, dan pesan Anda tidak pernah diubah."_q },
+		{ u"LuminaPrivacyHomoglyphWarning"_q, u"Peringatan nama tiruan"_q },
+		{ u"LuminaPrivacyHomoglyphWarningInfo"_q, u"Peringatkan saat sebuah nama "
+			u"mencampur huruf yang mirip dari alfabet berbeda — huruf Sirilik "
+			u"«а» di dalam kata Latin, huruf lebar penuh, atau angka 0 sebagai "
+			u"pengganti O — cara peniru menyamarkan nama yang dikenal. Tidak "
+			u"ada yang diblokir; pemeriksaan berjalan di perangkat Anda dan "
+			u"tidak ada nama yang diunggah."_q },
 		// link preview + voice confirm
 		{ u"LuminaPrivacyDisableLinkPreview"_q, u"Nonaktifkan pratinjau tautan "
 			u"secara bawaan"_q },
@@ -911,15 +1011,50 @@ namespace {
 		{ u"LuminaSttEngine"_q, u"Mesin"_q },
 		{ u"LuminaSttEngineWhisper"_q, u"OpenAI Whisper (kunci sendiri)"_q },
 		{ u"LuminaSttEngineGoogle"_q, u"Google (kunci sendiri)"_q },
+		{ u"LuminaSttEngineApple"_q, u"Apple (di perangkat, gratis)"_q },
+		{ u"LuminaSttEngineWhisperCpp"_q, u"Whisper (offline, di perangkat)"_q },
+		{ u"LuminaSttOfflineModel"_q, u"Model offline"_q },
+		{ u"LuminaSttModelAbsent"_q, u"Belum diunduh"_q },
+		{ u"LuminaSttModelDownloading"_q, u"Mengunduh {1}%"_q },
+		{ u"LuminaSttModelReady"_q, u"Siap"_q },
+		{ u"LuminaSttModelDelete"_q, u"Hapus"_q },
+		{ u"LuminaSttModelDeleteConfirm"_q, u"Hapus model offline yang sudah "
+			u"diunduh? Anda bisa mengunduhnya lagi nanti."_q },
+		{ u"LuminaSttModelDownloadingStart"_q, u"Mengunduh model offline…"_q },
+		{ u"LuminaSttOfflineInfo"_q, u"Transkripsi offline berjalan sepenuhnya "
+			u"di perangkat ini. Saat pertama kali dipakai, model bahasa diunduh "
+			u"satu kali (sekitar 57 MB); setelah itu tidak ada audio yang "
+			u"keluar dari komputer Anda."_q },
 		{ u"LuminaSttKey"_q, u"Kunci API"_q },
 		{ u"LuminaSttBaseUrl"_q, u"URL dasar"_q },
 		{ u"LuminaSttModel"_q, u"Model"_q },
+		{ u"LuminaSttProbeModels"_q, u"Deteksi model"_q },
+		{ u"LuminaSttProbeNoKey"_q, u"Atur kunci API terlebih dahulu, lalu "
+			u"deteksi model."_q },
+		{ u"LuminaSttProbeFailed"_q, u"Tidak dapat mengambil daftar model. "
+			u"Periksa URL dasar dan kunci API, lalu coba lagi."_q },
+		{ u"LuminaSttProbeEmpty"_q, u"Endpoint tidak mengembalikan model apa "
+			u"pun."_q },
 		{ u"LuminaSttNotReady"_q, u"Suara ke teks aktif, tetapi mesin yang dipilih di bawah belum punya kunci API, jadi tidak bisa berjalan. Simpan kunci di bagian Mesin, atau matikan opsi ini."_q },
+		{ u"LuminaSttSetupTitle"_q, u"Selesaikan penyiapan"_q },
+		{ u"LuminaSttSetupInfo"_q, u"Suara ke teks aktif, tetapi mesin yang "
+			u"dipilih di bawah belum siap: mesin cloud memerlukan kunci API, "
+			u"dan mesin offline perlu mengunduh modelnya sekali («Model "
+			u"offline», di bawah). Klik pertama pada «Transkripsikan» juga akan "
+			u"menawarkan unduhan itu."_q },
 		{ u"LuminaSttInfoDesktop"_q, u"Mesin bawaan mentranskripsi di perangkat ini: Whisper offline di Windows dan Linux (setelah model diunduh sekali), dan pengenalan suara Apple di macOS, yang tetap di Mac selama sistem mendukung pengenalan di perangkat. Pesan suara hanya diunggah jika Anda memilih mesin cloud di bawah (OpenAI Whisper atau Google), ke layanan itu, dengan kunci API dan kuota Anda sendiri; LuminaGram tidak pernah menyediakan kunci."_q },
 		{ u"LuminaSttVoskUnsupported"_q, u"Mesin luring (Vosk) belum didukung di desktop: ia perlu "
 			u"pustaka native dan model suara yang dipaketkan terpisah "
 			u"untuk Windows, macOS, dan Linux. Sampai saat itu, "
 			u"transkripsi di desktop hanya lewat awan."_q },
+		{ u"LuminaExplainMenuItem"_q, u"Jelaskan"_q },
+		{ u"LuminaExplainTitle"_q, u"Jelaskan pesan ini"_q },
+		{ u"LuminaExplainWorking"_q, u"Menjelaskan…"_q },
+		{ u"LuminaExplainError"_q, u"Tidak dapat menjelaskan pesan ini. Periksa "
+			u"kunci LLM dan koneksi Anda, lalu coba lagi."_q },
+		{ u"LuminaExplainNoKey"_q, u"Kunci API LLM belum diatur. Tambahkan di "
+			u"Pengaturan, LuminaGram, Terjemahan, lalu coba lagi."_q },
+		{ u"LuminaExplainEnable"_q, u"Item menu «Jelaskan pesan ini»"_q },
 		{ u"LuminaSttUiMenuItem"_q, u"Transkripsikan"_q },
 		{ u"LuminaSttUiModelMissing"_q, u"Model suara offline belum diunduh. Unduh di Pengaturan, LuminaGram, Suara ke Teks."_q },
 		{ u"LuminaSttModelNeededTitle"_q, u"Model suara offline"_q },
@@ -966,6 +1101,27 @@ namespace {
 		{ u"LuminaBrandAboutIntro"_q, u"Terjemahan, privasi, dan keamanan dalam satu aplikasi.\nDidukung Telegram API, bagian dari ekosistem Telegram."_q },
 		{ u"LuminaBrandAboutSummaryPre"_q, u"LuminaGram adalah aplikasi perpesanan gratis yang dibangun di atas "_q },
 		{ u"LuminaBrandAboutSummaryPost"_q, u", bagian dari ekosistem Telegram."_q },
+		{ u"LuminaBubbleGatesTitle"_q, u"Gelembung pesan"_q },
+		{ u"LuminaHideReactions"_q, u"Sembunyikan reaksi"_q },
+		{ u"LuminaHideReactionsInfo"_q, u"Sembunyikan reaksi yang tampil di "
+			u"bawah pesan. Ruang yang dipakainya juga dihapus, jadi tidak ada "
+			u"celah kosong yang tersisa."_q },
+		{ u"LuminaWideChannelPosts"_q, u"Postingan kanal lebar"_q },
+		{ u"LuminaWideChannelPostsInfo"_q, u"Tampilkan postingan kanal dalam "
+			u"gelembung lebih lebar yang memakai sebagian besar lebar yang "
+			u"tersedia, seperti tata letak baca. Hanya memengaruhi postingan "
+			u"teks; media tetap dengan ukurannya sendiri."_q },
+		{ u"LuminaStickerTimestamp"_q, u"Tampilkan waktu pada stiker"_q },
+		{ u"LuminaStickerTimestampInfo"_q, u"Tampilkan waktu pesan pada stiker, "
+			u"stiker animasi, dan pesan video bundar, yang biasanya hanya "
+			u"menampilkannya saat kursor diarahkan ke atasnya."_q },
+		{ u"LuminaInputRowTitle"_q, u"Baris input"_q },
+		{ u"LuminaHideVoiceButton"_q, u"Sembunyikan tombol pesan suara"_q },
+		{ u"LuminaHideSendAsButton"_q, u"Sembunyikan tombol «Kirim sebagai»"_q },
+		{ u"LuminaInputRowInfo"_q, u"Sembunyikan tombol pesan suara/video yang "
+			u"muncul saat kolom pesan kosong, dan tombol «Kirim sebagai» untuk "
+			u"memilih akun atau kanal yang dipakai untuk memposting pesan. "
+			u"Nonaktif secara bawaan; kontrol input lainnya tidak berubah."_q },
 		// LuminaGram Batch 4 (#14 double-tap edit, #16 call confirm, #17 menu, #22 keyword filter).
 		{ u"LuminaDoubleTapEditTitle"_q, u"Pengeditan"_q },
 		{ u"LuminaDoubleTapEditRow"_q, u"Ketuk dua kali pesan Anda untuk mengedit"_q },

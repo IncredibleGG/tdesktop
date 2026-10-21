@@ -2124,6 +2124,8 @@ PRIVATE
     lumina/lumina_scam_watch.h
     lumina/lumina_scam_watch_settings.cpp
     lumina/lumina_scam_watch_settings.h
+    lumina/lumina_secret_store.cpp
+    lumina/lumina_secret_store.h
     lumina/lumina_security_checkup.cpp
     lumina/lumina_security_checkup.h
     lumina/lumina_select_author.cpp

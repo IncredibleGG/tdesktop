@@ -1,3 +1,29 @@
+7.3.4 (21.10.26)
+
+- Translate before sending: the preview above the message field shows
+  "Translating..." with a spinner as soon as you type, so a slow translation
+  service no longer looks like the field stopped responding. Pressing Send
+  while the translation is still on its way says it will be sent when ready
+  (in the preview, or in a short notice where there is no preview). Looking
+  up the system proxy no longer blocks the window on every request.
+- Voice to text on Windows and Linux: the first Transcribe offers to download
+  the offline voice model (about 57 MB) and transcribes as soon as it is
+  done, with progress, cancel and a clear reason when the download fails.
+  The settings page describes on-device transcription correctly and drops the
+  placeholder bot links.
+- Translation and voice-to-text API keys are encrypted on disk on Windows
+  (bound to your Windows account); keys saved by older versions are encrypted
+  on first start. On macOS and Linux they stay where they were.
+- Encrypted backups no longer contain API keys; enter them again after
+  restoring on another device. Older backups that contain keys still import,
+  after the usual confirmation.
+- Upstream's experimental "translate-url-template" option is removed: it
+  sent message text over plain HTTP in the address and bypassed LuminaGram's
+  translation safeguards.
+- The About box links to LuminaGram's own source code and license.
+- About 90 LuminaGram texts are now translated into Spanish, Portuguese
+  (Brazil), Russian, Indonesian, Turkish, Arabic and Persian.
+
 7.3.3 (20.10.26)
 
 - Translation settings: a new "Detect available models" row under Model asks

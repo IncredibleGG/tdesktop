@@ -432,7 +432,7 @@ struct Registration {
 		{ u"LuminaBackupExport"_q, u"Export encrypted backup"_q },
 		{ u"LuminaBackupExportDone"_q, u"Backup saved."_q },
 		{ u"LuminaBackupExportFailed"_q, u"Could not create the backup file."_q },
-		{ u"LuminaBackupExportInfo"_q, u"Save everything LuminaGram keeps on this device - bookmarks, notes, reply templates, text replacements and every setting - into one file, encrypted with a passphrase you choose. The file also carries the private values: translation API keys, the vault and fake-crash codes, the decoy note. Nothing is sent to Telegram. Pick a long passphrase and keep it somewhere safe - without it the file cannot be opened, and there is no way to recover it."_q },
+		{ u"LuminaBackupExportInfo"_q, u"Save everything LuminaGram keeps on this device - bookmarks, notes, reply templates, text replacements and every setting - into one file, encrypted with a passphrase you choose. The file also carries the private values: the vault and fake-crash codes, the decoy note. API keys for translation and voice to text are never included: after restoring on another device, enter them again. Nothing is sent to Telegram. Pick a long passphrase and keep it somewhere safe - without it the file cannot be opened, and there is no way to recover it."_q },
 		{ u"LuminaBackupExportPassphraseTitle"_q, u"Set a passphrase"_q },
 		{ u"LuminaBackupFileFilter"_q, u"LuminaGram backup (*.lgbak)"_q },
 		{ u"LuminaBackupProviderTitle"_q, u"Translation and AI services"_q },

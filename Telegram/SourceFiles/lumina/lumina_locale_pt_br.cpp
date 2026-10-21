@@ -26,11 +26,46 @@ namespace {
 		{ u"LuminaSecurityTitle"_q, u"Segurança"_q },
 		{ u"LuminaChatSettings"_q, u"Conversas"_q },
 		{ u"LuminaGramChatList"_q, u"Lista de conversas"_q },
+		{ u"ChatLockAdd"_q, u"Adicionar à pasta privada"_q },
+		{ u"ChatLockRemove"_q, u"Remover da pasta privada"_q },
+		{ u"ChatLockNeedCode"_q, u"Para usar a pasta privada, primeiro você "
+			u"precisa de um código secreto. Defina um em LuminaGram → Segurança "
+			u"→ Cofre de disfarce. Sem um código, uma conversa bloqueada não "
+			u"poderá ser exibida de novo."_q },
 		{ u"LuminaAppearanceTitle"_q, u"Aparência"_q },
 		{ u"LuminaToolsTitle"_q, u"Ferramentas"_q },
 		{ u"LuminaGramStoredLocallyInfo"_q, u"As opções do LuminaGram ficam "
 			u"salvas somente neste dispositivo e nunca são sincronizadas com "
 			u"o Telegram."_q },
+		{ u"LuminaCheckupTitle"_q, u"Verificação de segurança"_q },
+		{ u"LuminaCheckupSummaryChecking"_q, u"Verificando sua conta…"_q },
+		{ u"LuminaCheckupSummaryOn"_q, u"A verificação em duas etapas está "
+			u"ativada, então sua conta tem uma camada extra de proteção. "
+			u"Confira o restante abaixo."_q },
+		{ u"LuminaCheckupSummaryOff"_q, u"A verificação em duas etapas está "
+			u"desativada. Ativá-la é a melhor coisa que você pode fazer por "
+			u"esta conta."_q },
+		{ u"LuminaCheckupTapToView"_q, u"Clique para ver"_q },
+		{ u"LuminaCheckupOn"_q, u"Ativado"_q },
+		{ u"LuminaCheckupOff"_q, u"Desativado"_q },
+		{ u"LuminaCheckupUnconfirmed"_q, u"Não confirmado"_q },
+		{ u"LuminaCheckupTwoStepHeader"_q, u"Verificação em duas etapas"_q },
+		{ u"LuminaCheckupTwoStep"_q, u"Verificação em duas etapas"_q },
+		{ u"LuminaCheckupRecoveryEmail"_q, u"E-mail de recuperação"_q },
+		{ u"LuminaCheckupRecoveryNoPassword"_q, u"Ative a 2FA primeiro"_q },
+		{ u"LuminaCheckupPrivacyHeader"_q, u"Quem pode falar com você"_q },
+		{ u"LuminaCheckupInvites"_q, u"Quem pode me adicionar a grupos"_q },
+		{ u"LuminaCheckupCalls"_q, u"Quem pode me ligar"_q },
+		{ u"LuminaCheckupPhone"_q, u"Quem pode ver meu número de telefone"_q },
+		{ u"LuminaCheckupEveryone"_q, u"Todos"_q },
+		{ u"LuminaCheckupContacts"_q, u"Meus contatos"_q },
+		{ u"LuminaCheckupCloseFriends"_q, u"Amigos próximos"_q },
+		{ u"LuminaCheckupNobody"_q, u"Ninguém"_q },
+		{ u"LuminaCheckupDevicesHeader"_q, u"Dispositivos conectados"_q },
+		{ u"LuminaCheckupSessions"_q, u"Sessões ativas"_q },
+		{ u"LuminaCheckupFooter"_q, u"O LuminaGram só mostra estas "
+			u"configurações, nunca as altera. Clique em qualquer linha para "
+			u"abrir a página oficial correspondente."_q },
 
 		// Sub-pages that have no rows yet.
 		{ u"LuminaAppearancePlaceholder"_q, u"As opções de formatação de "
@@ -86,6 +121,8 @@ namespace {
 			u"Recolher o original em mensagens longas"_q },
 		{ u"LuminaFoldOriginalLongMessagesInfo"_q,
 			u"Em mensagens bilíngues longas, o original é recolhido em uma linha para não lotar a conversa. Toque para expandir. A tradução é sempre mostrada por completo."_q },
+		{ u"LuminaTranslateGroupSkipMyLanguages"_q, u"Em grupos, pular os "
+			u"idiomas que eu leio"_q },
 		{ u"LuminaExpandOriginal"_q, u"Mostrar original"_q },
 		{ u"LuminaTranslateReadLang"_q, u"Idioma de leitura"_q },
 		{ u"LuminaTranslateReadLangFollow"_q, u"Seguir idioma do app"_q },
@@ -135,6 +172,27 @@ namespace {
 			u"configurações, e nunca são enviadas ao Telegram. Tudo o que "
 			u"você traduz é enviado ao serviço selecionado aqui, então "
 			u"escolha um em que você confie."_q },
+		{ u"LuminaTranslateMoreHeader"_q, u"Mais"_q },
+		{ u"LuminaGlossaryManage"_q, u"Lista de não traduzir"_q },
+		{ u"LuminaGlossaryNone"_q, u"Nenhum"_q },
+		{ u"LuminaTranslateMoreInfo"_q, u"«Explicar esta mensagem» adiciona ao "
+			u"menu do botão direito uma opção que pergunta ao seu próprio LLM o "
+			u"que uma mensagem realmente quer dizer — o tom, as gírias e como "
+			u"você poderia responder. A lista de não traduzir mantém "
+			u"inalteradas as palavras que estão nela quando uma mensagem é "
+			u"traduzida."_q },
+		{ u"LuminaGlossaryTitle"_q, u"Lista de não traduzir"_q },
+		{ u"LuminaGlossaryHeader"_q, u"Termos"_q },
+		{ u"LuminaGlossaryAdd"_q, u"Adicionar termo"_q },
+		{ u"LuminaGlossaryEdit"_q, u"Editar termo"_q },
+		{ u"LuminaGlossaryTermPlaceholder"_q, u"Termo"_q },
+		{ u"LuminaGlossaryEmpty"_q, u"As palavras desta lista não são alteradas "
+			u"quando uma mensagem é traduzida — nomes, marcas, @usuários, "
+			u"código. Links e @menções são sempre mantidos, estejam ou não na "
+			u"lista."_q },
+		{ u"LuminaGlossaryListInfo"_q, u"A correspondência não diferencia "
+			u"maiúsculas de minúsculas. Links e @menções são sempre mantidos, "
+			u"estejam ou não na lista."_q },
 
 		// Translate before sending: the boxes and the send menu.
 		{ u"LuminaTranslateOriginalLabel"_q, u"Original"_q },
@@ -318,12 +376,14 @@ namespace {
 		{ u"LuminaBackupExportInfo"_q, u"Salve tudo o que o LuminaGram guarda "
 			u"neste dispositivo — marcadores, notas, modelos de resposta, "
 			u"substituições de texto e todas as configurações — em um único "
-			u"arquivo, criptografado com uma frase secreta que você escolher. "
-			u"O arquivo também leva os valores privados: as chaves de API de "
-			u"tradução, os códigos do cofre e da falha falsa, a nota do bloco "
-			u"de notas falso. Nada é enviado ao Telegram. Escolha uma frase "
-			u"secreta longa e guarde-a em um lugar seguro — sem ela o arquivo "
-			u"não pode ser aberto, e não há como recuperá-la."_q },
+			u"arquivo, criptografado com uma frase secreta que você escolher. O "
+			u"arquivo também leva os valores privados: os códigos do cofre e da "
+			u"falha falsa, a nota do bloco de notas falso. As chaves de API de "
+			u"tradução e de voz para texto nunca são incluídas: depois de "
+			u"restaurar em outro dispositivo, digite-as de novo. Nada é enviado "
+			u"ao Telegram. Escolha uma frase secreta longa e guarde-a em um "
+			u"lugar seguro — sem ela o arquivo não pode ser aberto, e não há "
+			u"como recuperá-la."_q },
 		{ u"LuminaBackupExportPassphraseTitle"_q,
 			u"Defina uma frase secreta"_q },
 		{ u"LuminaBackupFileFilter"_q, u"Backup do LuminaGram (*.lgbak)"_q },
@@ -391,6 +451,12 @@ namespace {
 		{ u"LuminaCompactListRowsInfo"_q, u"Mostra mais conversas na tela "
 			u"encurtando cada linha da lista de conversas. Os avatares e as "
 			u"prévias das mensagens continuam visíveis."_q },
+		{ u"LuminaPreviewLinesTitle"_q, u"Prévia da mensagem"_q },
+		{ u"LuminaPreviewLinesChoiceOne"_q, u"1 linha"_q },
+		{ u"LuminaPreviewLinesChoice"_q, u"{1} linhas"_q },
+		{ u"LuminaPreviewLinesInfo"_q, u"Mostra até esta quantidade de linhas da "
+			u"última mensagem abaixo do nome de cada conversa. Com mais linhas, "
+			u"cada item da lista de conversas fica mais alto."_q },
 		{ u"LuminaChatListDotsTitle"_q, u"Pontos no avatar"_q },
 		{ u"LuminaChatListOnlineDot"_q, u"Ponto on-line"_q },
 		{ u"LuminaChatListOnlineDotInfo"_q, u"Mostra um pequeno ponto verde "
@@ -473,6 +539,28 @@ namespace {
 			u"deste dispositivo."_q },
 		{ u"LuminaLinkSafetyRow"_q, u"Inspetor de segurança de links"_q },
 		{ u"LuminaLinkSafetyTitle"_q, u"Abrir link externo?"_q },
+		{ u"LuminaFileGuardTitle"_q, u"Abrir este arquivo?"_q },
+		{ u"LuminaFileGuardName"_q, u"Nome do arquivo"_q },
+		{ u"LuminaFileGuardOpen"_q, u"Abrir mesmo assim"_q },
+		{ u"LuminaFileGuardWarnBidi"_q, u"O nome deste arquivo usa um caractere "
+			u"de controle de direção do texto, um truque que esconde a extensão "
+			u"real — o nome pode terminar em algo bem diferente do que aparece."_q },
+		{ u"LuminaFileGuardWarnDouble"_q, u"Este arquivo usa uma extensão dupla "
+			u"para parecer um documento ou arquivo de mídia, mas sua extensão "
+			u"real, a última, faz dele um programa."_q },
+		{ u"LuminaFileGuardWarnMismatch"_q, u"A extensão deste arquivo não "
+			u"corresponde ao tipo declarado. Pode ser um programa disfarçado de "
+			u"foto, vídeo ou documento."_q },
+		{ u"LuminaFileGuardRow"_q, u"Avisar sobre arquivos disfarçados"_q },
+		{ u"LuminaFileGuardInfo"_q, u"Antes de abrir um arquivo cujo nome foi "
+			u"disfarçado para esconder o que ele realmente é, pergunta "
+			u"primeiro. Isso detecta nomes que usam um caractere de controle de "
+			u"direção do texto para disfarçar a extensão, extensões duplas como "
+			u"invoice.pdf.exe e arquivos cuja extensão e tipo declarado "
+			u"divergem entre programa e mídia. A verificação lê apenas o nome e "
+			u"o tipo declarado — nada é analisado e nenhum arquivo sai deste "
+			u"dispositivo. O Telegram Desktop continua avisando por conta "
+			u"própria antes de executar um programa."_q },
 		{ u"LuminaLinkSafetyWarnMismatch"_q, u"Este link esconde o destino "
 			u"real atrás do texto antes do sinal «@»."_q },
 		{ u"LuminaLinkSafetyWarnPunycode"_q, u"Este endereço usa caracteres "
@@ -559,9 +647,14 @@ namespace {
 		{ u"LuminaProfileCardTaglineHint"_q, u"Uma frase curta sobre você"_q },
 		{ u"LuminaProfileCardTitle"_q, u"Cartão de perfil"_q },
 		{ u"LuminaProfileChatCreated"_q, u"Criado"_q },
+		{ u"LuminaProfileGroupSettings"_q, u"Configurações do grupo"_q },
+		{ u"LuminaProfileRecentActions"_q, u"Ações recentes"_q },
 		{ u"LuminaProfileDcId"_q, u"Datacenter"_q },
 		{ u"LuminaProfileUserId"_q, u"ID do usuário"_q },
+		{ u"LuminaProfileChatId"_q, u"ID da conversa"_q },
 		{ u"LuminaProfileDcIdValue"_q, u"DC{1}"_q },
+		{ u"LuminaProfileNameWarning"_q, u"Possível falsificação de identidade"_q },
+		{ u"LuminaProfileNameWarningLabel"_q, u"O nome usa caracteres parecidos"_q },
 		{ u"LuminaProfileInfoHeader"_q, u"Perfil"_q },
 		{ u"LuminaProfileInfoInfo"_q, u"Linhas extras nas páginas de perfil, "
 			u"todas calculadas neste dispositivo — nada é pedido ao Telegram. "
@@ -730,6 +823,13 @@ namespace {
 		{ u"LuminaOtpGuardSendAnyway"_q, u"Entendo o risco, enviar mesmo assim"_q },
 		{ u"LuminaOtpGuard"_q, u"Proteção do código de login"_q },
 		{ u"LuminaOtpGuardInfo"_q, u"Avisa antes de você enviar uma mensagem com um código de login, se o Telegram acabou de enviar um para você. A verificação acontece inteiramente no seu aparelho: nada é enviado para fora e sua mensagem nunca é alterada."_q },
+		{ u"LuminaPrivacyHomoglyphWarning"_q, u"Aviso de nome falsificado"_q },
+		{ u"LuminaPrivacyHomoglyphWarningInfo"_q, u"Avisa quando um nome mistura "
+			u"letras parecidas de alfabetos diferentes — um «а» cirílico dentro "
+			u"de uma palavra latina, letras de largura total ou um 0 no lugar "
+			u"de um O —, do jeito que um impostor disfarça um nome conhecido. "
+			u"Nada é bloqueado; a verificação é feita no seu dispositivo e "
+			u"nenhum nome é enviado."_q },
 		// link preview + voice confirm
 		{ u"LuminaPrivacyDisableLinkPreview"_q, u"Desativar a prévia de links "
 			u"por padrão"_q },
@@ -911,16 +1011,51 @@ namespace {
 		{ u"LuminaSttEngine"_q, u"Mecanismo"_q },
 		{ u"LuminaSttEngineWhisper"_q, u"OpenAI Whisper (sua própria chave)"_q },
 		{ u"LuminaSttEngineGoogle"_q, u"Google (sua própria chave)"_q },
+		{ u"LuminaSttEngineApple"_q, u"Apple (no dispositivo, grátis)"_q },
+		{ u"LuminaSttEngineWhisperCpp"_q, u"Whisper (offline, no dispositivo)"_q },
+		{ u"LuminaSttOfflineModel"_q, u"Modelo offline"_q },
+		{ u"LuminaSttModelAbsent"_q, u"Não baixado"_q },
+		{ u"LuminaSttModelDownloading"_q, u"Baixando {1}%"_q },
+		{ u"LuminaSttModelReady"_q, u"Pronto"_q },
+		{ u"LuminaSttModelDelete"_q, u"Excluir"_q },
+		{ u"LuminaSttModelDeleteConfirm"_q, u"Excluir o modelo offline baixado? "
+			u"Você pode baixá-lo de novo depois."_q },
+		{ u"LuminaSttModelDownloadingStart"_q, u"Baixando o modelo offline…"_q },
+		{ u"LuminaSttOfflineInfo"_q, u"A transcrição offline roda inteiramente "
+			u"neste dispositivo. Na primeira vez que você a usar, um modelo de "
+			u"idioma é baixado uma única vez (cerca de 57 MB); depois disso, "
+			u"nenhum áudio sai do seu computador."_q },
 		{ u"LuminaSttKey"_q, u"Chave de API"_q },
 		{ u"LuminaSttBaseUrl"_q, u"URL base"_q },
 		{ u"LuminaSttModel"_q, u"Modelo"_q },
+		{ u"LuminaSttProbeModels"_q, u"Detectar modelos"_q },
+		{ u"LuminaSttProbeNoKey"_q, u"Defina uma chave de API primeiro e depois "
+			u"detecte os modelos."_q },
+		{ u"LuminaSttProbeFailed"_q, u"Não foi possível obter a lista de "
+			u"modelos. Verifique a URL base e a chave de API e tente novamente."_q },
+		{ u"LuminaSttProbeEmpty"_q, u"O endpoint não retornou nenhum modelo."_q },
 		{ u"LuminaSttNotReady"_q, u"A transcrição de voz está ligada, mas o mecanismo escolhido abaixo ainda não tem chave de API, então não funciona. Salve uma chave em Mecanismo, ou desligue esta opção."_q },
+		{ u"LuminaSttSetupTitle"_q, u"Concluir a configuração"_q },
+		{ u"LuminaSttSetupInfo"_q, u"Voz para texto está ativado, mas o "
+			u"mecanismo selecionado abaixo ainda não está pronto: um mecanismo "
+			u"na nuvem precisa de uma chave de API, e o mecanismo offline "
+			u"precisa baixar o modelo uma vez («Modelo offline», abaixo). O "
+			u"primeiro clique em «Transcrever» também oferece esse download."_q },
 		{ u"LuminaSttInfoDesktop"_q, u"O mecanismo padrão transcreve neste dispositivo: Whisper offline no Windows e no Linux (depois de baixar o modelo uma vez) e o reconhecimento de fala da Apple no macOS, que fica no Mac sempre que o sistema oferece reconhecimento no dispositivo. Só um mecanismo na nuvem escolhido abaixo (OpenAI Whisper ou Google) envia a mensagem de voz, para esse serviço, com sua própria chave de API e sua própria cota; o LuminaGram nunca fornece uma chave."_q },
 		{ u"LuminaSttVoskUnsupported"_q, u"O mecanismo offline (Vosk) ainda não é compatível no "
 			u"desktop: ele precisa de uma biblioteca nativa e de um "
 			u"modelo de voz empacotados separadamente para Windows, "
 			u"macOS e Linux. Até lá, a transcrição no desktop é somente "
 			u"na nuvem."_q },
+		{ u"LuminaExplainMenuItem"_q, u"Explicar"_q },
+		{ u"LuminaExplainTitle"_q, u"Explicar esta mensagem"_q },
+		{ u"LuminaExplainWorking"_q, u"Explicando…"_q },
+		{ u"LuminaExplainError"_q, u"Não foi possível explicar esta mensagem. "
+			u"Verifique sua chave de LLM e a conexão e tente novamente."_q },
+		{ u"LuminaExplainNoKey"_q, u"Nenhuma chave de API de LLM definida. "
+			u"Adicione uma em Configurações, LuminaGram, Tradução e tente "
+			u"novamente."_q },
+		{ u"LuminaExplainEnable"_q, u"Item de menu «Explicar esta mensagem»"_q },
 		{ u"LuminaSttUiMenuItem"_q, u"Transcrever"_q },
 		{ u"LuminaSttUiModelMissing"_q, u"O modelo de voz offline ainda não foi baixado. Baixe-o em Configurações, LuminaGram, Voz para texto."_q },
 		{ u"LuminaSttModelNeededTitle"_q, u"Modelo de voz offline"_q },
@@ -968,6 +1103,29 @@ namespace {
 		{ u"LuminaBrandAboutIntro"_q, u"Tradução, privacidade e segurança, tudo em um só lugar.\nBaseado na API do Telegram, parte do ecossistema do Telegram."_q },
 		{ u"LuminaBrandAboutSummaryPre"_q, u"O LuminaGram é um app de mensagens gratuito baseado na "_q },
 		{ u"LuminaBrandAboutSummaryPost"_q, u", parte do ecossistema do Telegram."_q },
+		{ u"LuminaBubbleGatesTitle"_q, u"Balões de mensagem"_q },
+		{ u"LuminaHideReactions"_q, u"Ocultar reações"_q },
+		{ u"LuminaHideReactionsInfo"_q, u"Oculta as reações exibidas abaixo das "
+			u"mensagens. O espaço que ocupavam também é removido, então não "
+			u"sobra nenhum vão vazio."_q },
+		{ u"LuminaWideChannelPosts"_q, u"Posts de canal largos"_q },
+		{ u"LuminaWideChannelPostsInfo"_q, u"Mostra os posts de canais em balões "
+			u"mais largos que usam a maior parte da largura disponível, como um "
+			u"layout de leitura. Afeta apenas posts de texto; a mídia mantém o "
+			u"próprio tamanho."_q },
+		{ u"LuminaStickerTimestamp"_q, u"Mostrar a hora nas figurinhas"_q },
+		{ u"LuminaStickerTimestampInfo"_q, u"Mostra a hora da mensagem em "
+			u"figurinhas, figurinhas animadas e mensagens de vídeo redondas, "
+			u"que normalmente só a exibem quando você passa o cursor sobre "
+			u"elas."_q },
+		{ u"LuminaInputRowTitle"_q, u"Barra de digitação"_q },
+		{ u"LuminaHideVoiceButton"_q, u"Ocultar o botão de mensagem de voz"_q },
+		{ u"LuminaHideSendAsButton"_q, u"Ocultar o botão «Enviar como»"_q },
+		{ u"LuminaInputRowInfo"_q, u"Oculta o botão de mensagem de voz/vídeo que "
+			u"aparece quando o campo de mensagem está vazio e o botão «Enviar "
+			u"como», usado para escolher com qual conta ou canal a mensagem é "
+			u"publicada. Desativado por padrão; os outros controles de "
+			u"digitação não mudam."_q },
 		// LuminaGram Batch 4 (#14 double-tap edit, #16 call confirm, #17 menu, #22 keyword filter).
 		{ u"LuminaDoubleTapEditTitle"_q, u"Edição"_q },
 		{ u"LuminaDoubleTapEditRow"_q, u"Toque duplo na sua mensagem para editar"_q },

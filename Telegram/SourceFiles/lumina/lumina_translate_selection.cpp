@@ -111,14 +111,9 @@ private:
 // "use this engine" choice exactly as the Service row is, it is on-device, and
 // it must keep winning where it wins today.
 //
-// That function's other early branch, the experimental translate-url-template
-// option, is deliberately NOT re-stated. Reading it needs its literal option id
-// in a second place, and base::options::value() aborts on an id it does not
-// know - a hard crash on every context menu if upstream ever renames it. The
-// bypass below is the only path that skips it, it is taken only while the
-// continuous tier is off, and the combination it costs is an experimental
-// developer option plus a LuminaGram engine selected plus the switch off, where
-// the Service row is the answer a user can actually see.
+// That function used to have a second early branch, upstream's experimental
+// translate-url-template option. LuminaGram no longer registers that option
+// (see lang/translate_provider.cpp), so there is nothing else to re-state.
 [[nodiscard]] bool PlatformTranslatorChosen() {
 	return Core::App().settings().usePlatformTranslation()
 		&& Platform::IsTranslateProviderAvailable();

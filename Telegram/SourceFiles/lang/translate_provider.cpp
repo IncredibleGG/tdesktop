@@ -7,7 +7,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "lang/translate_provider.h"
 
-#include "base/options.h"
 #include "core/application.h"
 #include "core/core_settings.h"
 #include "data/data_msg_id.h"
@@ -15,30 +14,24 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_session.h"
 #include "history/history_item.h"
 #include "lang/translate_mtproto_provider.h"
-#include "lang/translate_url_provider.h"
 #include "lumina/lumina_translate_providers.h"
 #include "platform/platform_translate_provider.h"
 
-namespace {
-
-base::options::option<QString> OptionTranslateUrlTemplate({
-	.id = "translate-url-template",
-	.name = "Translate URL template",
-	.description = "Template URL for custom translation provider."
-		" Supports %q text, %f source language and %t target language.",
-});
-
-} // namespace
+// LuminaGram: upstream's experimental "translate-url-template" option is not
+// registered in this fork, so lang/translate_url_provider.cpp is never
+// reached. That option accepted plain http, put the whole message text into a
+// GET query string (where proxies and server logs keep it), set no timeout,
+// and ran ahead of every LuminaGram provider - skipping the explicit-choice,
+// protected-chat and https gates those providers enforce. A value left behind
+// in tdata/experimental_options.json, or brought in through the Experimental
+// settings import, is now an unknown option: base::options logs it and
+// ignores it. A custom HTTP endpoint is the OpenAI-compatible provider in
+// LuminaGram's own Translation settings.
 
 namespace Ui {
 
 std::unique_ptr<TranslateProvider> CreateTranslateProvider(
 		not_null<Main::Session*> session) {
-	const auto urlTemplate = OptionTranslateUrlTemplate.value();
-	if (!urlTemplate.isEmpty()
-		&& urlTemplate.contains(u"%q"_q)) {
-		return CreateUrlTranslateProvider(urlTemplate);
-	}
 	if (Core::App().settings().usePlatformTranslation()
 		&& Platform::IsTranslateProviderAvailable()) {
 		return Platform::CreateTranslateProvider();

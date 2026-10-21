@@ -56,6 +56,12 @@ enum class Store {
 // (context-menu building, status updates, etc). Writes are atomic (QSaveFile)
 // and coalesced (~500ms), and a file that fails to parse is renamed to
 // `*.corrupt` rather than dropped, so nothing is ever silently destroyed.
+//
+// API keys (`translateKey_*`, `sttKey_*`, see lumina_secret_store.h) are the
+// one exception to "a value behaves identically": they always live in
+// Store::Private whatever store is passed, set() / importAll() store them
+// sealed where the platform can seal, and getString() answers them opened.
+// Plaintext keys written by an older version are sealed when the store loads.
 class Settings final {
 public:
 	// !! NOT SAFE BEFORE QApplication EXISTS. The first call constructs the
@@ -91,8 +97,14 @@ public:
 	[[nodiscard]] rpl::producer<QString> changes() const;
 	[[nodiscard]] rpl::producer<> changesFor(QString key) const;
 
-	// For lumina_backup.
+	// Every key of every store, API keys included in their stored form
+	// (sealed on Windows) - the panic wipe enumerates this.
 	[[nodiscard]] QJsonObject exportAll() const;
+
+	// For lumina_backup: exportAll() without the API keys. A backup never
+	// carries them (7.3.4+); see lumina_secret_store.h.
+	[[nodiscard]] QJsonObject exportForBackup() const;
+
 	void importAll(const QJsonObject &data); // fires changes() per key
 
 	// Flushes the debounced write. Called on destruction as well.
@@ -142,8 +154,10 @@ private:
 	void load();
 	void loadStore(Store store);
 	void migrateLegacyKeys();
+	void migrateApiKeys();
 
 	[[nodiscard]] QJsonValue lookup(const QString &key) const;
+	[[nodiscard]] QJsonObject exportStores(bool withApiKeys) const;
 	bool apply(const QString &key, const QJsonValue &value, Store store);
 	void scheduleSave();
 	bool writeStore(Store store); // false keeps the store dirty for a retry.
