@@ -981,13 +981,12 @@ namespace {
 		{ u"LuminaSecurityFakeCrashCodeNotSet"_q, u"Sin establecer"_q },
 		{ u"LuminaSecurityFakeCrashCodeSameAsPasscode"_q, u"Este código no puede ser igual "
 			u"que tu código de acceso."_q },
-		{ u"LuminaSecurityFakeCrashInfo"_q, u"Cuando esto está activado, escribir el "
-			u"código de fallo falso en la pantalla de bloqueo cierra "
-			u"LuminaGram de inmediato en lugar de desbloquearlo, sin "
-			u"ningún mensaje y sin dejar nada en pantalla: para quien "
-			u"esté mirando, la aplicación se ha bloqueado. El código es "
-			u"independiente de tu código de acceso, se guarda solo en "
-			u"este dispositivo y nunca se envía a ninguna parte."_q },
+		{ u"LuminaSecurityFakeCrashInfo"_q, u"Cuando esto está activado, escribir el código de fallo "
+			u"falso en la pantalla de bloqueo cierra LuminaGram en "
+			u"lugar de desbloquearlo: para quien esté mirando, la "
+			u"aplicación se ha bloqueado. El código es independiente "
+			u"de tu código de acceso, se guarda solo en este "
+			u"dispositivo y nunca se envía a ninguna parte."_q },
 		{ u"LuminaSecurityFakeCrashBiometricInfo"_q, u"Mientras esto esté activado y haya "
 			u"un código establecido, el desbloqueo con Touch ID, Windows "
 			u"Hello o la contraseña del sistema queda desactivado: una "
@@ -1005,6 +1004,18 @@ namespace {
 			u"código de acceso, así que nunca se activará: el código de "
 			u"acceso desbloquea la aplicación en su lugar. Elige un "
 			u"código diferente."_q },
+		{ u"LuminaFakeCrashModeHeader"_q, u"Al escribir este código"_q },
+		{ u"LuminaFakeCrashModeExit"_q, u"Salir de inmediato"_q },
+		{ u"LuminaFakeCrashModeDialog"_q, u"Mostrar un aviso de fallo falso"_q },
+		{ u"LuminaFakeCrashModeExitInfo"_q, u"Salir de inmediato: la ventana desaparece al instante, "
+			u"sin ningún mensaje y sin dejar nada en pantalla."_q },
+		{ u"LuminaFakeCrashModeDialogInfo"_q, u"Aviso de fallo falso: la ventana desaparece y aparece "
+			u"un aviso con estilo del sistema «LuminaGram dejó de "
+			u"funcionar»; LuminaGram se cierra al descartarlo."_q },
+		{ u"LuminaFakeCrashTitle"_q, u"LuminaGram dejó de funcionar"_q },
+		{ u"LuminaFakeCrashText"_q, u"Un problema hizo que el programa dejara de funcionar "
+			u"correctamente. El programa se cerrará."_q },
+		{ u"LuminaFakeCrashCloseApp"_q, u"Cerrar el programa"_q },
 		// login guard (D-32)
 		{ u"LuminaSessionGuardHeader"_q, u"Protección de inicio de sesión"_q },
 		{ u"LuminaSessionGuard"_q, u"Avisos de nuevos inicios de sesión"_q },

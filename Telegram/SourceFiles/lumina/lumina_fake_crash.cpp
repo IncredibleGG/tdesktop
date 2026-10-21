@@ -7,17 +7,82 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "lumina/lumina_fake_crash.h"
 
+#include "lumina/lumina_locale.h"
 #include "lumina/lumina_settings.h"
 
+#include <QtCore/QPointer>
+#include <QtGui/QGuiApplication>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QWidget>
+
 #include <cstdlib>
+#include <vector>
+
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif // Q_OS_WIN
 
 namespace Lumina {
 namespace {
 
-// Same key names as Android's LuminaSecurityActivity, so the two platforms'
-// stores can be read against each other.
+// Same key names and values as Android's LuminaConfig (KEY_FAKE_CRASH_*,
+// FAKE_CRASH_MODE_*), so the two platforms' stores can be read against each
+// other.
 const auto kKeyEnabled = u"fakeCrashEnabled"_q;
 const auto kKeyCode = u"fakeCrashCode"_q;
+const auto kKeyMode = u"fakeCrashMode"_q;
+const auto kModeExit = u"exit"_q;
+const auto kModeDialog = u"dialog"_q;
+
+// Dialog mode, step one: every window goes away first, so the alert stands
+// alone the way a crash leaves it.
+//
+// Qt quits when the last window goes away (quitOnLastWindowClosed() is Qt's
+// default, true, and nothing in this tree changes it outside the vault gate -
+// see lumina_vault.cpp), and that quit is the graceful, vetoable one
+// TriggerFakeCrash() exists to avoid. So it is switched off before anything
+// is hidden, and never switched back: the process ends right after the alert.
+//
+// Guarded pointers, because hiding one top-level widget can destroy another
+// (a menu or tooltip owned by the window) while the list is being walked.
+void HideAllWindows() {
+	QGuiApplication::setQuitOnLastWindowClosed(false);
+	auto widgets = std::vector<QPointer<QWidget>>();
+	for (const auto widget : QApplication::topLevelWidgets()) {
+		widgets.emplace_back(widget);
+	}
+	for (const auto &widget : widgets) {
+		if (widget && widget->isVisible()) {
+			widget->hide();
+		}
+	}
+}
+
+// Dialog mode, step two: the alert itself, modal, returning once it is
+// dismissed in any way. The system's own message box where there is one to
+// imitate - on Windows MessageBoxW is exactly what a crash dialog is drawn
+// with; on macOS QMessageBox is drawn by the system (NSAlert, with the app's
+// icon); on Linux it is the plain Qt one.
+void ShowAlert() {
+	const auto title = Tr(u"LuminaFakeCrashTitle"_q);
+	const auto text = Tr(u"LuminaFakeCrashText"_q);
+	const auto caption = u"LuminaGram"_q;
+#ifdef Q_OS_WIN
+	const auto body = (title + u"\n\n"_q + text).toStdWString();
+	const auto head = caption.toStdWString();
+	MessageBoxW(
+		nullptr,
+		body.c_str(),
+		head.c_str(),
+		MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TOPMOST | MB_TASKMODAL);
+#else // Q_OS_WIN
+	QMessageBox box(QMessageBox::Critical, caption, title);
+	box.setInformativeText(text);
+	box.addButton(Tr(u"LuminaFakeCrashCloseApp"_q), QMessageBox::AcceptRole);
+	box.exec();
+#endif // Q_OS_WIN
+}
 
 } // namespace
 
@@ -33,8 +98,15 @@ bool FakeCrashEnabled() {
 // is not armed the next time - which is the safe direction but also the one
 // the user cannot see. A saveNow() per toggle is cheaper than that.
 void SetFakeCrashEnabled(bool value) {
-	Settings::Instance().set(kKeyEnabled, value, Store::Private);
-	Settings::Instance().saveNow();
+	auto &settings = Settings::Instance();
+	settings.set(kKeyEnabled, value, Store::Private);
+	if (value && settings.getString(kKeyMode).isEmpty()) {
+		// Writes this platform's default down the first time the feature is
+		// switched on, so a backup restored on Android - where a missing mode
+		// means Dialog - keeps meaning what it meant here.
+		settings.set(kKeyMode, kModeExit, Store::Private);
+	}
+	settings.saveNow();
 }
 
 QString FakeCrashCode() {
@@ -51,6 +123,24 @@ void SetFakeCrashCode(const QString &code) {
 	} else {
 		Settings::Instance().set(kKeyCode, trimmed, Store::Private);
 	}
+	Settings::Instance().saveNow();
+}
+
+FakeCrashMode CurrentFakeCrashMode() {
+	// Missing - every desktop user from before the choice existed - and
+	// anything unrecognised read as Exit: the behaviour this platform has
+	// always had (see the header).
+	return (Settings::Instance().getString(kKeyMode) == kModeDialog)
+		? FakeCrashMode::Dialog
+		: FakeCrashMode::Exit;
+}
+
+// Flushed at once for the same reason as the two setters above.
+void SetFakeCrashMode(FakeCrashMode mode) {
+	Settings::Instance().set(
+		kKeyMode,
+		(mode == FakeCrashMode::Dialog) ? kModeDialog : kModeExit,
+		Store::Private);
 	Settings::Instance().saveNow();
 }
 
@@ -110,10 +200,24 @@ bool FakeCrashCodeMatches(const QString &entered) {
 	std::_Exit(0);
 }
 
+[[noreturn]] void RunFakeCrash() {
+	if (CurrentFakeCrashMode() == FakeCrashMode::Dialog) {
+		// Whatever happens in here, the exit below still happens: a duress
+		// code that unlocked nothing but also left the app running would be
+		// the worst outcome of the three.
+		try {
+			HideAllWindows();
+			ShowAlert();
+		} catch (...) {
+		}
+	}
+	TriggerFakeCrash();
+}
+
 rpl::producer<> FakeCrashChanges() {
 	return Settings::Instance().changes(
 	) | rpl::filter([](const QString &key) {
-		return (key == kKeyEnabled) || (key == kKeyCode);
+		return (key == kKeyEnabled) || (key == kKeyCode) || (key == kKeyMode);
 	}) | rpl::to_empty;
 }
 

@@ -941,12 +941,12 @@ namespace {
 		{ u"LuminaSecurityFakeCrashCodeNotSet"_q, u"Não definido"_q },
 		{ u"LuminaSecurityFakeCrashCodeSameAsPasscode"_q, u"Este código não pode ser igual "
 			u"à sua senha de bloqueio."_q },
-		{ u"LuminaSecurityFakeCrashInfo"_q, u"Quando isto está ativado, digitar o código "
-			u"de falha falsa na tela de bloqueio fecha o LuminaGram na "
-			u"hora em vez de desbloqueá-lo, sem nenhuma mensagem e sem "
-			u"deixar nada na tela — para quem estiver olhando, o app "
-			u"travou. O código é separado da sua senha de bloqueio, fica "
-			u"somente neste dispositivo e nunca é enviado a lugar algum."_q },
+		{ u"LuminaSecurityFakeCrashInfo"_q, u"Quando isto está ativado, digitar o código de falha "
+			u"falsa na tela de bloqueio fecha o LuminaGram em vez de "
+			u"desbloqueá-lo — para quem estiver olhando, o app "
+			u"travou. O código é separado da sua senha de bloqueio, "
+			u"fica somente neste dispositivo e nunca é enviado a "
+			u"lugar algum."_q },
 		{ u"LuminaSecurityFakeCrashBiometricInfo"_q, u"Enquanto isto estiver ativado e "
 			u"houver um código definido, o desbloqueio com Touch ID, "
 			u"Windows Hello ou a senha do sistema fica desligado: a "
@@ -963,6 +963,18 @@ namespace {
 			u"senha de bloqueio, então ele nunca vai funcionar — a senha "
 			u"desbloqueia o app no lugar dele. Escolha um código "
 			u"diferente."_q },
+		{ u"LuminaFakeCrashModeHeader"_q, u"Ao digitar este código"_q },
+		{ u"LuminaFakeCrashModeExit"_q, u"Sair na hora"_q },
+		{ u"LuminaFakeCrashModeDialog"_q, u"Mostrar um aviso de falha falsa"_q },
+		{ u"LuminaFakeCrashModeExitInfo"_q, u"Sair na hora: a janela some imediatamente, sem nenhuma "
+			u"mensagem e sem deixar nada na tela."_q },
+		{ u"LuminaFakeCrashModeDialogInfo"_q, u"Aviso de falha falsa: a janela some e aparece um aviso "
+			u"no estilo do sistema “O LuminaGram parou de funcionar”; "
+			u"o LuminaGram fecha quando o aviso é dispensado."_q },
+		{ u"LuminaFakeCrashTitle"_q, u"O LuminaGram parou de funcionar"_q },
+		{ u"LuminaFakeCrashText"_q, u"Um problema fez com que o programa parasse de funcionar "
+			u"corretamente. O programa será fechado."_q },
+		{ u"LuminaFakeCrashCloseApp"_q, u"Fechar o programa"_q },
 		// login guard (D-32)
 		{ u"LuminaSessionGuardHeader"_q, u"Proteção de login"_q },
 		{ u"LuminaSessionGuard"_q, u"Alertas de novos logins"_q },

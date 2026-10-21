@@ -941,13 +941,11 @@ namespace {
 		{ u"LuminaSecurityFakeCrashCodeNotSet"_q, u"Belum diatur"_q },
 		{ u"LuminaSecurityFakeCrashCodeSameAsPasscode"_q, u"Kode ini tidak boleh sama "
 			u"dengan kode sandi kunci Anda."_q },
-		{ u"LuminaSecurityFakeCrashInfo"_q, u"Saat aktif, mengetik kode crash palsu di "
-			u"layar kunci akan langsung menutup LuminaGram alih-alih "
-			u"membukanya, tanpa pesan apa pun dan tanpa meninggalkan apa "
-			u"pun di layar — bagi siapa pun yang melihat, aplikasi "
-			u"tampak crash. Kode ini terpisah dari kode sandi kunci "
-			u"Anda, disimpan hanya di perangkat ini, dan tidak pernah "
-			u"dikirim ke mana pun."_q },
+		{ u"LuminaSecurityFakeCrashInfo"_q, u"Saat aktif, mengetik kode crash palsu di layar kunci "
+			u"akan menutup LuminaGram alih-alih membukanya — bagi "
+			u"siapa pun yang melihat, aplikasi tampak crash. Kode ini "
+			u"terpisah dari kode sandi kunci Anda, disimpan hanya di "
+			u"perangkat ini, dan tidak pernah dikirim ke mana pun."_q },
 		{ u"LuminaSecurityFakeCrashBiometricInfo"_q, u"Selama ini aktif dan kode sudah "
 			u"diatur, membuka kunci dengan Touch ID, Windows Hello, atau "
 			u"kata sandi sistem dimatikan: sidik jari membuka aplikasi "
@@ -963,6 +961,19 @@ namespace {
 		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"Kode ini kini sama dengan kode "
 			u"sandi kunci Anda, jadi tidak akan pernah berfungsi — kode "
 			u"sandi yang membuka aplikasi. Pilih kode lain."_q },
+		{ u"LuminaFakeCrashModeHeader"_q, u"Saat kode ini dimasukkan"_q },
+		{ u"LuminaFakeCrashModeExit"_q, u"Langsung keluar"_q },
+		{ u"LuminaFakeCrashModeDialog"_q, u"Tampilkan peringatan crash palsu"_q },
+		{ u"LuminaFakeCrashModeExitInfo"_q, u"Langsung keluar: jendela langsung hilang, tanpa pesan "
+			u"apa pun dan tanpa meninggalkan apa pun di layar."_q },
+		{ u"LuminaFakeCrashModeDialogInfo"_q, u"Peringatan crash palsu: jendela hilang lalu muncul "
+			u"peringatan bergaya sistem “LuminaGram telah berhenti "
+			u"bekerja”; LuminaGram tertutup saat peringatan itu "
+			u"ditutup."_q },
+		{ u"LuminaFakeCrashTitle"_q, u"LuminaGram telah berhenti bekerja"_q },
+		{ u"LuminaFakeCrashText"_q, u"Sebuah masalah menyebabkan program berhenti bekerja "
+			u"dengan benar. Program akan ditutup."_q },
+		{ u"LuminaFakeCrashCloseApp"_q, u"Tutup program"_q },
 		// login guard (D-32)
 		{ u"LuminaSessionGuardHeader"_q, u"Penjaga login"_q },
 		{ u"LuminaSessionGuard"_q, u"Peringatan login baru"_q },

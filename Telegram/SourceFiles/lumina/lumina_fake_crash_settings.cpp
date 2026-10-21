@@ -20,6 +20,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/layers/generic_box.h"
 #include "ui/vertical_list.h"
 #include "ui/widgets/buttons.h"
+#include "ui/widgets/checkbox.h"
 #include "ui/widgets/fields/input_field.h"
 #include "ui/wrap/slide_wrap.h"
 #include "ui/wrap/vertical_layout.h"
@@ -201,6 +202,57 @@ void EditCodeBox(not_null<Ui::GenericBox*> box) {
 	});
 }
 
+// "When this code is entered": the two modes, as radio rows inside the block
+// that only shows while the feature is on, like Android's. Placed under the
+// code row rather than above it, so the code row is not read as a third
+// choice; Exit is listed first because it is this platform's default.
+void AddModeRows(not_null<Ui::VerticalLayout*> container) {
+	Ui::AddSkip(container);
+	Ui::AddSubsectionTitle(
+		container,
+		TrValue(u"LuminaFakeCrashModeHeader"_q));
+	Ui::AddSkip(container, st::settingsSendTypeSkip);
+
+	const auto group = std::make_shared<Ui::RadioenumGroup<FakeCrashMode>>(
+		CurrentFakeCrashMode());
+	const auto add = [&](FakeCrashMode mode, const QString &key) {
+		const auto row = container->add(
+			object_ptr<Ui::Radioenum<FakeCrashMode>>(
+				container,
+				group,
+				mode,
+				Tr(key),
+				st::settingsSendType),
+			st::settingsSendTypePadding);
+		LangChanges(
+		) | rpl::on_next([=] {
+			row->setText(Tr(key));
+		}, row->lifetime());
+	};
+	add(FakeCrashMode::Exit, u"LuminaFakeCrashModeExit"_q);
+	add(FakeCrashMode::Dialog, u"LuminaFakeCrashModeDialog"_q);
+
+	// The preference can also move under the page - a restored backup writes
+	// every key it carries - so the rows follow the preference rather than
+	// only the clicks; `syncing` keeps that path from writing it straight
+	// back (same shape as lumina_dialogs_style_settings.cpp).
+	const auto syncing = container->lifetime().make_state<bool>(false);
+	group->setChangedCallback([=](FakeCrashMode mode) {
+		if (*syncing) {
+			return;
+		}
+		SetFakeCrashMode(mode);
+	});
+	FakeCrashChanges(
+	) | rpl::on_next([=] {
+		*syncing = true;
+		group->setValue(CurrentFakeCrashMode());
+		*syncing = false;
+	}, container->lifetime());
+
+	Ui::AddSkip(container, st::settingsSendTypeSkip);
+}
+
 // One reactive paragraph rather than a stack of conditional dividers: the
 // warnings come and go as the code, the toggle and the passcode change, and a
 // block of dividers appearing and disappearing under the rows reads far worse
@@ -208,6 +260,13 @@ void EditCodeBox(not_null<Ui::GenericBox*> box) {
 [[nodiscard]] QString AboutText(bool codeIsPasscode) {
 	auto lines = QStringList();
 	lines.append(Tr(u"LuminaSecurityFakeCrashInfo"_q));
+	if (FakeCrashEnabled()) {
+		// What the chosen mode looks like, the way Android puts it under
+		// each of its two choices.
+		lines.append(Tr((CurrentFakeCrashMode() == FakeCrashMode::Dialog)
+			? u"LuminaFakeCrashModeDialogInfo"_q
+			: u"LuminaFakeCrashModeExitInfo"_q));
+	}
 
 	// The decision recorded in the port plan (§6 Q3): a fingerprint opens the
 	// app without the passcode field ever being touched, and would therefore
@@ -264,6 +323,7 @@ void AddFakeCrashRows(
 				: u"LuminaSecurityFakeCrashCodeSet"_q);
 		},
 		[=] { controller->show(Box(EditCodeBox)); });
+	AddModeRows(codeBlock);
 
 	// The clash warning needs a passcode derivation, which since 7.3 runs on
 	// a worker (see CheckCodeIsLocalPasscode): the paragraph shows the last

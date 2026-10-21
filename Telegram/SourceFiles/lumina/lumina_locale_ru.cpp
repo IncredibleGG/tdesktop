@@ -1008,11 +1008,10 @@ namespace {
 		{ u"LuminaSecurityFakeCrashCodeNotSet"_q, u"Не задан"_q },
 		{ u"LuminaSecurityFakeCrashCodeSameAsPasscode"_q, u"Этот код не может совпадать с "
 			u"вашим код-паролем."_q },
-		{ u"LuminaSecurityFakeCrashInfo"_q, u"Когда это включено, ввод кода ложного сбоя "
-			u"на экране блокировки не разблокирует LuminaGram, а сразу "
-			u"закрывает его — без сообщений и без единого следа на "
-			u"экране: со стороны выглядит так, будто приложение упало. "
-			u"Код не связан с вашим код-паролем, хранится только на этом "
+		{ u"LuminaSecurityFakeCrashInfo"_q, u"Когда это включено, ввод кода ложного сбоя на экране "
+			u"блокировки не разблокирует LuminaGram, а закрывает его: "
+			u"со стороны выглядит так, будто приложение упало. Код не "
+			u"связан с вашим код-паролем, хранится только на этом "
 			u"устройстве и никуда не отправляется."_q },
 		{ u"LuminaSecurityFakeCrashBiometricInfo"_q, u"Пока это включено и код задан, "
 			u"разблокировка с помощью Touch ID, Windows Hello или пароля "
@@ -1029,6 +1028,18 @@ namespace {
 		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"Теперь этот код совпадает с вашим "
 			u"код-паролем, поэтому он никогда не сработает — приложение "
 			u"разблокирует код-пароль. Выберите другой код."_q },
+		{ u"LuminaFakeCrashModeHeader"_q, u"После ввода этого кода"_q },
+		{ u"LuminaFakeCrashModeExit"_q, u"Сразу выйти"_q },
+		{ u"LuminaFakeCrashModeDialog"_q, u"Показать ложное сообщение о сбое"_q },
+		{ u"LuminaFakeCrashModeExitInfo"_q, u"Сразу выйти: окно мгновенно исчезает — без сообщений и "
+			u"без единого следа на экране."_q },
+		{ u"LuminaFakeCrashModeDialogInfo"_q, u"Ложное сообщение о сбое: окно исчезает, и появляется "
+			u"системное окно «Прекращена работа программы "
+			u"LuminaGram»; после его закрытия LuminaGram завершается."_q },
+		{ u"LuminaFakeCrashTitle"_q, u"Прекращена работа программы LuminaGram"_q },
+		{ u"LuminaFakeCrashText"_q, u"Возникшая проблема привела к прекращению работы "
+			u"программы. Программа будет закрыта."_q },
+		{ u"LuminaFakeCrashCloseApp"_q, u"Закрыть программу"_q },
 		// login guard (D-32)
 		{ u"LuminaSessionGuardHeader"_q, u"Защита входа"_q },
 		{ u"LuminaSessionGuard"_q, u"Оповещения о новых входах"_q },

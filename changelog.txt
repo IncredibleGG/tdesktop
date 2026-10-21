@@ -1,5 +1,10 @@
 7.3.4 (21.10.26)
 
+- Fake-crash unlock gets a second choice for what the code does: exit
+  immediately (as before, and still the default) or hide the window and show
+  a fake "LuminaGram has stopped working" alert, closing once it is
+  dismissed. The section now opens the Security page, right above the
+  disguise vault, as on Android.
 - Translate before sending: the preview above the message field shows
   "Translating..." with a spinner as soon as you type, so a slow translation
   service no longer looks like the field stopped responding. Pressing Send
@@ -13,7 +18,10 @@
   placeholder bot links.
 - Translation and voice-to-text API keys are encrypted on disk on Windows
   (bound to your Windows account); keys saved by older versions are encrypted
-  on first start. On macOS and Linux they stay where they were.
+  on first start. On macOS and Linux they stay where they were. Because they
+  are bound to the account, a portable copy moved to another PC or Windows
+  account, or tdata restored after reinstalling Windows, shows the keys as
+  not set: enter them again.
 - Encrypted backups no longer contain API keys; enter them again after
   restoring on another device. Older backups that contain keys still import,
   after the usual confirmation.

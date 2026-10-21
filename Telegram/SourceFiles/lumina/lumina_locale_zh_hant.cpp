@@ -767,11 +767,10 @@ namespace {
 		{ u"LuminaSecurityFakeCrashCodeNotSet"_q, u"未設定"_q },
 		{ u"LuminaSecurityFakeCrashCodeSameAsPasscode"_q, u"此密碼不能與你的密碼"
 			u"鎖相同。"_q },
-		{ u"LuminaSecurityFakeCrashInfo"_q, u"開啟後，在鎖定畫面輸入假當機"
-			u"密碼不會解鎖，而是立刻關閉 LuminaGram："
-			u"不會有任何提示，畫面上也不會留下任何東西——在旁"
-			u"人看來就是應用程式當掉了。這個密碼與你的密碼鎖互"
-			u"相獨立，只保存在本機，絕不會傳送到任何地方。"_q },
+		{ u"LuminaSecurityFakeCrashInfo"_q, u"開啟後，在鎖定畫面輸入假當機密碼不會解鎖，而"
+			u"是關閉 LuminaGram——在旁人看來就"
+			u"是應用程式當掉了。這個密碼與你的密碼鎖互相獨"
+			u"立，只保存在本機，絕不會傳送到任何地方。"_q },
 		{ u"LuminaSecurityFakeCrashBiometricInfo"_q, u"在此功能開啟且已設定密"
 			u"碼期間，使用 Touch ID、"
 			u"Windows Hello 或系統密碼解鎖會被停"
@@ -786,6 +785,16 @@ namespace {
 		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"這個密碼現在與你的密碼"
 			u"鎖相同，因此永遠不會觸發——密碼鎖會先把應用程式"
 			u"解鎖。請換一個密碼。"_q },
+		{ u"LuminaFakeCrashModeHeader"_q, u"輸入此密碼後"_q },
+		{ u"LuminaFakeCrashModeExit"_q, u"直接退出"_q },
+		{ u"LuminaFakeCrashModeDialog"_q, u"顯示假當機提示"_q },
+		{ u"LuminaFakeCrashModeExitInfo"_q, u"直接退出：視窗立刻消失，不會有任何提示，畫面上也不會留下任何東西。"_q },
+		{ u"LuminaFakeCrashModeDialogInfo"_q, u"顯示假當機提示：視窗消失後跳出系統風格的「LuminaGram"
+			u" 已停止運作」提示，關閉提示後應用程式隨即結"
+			u"束。"_q },
+		{ u"LuminaFakeCrashTitle"_q, u"LuminaGram 已停止運作"_q },
+		{ u"LuminaFakeCrashText"_q, u"發生了一個問題，導致程式停止正常運作。程式即將關閉。"_q },
+		{ u"LuminaFakeCrashCloseApp"_q, u"關閉程式"_q },
 		// login guard (D-32)
 		{ u"LuminaSessionGuardHeader"_q, u"登入守衛"_q },
 		{ u"LuminaSessionGuard"_q, u"新登入警示"_q },

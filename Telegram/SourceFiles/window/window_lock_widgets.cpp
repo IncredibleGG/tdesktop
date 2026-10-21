@@ -348,7 +348,7 @@ void PasscodeLockWidget::submit() {
 		// the duress code does not work while the user is locked out for
 		// retrying too fast. Deliberately nothing is logged here.
 		if (Lumina::FakeCrashCodeMatches(typed)) {
-			Lumina::TriggerFakeCrash(); // Does not return.
+			Lumina::RunFakeCrash(); // Does not return.
 		}
 		error();
 	});

@@ -39,14 +39,16 @@ rpl::producer<QString> LuminaSecurity::title() {
 
 // F-02 sub-page contract: this body stays an ordered list of one call per
 // feature, each declared in that feature's own `lumina/*.h`.
-// Planned owners, in the order their rows should appear:
+// Owners, in the order their rows appear:
+//   W3-C fake-crash duress unlock - first on the page and directly above the
+//        disguise vault, matching Android, which moved it to the top of its
+//        App disguise page (desktop's disguise lives on this page);
 //   W3-A disguise vault (gate, password door, calculator and notepad decoys);
 //   W3-B panic wipe;
-//   W3-C fake-crash duress unlock;
 //   D-32 login guard (new-login alerts, ported from Android).
 void LuminaSecurity::setupContent(not_null<Ui::VerticalLayout*> container) {
-	Lumina::AddVaultRows(container, controller());
 	Lumina::AddFakeCrashRows(container, controller());
+	Lumina::AddVaultRows(container, controller());
 	Lumina::AddPanicWipeRows(container, controller());
 	Lumina::AddSessionGuardRows(container, controller());
 }
