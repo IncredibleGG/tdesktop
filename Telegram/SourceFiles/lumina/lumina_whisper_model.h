@@ -39,8 +39,20 @@ struct WhisperModelState {
 		Downloading, // In flight; `progress` is 0..100.
 		Ready,       // Present and the right size.
 	};
+
+	// Why the last attempt ended back in Absent. None for a model that was
+	// never requested, a download the user cancelled, and a deleted model -
+	// none of those are failures to report.
+	enum class Failure {
+		None,
+		Network, // The connection failed or the server refused the file.
+		Timeout, // Nothing arrived for kStallTimeout (lumina_whisper_model.cpp).
+		Storage, // The file could not be written, or moved into place.
+		Corrupt, // It arrived, but its size or sha256 is wrong.
+	};
 	Stage stage = Stage::Absent;
 	int progress = 0;
+	Failure failure = Failure::None;
 };
 
 [[nodiscard]] WhisperModelState CurrentWhisperModelState();
@@ -53,9 +65,19 @@ struct WhisperModelState {
 // Starts the download on the main thread via QNetworkAccessManager. A second
 // call while one is already in flight is a no-op. Writes to PATH + ".tmp",
 // verifies the size on finish, and only then atomically renames into place.
+// A download that receives nothing for a while is abandoned with
+// Failure::Timeout rather than left showing the same percentage forever.
 void DownloadWhisperModel();
+
+// Stops a download in flight and removes its partial file. The state goes
+// back to Absent with no failure. A no-op when nothing is downloading.
+void CancelWhisperModelDownload();
 
 // Removes the model (and any leftover .tmp), moving the state back to Absent.
 void DeleteWhisperModel();
+
+// The one-line, localised reason for `failure`, empty for Failure::None.
+[[nodiscard]] QString WhisperModelFailureText(
+	WhisperModelState::Failure failure);
 
 } // namespace Lumina

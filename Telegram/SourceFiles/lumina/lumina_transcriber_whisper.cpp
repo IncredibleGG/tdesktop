@@ -125,9 +125,14 @@ void WhisperCppEngine::transcribe(
 		Fn<void(TranscribeResult)> done) {
 	const auto state = _state;
 	if (!WhisperModelReady()) {
-		// The model has not been downloaded. TranscriberConfigured() gates the
-		// UI on the same check, so this is a belt-and-braces guard.
-		Deliver(state, std::move(done), { .error = TranscribeError::NoKey });
+		// The model has not been downloaded. The voice-to-text entry points
+		// offer the download before they get here (EnsureOfflineModel() in
+		// lumina_voice_to_text.cpp), so this is a belt-and-braces guard - and
+		// it answers ModelMissing, not NoKey: this engine has no key at all.
+		Deliver(
+			state,
+			std::move(done),
+			{ .error = TranscribeError::ModelMissing });
 		return;
 	}
 	auto ok = false;

@@ -273,6 +273,19 @@ void SetDialogReadTranslateOn(not_null<History*> history, bool on);
 // luminaResolveSendLang.
 [[nodiscard]] QString ResolveSendLanguage(not_null<History*> history);
 
+// The text of the send this chat is holding while its translation is being
+// fetched, or an empty string. Empty again as soon as the translation is in -
+// including while a confirm box waits on the user, which is no longer
+// "translating". The live preview bar (lumina_translate_preview_bar.h) shows
+// "Translating... sends when ready" off this, so a Send that has to wait for
+// a slow provider never looks as if it did nothing. Where no bar is showing
+// that text - a caption, a chat whose composer is elsewhere - the pipeline
+// says the same in a toast once the wait is long enough to notice.
+[[nodiscard]] QString TranslateSendPendingText(not_null<History*> history);
+
+// Fires whenever a chat starts or stops waiting on a send translation.
+[[nodiscard]] rpl::producer<> TranslateSendPendingChanges();
+
 // Opens the language picker for this chat's lock and returns immediately.
 // Choosing writes the lock and clears the preview cache; it never sends
 // anything. Android's luminaChooseDialogSendLang, which hangs off its Send

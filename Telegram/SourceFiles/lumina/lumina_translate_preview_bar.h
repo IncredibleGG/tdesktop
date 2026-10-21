@@ -64,6 +64,13 @@ namespace Lumina {
 // subscription to TranslatePreviewRefreshRequests(), which is what lets the
 // bar appear when the user turns the feature on with a chat already open.
 //
+// While a translation is on its way the bar says so at once: "Translating..."
+// in the accent colour with a spinner in place of the glyph, from the first
+// character typed - not from the moment the debounced request goes out - and,
+// once Send is pressed on text whose translation has not arrived yet, "sends
+// when ready" (Lumina::TranslateSendPendingText()). A slow provider then reads
+// as work in progress instead of as a composer that stopped responding.
+//
 // Cost control: the preview is debounced (the provider is asked only after
 // typing pauses) and cached against the exact source text and target language,
 // so a metered API key is never charged per keystroke. Every request that is
@@ -154,6 +161,15 @@ void MoveTranslatePreviewBar(
 // means "do the translation yourself"; it never means "send it untranslated".
 [[nodiscard]] bool TranslatePreviewShown(not_null<History*> history);
 [[nodiscard]] QString TranslatePreviewTranslation(
+	not_null<History*> history,
+	const QString &original);
+
+// Whether a bar for this chat is on screen and showing exactly `original` -
+// that is, whether a send of that text being held for its translation is
+// already visible as such in the bar ("Translating... sends when ready"). The
+// send pipeline asks before it falls back to a toast, so the same wait is
+// never announced twice.
+[[nodiscard]] bool TranslatePreviewShowsText(
 	not_null<History*> history,
 	const QString &original);
 

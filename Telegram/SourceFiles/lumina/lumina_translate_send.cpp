@@ -21,6 +21,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_settings.h"
 #include "lumina/lumina_translate_caption.h"
 #include "lumina/lumina_translate_gating.h"
+#include "lumina/lumina_translate_preview_bar.h"
 #include "lumina/lumina_translate_providers.h"
 #include "spellcheck/spellcheck_types.h"
 #include "lumina/lumina_translate_settings.h"
@@ -39,6 +40,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtCore/QJsonObject>
 #include <QtCore/QJsonValue>
 #include <crl/crl_on_main.h>
+#include <rpl/event_stream.h>
 
 #include <algorithm>
 #include <optional>
@@ -92,6 +94,12 @@ constexpr auto kQueueGuardTimeout = kWatchdogTimeout * 3;
 // lumina_translate_caption.cpp: long enough that it never cuts short a box
 // someone is actually reading, short enough that the photo still leaves.
 constexpr auto kCaptionBoxTimeout = crl::time(3 * 60 * 1000);
+
+// How long a held send may wait on its translation before a chat with no
+// preview bar showing it hears about it in a toast. Long enough that a quick
+// provider never flashes one; short enough that a slow one is explained well
+// before Send looks as if it did nothing.
+constexpr auto kPendingNoticeDelay = crl::time(700);
 
 [[nodiscard]] QString DialogLanguagesKey() {
 	return u"trSendLangDialog"_q;
@@ -350,6 +358,12 @@ struct Request {
 	base::Timer watchdog;
 	uint64 generation = 0;
 
+	// True from StartTranslation() until the translation (or its failure)
+	// is applied: the "Translating..." state the preview bar and the toast
+	// below report. `notice` is that toast's delay.
+	bool translating = false;
+	base::Timer notice;
+
 	// Tag-preserving translation state, set in CreateRequest() and read in
 	// ApplyTranslation() / FinishRequest(). `hadTags` is true for any message
 	// that arrived with tags; `spans` is non-empty only when those tags were
@@ -374,6 +388,12 @@ struct Request {
 [[nodiscard]] base::flat_map<QString, std::unique_ptr<Request>> &Requests() {
 	using Map = base::flat_map<QString, std::unique_ptr<Request>>;
 	static const auto result = new Map();
+	return *result;
+}
+
+// Leaked like the maps above, so nothing is torn down at static destruction.
+[[nodiscard]] rpl::event_stream<> &PendingChanges() {
+	static const auto result = new rpl::event_stream<>();
 	return *result;
 }
 
@@ -477,7 +497,11 @@ void FinishRequest(
 	const auto history = request->history.get();
 	const auto hasRebuilt = request->hasRebuilt;
 	auto rebuiltTags = std::move(request->rebuiltTags);
+	const auto wasTranslating = request->translating;
 	Requests().remove(key);
+	if (wasTranslating) {
+		PendingChanges().fire({});
+	}
 	ScheduleDrain(key);
 	if (!proceed) {
 		return;
@@ -518,9 +542,31 @@ void FinishRequest(
 // lumina_send_pipeline.h spells "cancel". The composer never cleared its
 // field, so the user's text is still sitting in it afterwards.
 void CancelRequest(const QString &key, uint64 generation) {
-	if (FindRequest(key, generation)) {
+	if (const auto request = FindRequest(key, generation)) {
+		const auto wasTranslating = request->translating;
 		Requests().remove(key);
+		if (wasTranslating) {
+			PendingChanges().fire({});
+		}
 		ScheduleDrain(key);
+	}
+}
+
+// The held send's wait, said out loud where nothing else is saying it: a
+// caption, or a chat whose composer is not showing the text that is waiting.
+// A preview bar that shows it already reads "Translating... sends when
+// ready", so then this stays quiet.
+void ShowPendingNotice(const QString &key, uint64 generation) {
+	const auto request = FindRequest(key, generation);
+	if (!request || !request->translating) {
+		return;
+	}
+	const auto history = request->history.get();
+	if (!history || TranslatePreviewShowsText(history, request->original)) {
+		return;
+	}
+	if (const auto controller = ResolveController(history)) {
+		controller->showToast(Tr(u"LuminaTranslateSendPending"_q));
 	}
 }
 
@@ -610,6 +656,15 @@ void StartTranslation(
 	});
 	request->watchdog.callOnce(kWatchdogTimeout);
 
+	// From here on Send is waiting on the provider, and the user is told so:
+	// at once in the preview bar, and after kPendingNoticeDelay in a toast
+	// where no bar shows this text. Nothing here waits on the main thread -
+	// the request below is asynchronous and the composer stays live.
+	request->translating = true;
+	request->notice.setCallback([=] { ShowPendingNotice(key, generation); });
+	request->notice.callOnce(kPendingNoticeDelay);
+	PendingChanges().fire({});
+
 	const auto history = request->history.get();
 	const auto session = history ? &history->session() : nullptr;
 	const auto original = request->original;
@@ -638,9 +693,16 @@ void ApplyTranslation(
 		uint64 generation,
 		const QString &translated) {
 	const auto request = FindRequest(key, generation);
-	if (!request) {
+	if (!request || !request->translating) {
+		// Not waiting on a translation (any more). Two answers can race for
+		// one send - the request below and a preview that lands first, see
+		// NoteSendTranslationPreview() - and only the first may act, or a
+		// confirm box would open twice.
 		return;
 	}
+	request->translating = false;
+	request->notice.cancel();
+	PendingChanges().fire({});
 	request->watchdog.cancel();
 	if (translated.isEmpty() || (translated == request->original)) {
 		FinishRequest(key, generation, QString());
@@ -1422,6 +1484,45 @@ void NoteSendTranslationPreview(
 	preview.source = source.trimmed();
 	preview.target = target;
 	preview.translated = translated.trimmed();
+
+	// A Send pressed while this very translation was still on its way is
+	// waiting on a request of its own, started later. Hand it this one now
+	// instead of making it wait for the slower copy; whichever answer comes
+	// second finds the send no longer translating and is dropped.
+	//
+	// Plain text only, like the reuse branch in BeginRequest(): this preview
+	// carries no tags. Consumed when used, for the same reasons that branch
+	// consumes it.
+	const auto key = preview.dialog;
+	const auto i = Requests().find(key);
+	if (i == Requests().end() || preview.translated.isEmpty()) {
+		return;
+	}
+	const auto request = i->second.get();
+	if (!request->translating
+		|| request->hadTags
+		|| (request->original != preview.source)
+		|| (request->target != preview.target)) {
+		return;
+	}
+	const auto generation = request->generation;
+	const auto result = preview.translated;
+	preview = PreviewCache();
+
+	// The preview hands this over from inside its provider's reply; applying
+	// it can send a message or open a box, which belongs on a clean turn.
+	crl::on_main([=] { ApplyTranslation(key, generation, result); });
+}
+
+QString TranslateSendPendingText(not_null<History*> history) {
+	const auto i = Requests().find(DialogKey(history));
+	return (i != Requests().end() && i->second->translating)
+		? i->second->original
+		: QString();
+}
+
+rpl::producer<> TranslateSendPendingChanges() {
+	return PendingChanges().events();
 }
 
 void SetSendOriginalHook(SendOriginalHook hook) {

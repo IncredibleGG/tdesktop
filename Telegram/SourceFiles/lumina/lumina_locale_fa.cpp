@@ -142,6 +142,7 @@ namespace {
 		// The translate-before-send preview bar above the composer.
 		{ u"LuminaTranslatePreviewTranslating"_q, u"در حال ترجمه…"_q },
 		{ u"LuminaTranslatePreviewFailed"_q, u"ترجمه در دسترس نیست"_q },
+		{ u"LuminaTranslateSendPending"_q, u"در حال ترجمه… پس از آماده شدن ارسال می‌شود"_q },
 
 		// The per-chat translate button in the chat top bar.
 		{ u"LuminaTranslateChatToggle"_q, u"ترجمهٔ این گفتگو"_q },
@@ -609,15 +610,25 @@ namespace {
 		{ u"LuminaSttBaseUrl"_q, u"آدرس پایه"_q },
 		{ u"LuminaSttModel"_q, u"مدل"_q },
 		{ u"LuminaSttNotReady"_q, u"تبدیل گفتار به نوشتار روشن است، اما موتور انتخاب‌شده در پایین هنوز کلید API ندارد و نمی‌تواند کار کند. در بخش موتور یک کلید ذخیره کنید یا این گزینه را خاموش کنید."_q },
-		{ u"LuminaSttInfoDesktop"_q, u"رونویسی با کلید API و سهمیهٔ خود شما انجام می‌شود و "
-			u"LuminaGram هیچ کلیدی ارائه نمی‌دهد. پیام صوتی به سرویسی "
-			u"که در پایین انتخاب می‌کنید آپلود می‌شود؛ پس فقط برای "
-			u"سرویسی روشن کنید که به آن اعتماد دارید."_q },
+		{ u"LuminaSttInfoDesktop"_q, u"موتور پیش‌فرض گفتار را روی همین دستگاه به متن تبدیل می‌کند: Whisper آفلاین در Windows و Linux (پس از یک بار دانلود مدل) و تشخیص گفتار Apple در macOS که تا جایی که سیستم از تشخیص روی دستگاه پشتیبانی کند، روی Mac می‌ماند. پیام صوتی فقط وقتی بارگذاری می‌شود که در پایین یک موتور ابری (OpenAI Whisper یا Google) انتخاب کنید؛ آن هم برای همان سرویس و با کلید API و سهمیهٔ خود شما. LuminaGram هیچ کلیدی ارائه نمی‌کند."_q },
 		{ u"LuminaSttVoskUnsupported"_q, u"موتور آفلاین (Vosk) هنوز در نسخهٔ دسکتاپ پشتیبانی "
 			u"نمی‌شود: به یک کتابخانهٔ بومی و یک مدل گفتاری نیاز دارد "
 			u"که باید جداگانه برای Windows، macOS و Linux بسته‌بندی "
 			u"شود. تا آن زمان، رونویسی اینجا فقط ابری است."_q },
 		{ u"LuminaSttUiMenuItem"_q, u"به متن"_q },
+		{ u"LuminaSttUiModelMissing"_q, u"مدل صوتی آفلاین هنوز دانلود نشده است. آن را از تنظیمات، LuminaGram، تبدیل گفتار به متن دانلود کنید."_q },
+		{ u"LuminaSttModelNeededTitle"_q, u"مدل صوتی آفلاین"_q },
+		{ u"LuminaSttModelNeededText"_q, u"ابتدا باید مدل صوتی آفلاین دانلود شود (حدود 57 مگابایت). پیام صوتی به‌محض پایان دانلود خودکار به متن تبدیل می‌شود."_q },
+		{ u"LuminaSttModelDownloadAction"_q, u"دانلود"_q },
+		{ u"LuminaSttModelDownloadingProgress"_q, u"در حال دانلود مدل صوتی آفلاین… {1}%"_q },
+		{ u"LuminaSttModelCancelDownload"_q, u"لغو دانلود"_q },
+		{ u"LuminaSttModelCancelConfirm"_q, u"دانلود مدل صوتی آفلاین متوقف شود؟"_q },
+		{ u"LuminaSttModelRetry"_q, u"تلاش دوباره"_q },
+		{ u"LuminaSttModelFailed"_q, u"دانلود ناموفق بود"_q },
+		{ u"LuminaSttModelFailedNetwork"_q, u"دانلود مدل صوتی آفلاین ممکن نشد. اتصال خود را بررسی کنید و دوباره تلاش کنید."_q },
+		{ u"LuminaSttModelFailedTimeout"_q, u"دانلود مدل صوتی آفلاین دیگر پاسخ نمی‌داد و لغو شد. اتصال خود را بررسی کنید و دوباره تلاش کنید."_q },
+		{ u"LuminaSttModelFailedStorage"_q, u"ذخیرهٔ مدل صوتی آفلاین ممکن نشد. مطمئن شوید فضای کافی روی دیسک هست و دوباره تلاش کنید."_q },
+		{ u"LuminaSttModelFailedCorrupt"_q, u"مدل صوتی دانلودشده خراب بود و حذف شد. لطفاً دوباره تلاش کنید."_q },
 		{ u"LuminaSttUiPickTitle"_q, u"تبدیل گفتار به متن"_q },
 		{ u"LuminaSttUiFetching"_q, u"در حال دانلود پیام صوتی…"_q },
 		{ u"LuminaSttUiTranscribing"_q, u"در حال رونویسی…"_q },

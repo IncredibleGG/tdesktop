@@ -151,6 +151,7 @@ namespace {
 		// The translate-before-send preview bar above the composer.
 		{ u"LuminaTranslatePreviewTranslating"_q, u"Menerjemahkan…"_q },
 		{ u"LuminaTranslatePreviewFailed"_q, u"Terjemahan tidak tersedia"_q },
+		{ u"LuminaTranslateSendPending"_q, u"Menerjemahkan… akan dikirim setelah siap"_q },
 
 		// The per-chat translate button in the chat top bar.
 		{ u"LuminaTranslateChatToggle"_q, u"Terjemahkan obrolan ini"_q },
@@ -914,16 +915,25 @@ namespace {
 		{ u"LuminaSttBaseUrl"_q, u"URL dasar"_q },
 		{ u"LuminaSttModel"_q, u"Model"_q },
 		{ u"LuminaSttNotReady"_q, u"Suara ke teks aktif, tetapi mesin yang dipilih di bawah belum punya kunci API, jadi tidak bisa berjalan. Simpan kunci di bagian Mesin, atau matikan opsi ini."_q },
-		{ u"LuminaSttInfoDesktop"_q, u"Transkripsi memakai kunci API dan kuota Anda sendiri; "
-			u"LuminaGram tidak pernah menyediakan kunci. Pesan suara "
-			u"diunggah ke layanan yang Anda pilih di bawah, jadi "
-			u"aktifkan ini hanya untuk layanan yang Anda percayai "
-			u"menerima pesan Anda."_q },
+		{ u"LuminaSttInfoDesktop"_q, u"Mesin bawaan mentranskripsi di perangkat ini: Whisper offline di Windows dan Linux (setelah model diunduh sekali), dan pengenalan suara Apple di macOS, yang tetap di Mac selama sistem mendukung pengenalan di perangkat. Pesan suara hanya diunggah jika Anda memilih mesin cloud di bawah (OpenAI Whisper atau Google), ke layanan itu, dengan kunci API dan kuota Anda sendiri; LuminaGram tidak pernah menyediakan kunci."_q },
 		{ u"LuminaSttVoskUnsupported"_q, u"Mesin luring (Vosk) belum didukung di desktop: ia perlu "
 			u"pustaka native dan model suara yang dipaketkan terpisah "
 			u"untuk Windows, macOS, dan Linux. Sampai saat itu, "
 			u"transkripsi di desktop hanya lewat awan."_q },
 		{ u"LuminaSttUiMenuItem"_q, u"Transkripsikan"_q },
+		{ u"LuminaSttUiModelMissing"_q, u"Model suara offline belum diunduh. Unduh di Pengaturan, LuminaGram, Suara ke Teks."_q },
+		{ u"LuminaSttModelNeededTitle"_q, u"Model suara offline"_q },
+		{ u"LuminaSttModelNeededText"_q, u"Model suara offline perlu diunduh terlebih dahulu (sekitar 57 MB). Pesan suara akan ditranskripsi otomatis begitu unduhan selesai."_q },
+		{ u"LuminaSttModelDownloadAction"_q, u"Unduh"_q },
+		{ u"LuminaSttModelDownloadingProgress"_q, u"Mengunduh model suara offline… {1}%"_q },
+		{ u"LuminaSttModelCancelDownload"_q, u"Batalkan unduhan"_q },
+		{ u"LuminaSttModelCancelConfirm"_q, u"Hentikan unduhan model suara offline?"_q },
+		{ u"LuminaSttModelRetry"_q, u"Coba lagi"_q },
+		{ u"LuminaSttModelFailed"_q, u"Unduhan gagal"_q },
+		{ u"LuminaSttModelFailedNetwork"_q, u"Tidak dapat mengunduh model suara offline. Periksa koneksi Anda lalu coba lagi."_q },
+		{ u"LuminaSttModelFailedTimeout"_q, u"Unduhan model suara offline berhenti merespons dan dibatalkan. Periksa koneksi Anda lalu coba lagi."_q },
+		{ u"LuminaSttModelFailedStorage"_q, u"Model suara offline tidak dapat disimpan. Pastikan ruang disk cukup lalu coba lagi."_q },
+		{ u"LuminaSttModelFailedCorrupt"_q, u"Model suara offline yang diunduh rusak dan telah dihapus. Silakan coba lagi."_q },
 		{ u"LuminaSttUiPickTitle"_q, u"Suara ke teks"_q },
 		{ u"LuminaSttUiFetching"_q, u"Mengunduh pesan suara…"_q },
 		{ u"LuminaSttUiTranscribing"_q, u"Mentranskripsi…"_q },

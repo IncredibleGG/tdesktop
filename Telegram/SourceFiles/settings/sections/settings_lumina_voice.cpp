@@ -15,7 +15,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_voice_to_text.h"
 #include "lumina/lumina_whisper_model.h"
 #include "settings/settings_common.h"
-#include "ui/basic_click_handlers.h"
 #include "ui/boxes/confirm_box.h"
 #include "ui/boxes/single_choice_box.h"
 #include "ui/layers/generic_box.h"
@@ -45,14 +44,19 @@ constexpr auto kModelMaxLength = 128;
 constexpr auto kApiKeyTailShown = 4;
 constexpr auto kApiKeyDotsShown = 6;
 
-// PLACEHOLDER destinations for the onboarding funnel below. Both stand in for
-// the real LuminaGram bot and its setup guide, which do not exist yet; they are
-// grouped and tagged here so one grep for "PLACEHOLDER" finds every URL to swap
-// when they do. The "?start=" tail is a bot deep link, so the guide can be a
-// flow inside the same bot.
-const auto kBotUrlPlaceholder = u"https://t.me/LuminaGramBot"_q; // PLACEHOLDER
-const auto kGuideUrlPlaceholder
-	= u"https://t.me/LuminaGramBot?start=setup"_q; // PLACEHOLDER
+// The engine settings, as a stream - and, off mac, the offline model with
+// them: CurrentTranscriberId() moves a profile whose stored engine cannot run
+// onto the offline one the moment its model is downloaded, so a finished
+// download changes which engine every row on this page describes.
+[[nodiscard]] rpl::producer<> EngineChanges() {
+#ifndef Q_OS_MAC
+	return rpl::merge(
+		Lumina::TranscriberChanges(),
+		Lumina::WhisperModelChanges());
+#else // !Q_OS_MAC
+	return Lumina::TranscriberChanges();
+#endif // !Q_OS_MAC
+}
 
 // Every row on this page reads a value that some other row can change, so
 // they all recompute on the same two streams: the engine settings, and the
@@ -61,7 +65,7 @@ const auto kGuideUrlPlaceholder
 	return rpl::single(
 		rpl::empty
 	) | rpl::then(rpl::merge(
-		Lumina::TranscriberChanges(),
+		EngineChanges(),
 		Lumina::LangChanges())
 	) | rpl::map([compute = std::move(compute)] {
 		return compute();
@@ -72,7 +76,7 @@ const auto kGuideUrlPlaceholder
 	return rpl::single(
 		rpl::empty
 	) | rpl::then(
-		Lumina::TranscriberChanges()
+		EngineChanges()
 	) | rpl::map([compute = std::move(compute)] {
 		return compute();
 	});
@@ -104,14 +108,17 @@ const auto kGuideUrlPlaceholder
 // of step with Android's for a key both platforms store and a backup carries
 // between them - the page owns the gap, with the onboarding funnel this drives.
 //
-// Recomputes on the two streams readiness depends on and no others: the engine
-// settings and the master switch. The funnel's own text tracks the in-app
-// language on its own through TrValue(), so LangChanges() is left out here.
+// Recomputes on the streams readiness depends on and no others: the engine
+// settings (the offline model included, see EngineChanges(), so the block
+// folds away the moment a download finishes rather than the next time the
+// page is opened) and the master switch. The funnel's own text tracks the
+// in-app language on its own through TrValue(), so LangChanges() is left out
+// here.
 [[nodiscard]] rpl::producer<bool> NotReadyValue() {
 	return rpl::single(
 		rpl::empty
 	) | rpl::then(rpl::merge(
-		Lumina::TranscriberChanges(),
+		EngineChanges(),
 		Lumina::VoiceToTextEnabledChanges())
 	) | rpl::map([] {
 		return Lumina::VoiceToTextEnabled()
@@ -377,17 +384,23 @@ void ShowEnginePicker(not_null<Window::SessionController*> controller) {
 				QString::number(state.progress));
 		case Stage::Ready:
 			return Lumina::Tr(u"LuminaSttModelReady"_q);
-		default:
-			return Lumina::Tr(u"LuminaSttModelAbsent"_q);
+		case Stage::Absent:
+			break;
 		}
+		return (state.failure != Lumina::WhisperModelState::Failure::None)
+			? Lumina::Tr(u"LuminaSttModelFailed"_q)
+			: Lumina::Tr(u"LuminaSttModelAbsent"_q);
 	});
 }
 
 // The single offline-model row, shown only for the whisper.cpp engine. It
 // folds away for any cloud engine exactly like the key / base-url / model
-// blocks. Tap while absent downloads the model; tap while ready confirms and
-// deletes it. The label tracks progress reactively, so no separate progress
-// bulletin is needed beyond a one-shot toast on the initial tap.
+// blocks. Tap while absent downloads the model, tap while downloading offers
+// to cancel it, tap while ready confirms and deletes it. The label tracks
+// progress reactively, so no separate progress bulletin is needed beyond a
+// one-shot toast on the initial tap - and one more if the download fails,
+// saying why, because a label that falls back to "Download failed" on its
+// own is easy to miss.
 void AddWhisperModelRow(
 		not_null<Ui::VerticalLayout*> container,
 		not_null<Window::SessionController*> controller) {
@@ -411,12 +424,40 @@ void AddWhisperModelRow(
 				},
 				.confirmText = Lumina::Tr(u"LuminaSttModelDelete"_q),
 			}));
+		} else if (state.stage == Stage::Downloading) {
+			controller->show(Ui::MakeConfirmBox({
+				.text = Lumina::Tr(u"LuminaSttModelCancelConfirm"_q),
+				.confirmed = [](Fn<void()> close) {
+					Lumina::CancelWhisperModelDownload();
+					close();
+				},
+				.confirmText = Lumina::Tr(u"LuminaSttModelCancelDownload"_q),
+			}));
 		} else if (state.stage == Stage::Absent) {
 			Lumina::DownloadWhisperModel();
 			controller->showToast(
 				Lumina::Tr(u"LuminaSttModelDownloadingStart"_q));
 		}
 	});
+
+	// Only a download that was running while this page watched it and then
+	// ended in a failure is reported; one the user cancelled ends with no
+	// failure and says nothing.
+	using Stage = Lumina::WhisperModelState::Stage;
+	using Failure = Lumina::WhisperModelState::Failure;
+	const auto wasDownloading = button->lifetime().make_state<bool>(
+		Lumina::CurrentWhisperModelState().stage == Stage::Downloading);
+	Lumina::WhisperModelChanges(
+	) | rpl::on_next([=] {
+		const auto state = Lumina::CurrentWhisperModelState();
+		if (*wasDownloading
+			&& (state.stage == Stage::Absent)
+			&& (state.failure != Failure::None)) {
+			controller->showToast(
+				Lumina::WhisperModelFailureText(state.failure));
+		}
+		*wasDownloading = (state.stage == Stage::Downloading);
+	}, button->lifetime());
 	GateRow(button, AddRightLabel(
 		button,
 		Lumina::TrValue(u"LuminaSttOfflineModel"_q),
@@ -564,17 +605,16 @@ void AddEngineRows(
 		Lumina::TrValue(u"LuminaSttOfflineInfo"_q));
 }
 
-// The onboarding funnel that replaces the old one-line "engine has no key" note.
-// Built once, slide-wrapped, and shown only while NotReadyValue() is true, so a
-// ready engine never sees it, and saving a key or picking a configured engine
-// folds it away without rebuilding the page. Every user-visible string is a
-// TrValue(), so it re-reads when the in-app language changes too.
+// The "finish setup" note that replaces the old one-line "engine has no key"
+// note. Built once, slide-wrapped, and shown only while NotReadyValue() is
+// true, so a ready engine never sees it, and saving a key, picking a
+// configured engine or finishing the model download folds it away without
+// rebuilding the page. Every user-visible string is a TrValue(), so it
+// re-reads when the in-app language changes too.
 //
-// It turns a dead end into a path: a short "why", a link to the guide, and a
-// call to action that opens our own bot. Both destinations are PLACEHOLDER URLs
-// (see the top of this file) opened through the app's own URL handler - the
-// same way the link-safety box opens a link - so a t.me/... link resolves to
-// the bot in-app rather than bouncing out through a browser first.
+// It used to carry two rows linking to a setup guide and a LuminaGram bot.
+// Neither exists, so both rows went: the note says what is missing, and the
+// rows that fix it - the API key, the offline model - are right below it.
 void AddOnboardingFunnel(not_null<Ui::VerticalLayout*> container) {
 	const auto block = container->add(
 		object_ptr<Ui::SlideWrap<Ui::VerticalLayout>>(
@@ -584,24 +624,6 @@ void AddOnboardingFunnel(not_null<Ui::VerticalLayout*> container) {
 
 	Ui::AddSkip(block);
 	Ui::AddSubsectionTitle(block, Lumina::TrValue(u"LuminaSttSetupTitle"_q));
-
-	// Ordinary settings rows, wired exactly like AddValueRow's activate
-	// callback. TrValue(key) is evaluated now (the row keeps the producer); the
-	// press handler keeps only the url.
-	const auto addLinkRow = [&](const QString &key, const QString &url) {
-		const auto row = AddButtonWithIcon(
-			block,
-			Lumina::TrValue(key),
-			st::settingsButtonNoIcon);
-		row->setClickedCallback([=] {
-			UrlClickHandler::Open(url);
-		});
-		return row;
-	};
-	addLinkRow(u"LuminaSttGuide"_q, kGuideUrlPlaceholder);
-	addLinkRow(u"LuminaSttGetViaBot"_q, kBotUrlPlaceholder);
-
-	Ui::AddSkip(block);
 	Ui::AddDividerText(block, Lumina::TrValue(u"LuminaSttSetupInfo"_q));
 }
 

@@ -151,6 +151,7 @@ namespace {
 		// The translate-before-send preview bar above the composer.
 		{ u"LuminaTranslatePreviewTranslating"_q, u"جارٍ الترجمة…"_q },
 		{ u"LuminaTranslatePreviewFailed"_q, u"الترجمة غير متاحة"_q },
+		{ u"LuminaTranslateSendPending"_q, u"جارٍ الترجمة… ستُرسل الرسالة عند اكتمالها"_q },
 
 		// The per-chat translate button in the chat top bar. Both texts name
 		// what pressing the button will do, not what the chat is doing now.
@@ -621,15 +622,25 @@ namespace {
 		{ u"LuminaSttBaseUrl"_q, u"عنوان الواجهة"_q },
 		{ u"LuminaSttModel"_q, u"النموذج"_q },
 		{ u"LuminaSttNotReady"_q, u"تحويل الصوت إلى نص مفعّل، لكن المحرك المحدد بالأسفل لا يملك مفتاح API بعد، لذا لا يمكنه العمل. احفظ مفتاحًا في قسم المحرك، أو أوقف هذا الخيار."_q },
-		{ u"LuminaSttInfoDesktop"_q, u"يعمل التفريغ بمفتاح API الخاص بك ومن حصتك أنت، ولا يوفّر "
-			u"LuminaGram أي مفتاح. يُرفع المقطع الصوتي إلى الخدمة التي "
-			u"تختارها أدناه، فلا تفعّل هذا إلا لخدمة تقبل إرسال رسائلك "
-			u"إليها."_q },
+		{ u"LuminaSttInfoDesktop"_q, u"يفرّغ المحرك الافتراضي الصوت على هذا الجهاز: Whisper دون اتصال على Windows وLinux (بعد تنزيل النموذج مرة واحدة)، والتعرّف على الكلام من Apple على macOS، الذي يبقى على جهاز Mac ما دام النظام يدعم التعرّف على الجهاز. لا تُرفع الرسالة الصوتية إلا إذا اخترت محركًا سحابيًا أدناه (OpenAI Whisper أو Google)، فتُرسل إلى تلك الخدمة بمفتاح API وحصتك الخاصين؛ ولا يوفّر LuminaGram أي مفتاح."_q },
 		{ u"LuminaSttVoskUnsupported"_q, u"المحرّك دون اتصال (Vosk) غير مدعوم بعد على سطح المكتب: "
 			u"فهو يحتاج مكتبة أصلية ونموذجًا صوتيًا يُحزم لكل من "
 			u"Windows وmacOS وLinux على حدة. حتى ذلك الحين، التفريغ هنا "
 			u"سحابي فقط."_q },
 		{ u"LuminaSttUiMenuItem"_q, u"تحويل إلى نص"_q },
+		{ u"LuminaSttUiModelMissing"_q, u"لم يُنزَّل نموذج الصوت دون اتصال بعد. نزّله من الإعدادات ثم LuminaGram ثم تحويل الصوت إلى نص."_q },
+		{ u"LuminaSttModelNeededTitle"_q, u"نموذج الصوت دون اتصال"_q },
+		{ u"LuminaSttModelNeededText"_q, u"يجب تنزيل نموذج الصوت دون اتصال أولًا (نحو 57 ميغابايت). ستُفرَّغ الرسالة الصوتية تلقائيًا فور اكتمال التنزيل."_q },
+		{ u"LuminaSttModelDownloadAction"_q, u"تنزيل"_q },
+		{ u"LuminaSttModelDownloadingProgress"_q, u"جارٍ تنزيل نموذج الصوت دون اتصال… {1}%"_q },
+		{ u"LuminaSttModelCancelDownload"_q, u"إلغاء التنزيل"_q },
+		{ u"LuminaSttModelCancelConfirm"_q, u"هل تريد إيقاف تنزيل نموذج الصوت دون اتصال؟"_q },
+		{ u"LuminaSttModelRetry"_q, u"إعادة المحاولة"_q },
+		{ u"LuminaSttModelFailed"_q, u"فشل التنزيل"_q },
+		{ u"LuminaSttModelFailedNetwork"_q, u"تعذّر تنزيل نموذج الصوت دون اتصال. تحقّق من الاتصال ثم حاول مجددًا."_q },
+		{ u"LuminaSttModelFailedTimeout"_q, u"توقّف تنزيل نموذج الصوت دون اتصال عن الاستجابة فأُلغي. تحقّق من الاتصال ثم حاول مجددًا."_q },
+		{ u"LuminaSttModelFailedStorage"_q, u"تعذّر حفظ نموذج الصوت دون اتصال. تأكّد من توفّر مساحة كافية على القرص ثم حاول مجددًا."_q },
+		{ u"LuminaSttModelFailedCorrupt"_q, u"كان نموذج الصوت الذي نُزِّل تالفًا فحُذف. حاول مجددًا."_q },
 		{ u"LuminaSttUiPickTitle"_q, u"تحويل الصوت إلى نص"_q },
 		{ u"LuminaSttUiFetching"_q, u"جارٍ تنزيل الرسالة الصوتية…"_q },
 		{ u"LuminaSttUiTranscribing"_q, u"جارٍ التحويل…"_q },

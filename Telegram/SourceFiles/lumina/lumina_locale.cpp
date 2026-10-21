@@ -238,6 +238,7 @@ struct Registration {
 		// The translate-before-send preview bar above the composer.
 		{ u"LuminaTranslatePreviewTranslating"_q, u"Translating..."_q },
 		{ u"LuminaTranslatePreviewFailed"_q, u"Translation unavailable"_q },
+		{ u"LuminaTranslateSendPending"_q, u"Translating... it will be sent when ready"_q },
 
 		// The per-chat translate button in the chat top bar. Both texts name
 		// what pressing the button will do, not what the chat is doing now,
@@ -770,10 +771,7 @@ struct Registration {
 			u"model? You can download it again later."_q },
 		{ u"LuminaSttModelDownloadingStart"_q, u"Downloading the offline "
 			u"model..."_q },
-		{ u"LuminaSttOfflineInfo"_q, u"Offline transcription runs entirely "
-			u"on this device. The first time you use it, a one-time language "
-			u"model (about 59 MB) is downloaded; after that no audio ever "
-			u"leaves your machine."_q },
+		{ u"LuminaSttOfflineInfo"_q, u"Offline transcription runs entirely on this device. The first time you use it, a one-time language model (about 57 MB) is downloaded; after that no audio ever leaves your machine."_q },
 		{ u"LuminaSttKey"_q, u"API key"_q },
 		{ u"LuminaSttBaseUrl"_q, u"Base URL"_q },
 		{ u"LuminaSttModel"_q, u"Model"_q },
@@ -783,18 +781,8 @@ struct Registration {
 		{ u"LuminaSttProbeEmpty"_q, u"The endpoint returned no models."_q },
 		{ u"LuminaSttNotReady"_q, u"Voice to text is on, but the engine selected below has no API key yet, so it cannot run. Save a key under Engine, or turn this off."_q },
 		{ u"LuminaSttSetupTitle"_q, u"Finish setup"_q },
-		{ u"LuminaSttSetupInfo"_q, u"Voice to text is on, but the engine "
-			u"selected below is not ready yet: a cloud engine needs an API key, "
-			u"and an offline engine needs its model downloaded. Follow the guide "
-			u"to set one up, or open the LuminaGram bot and it will walk you "
-			u"through it."_q },
-		{ u"LuminaSttGuide"_q, u"Read the setup guide"_q },
-		{ u"LuminaSttGetViaBot"_q, u"Open the LuminaGram bot"_q },
-		{ u"LuminaSttInfoDesktop"_q, u"Transcription runs on your own API key and your own quota "
-			u"- LuminaGram never provides a key. The voice message is "
-			u"uploaded to the service you pick below, so only turn this "
-			u"on for a service you are willing to send your messages "
-			u"to."_q },
+		{ u"LuminaSttSetupInfo"_q, u"Voice to text is on, but the engine selected below is not ready yet: a cloud engine needs an API key, and the offline engine needs its model downloaded once (Offline model, below). The first tap on Transcribe offers that download too."_q },
+		{ u"LuminaSttInfoDesktop"_q, u"The default engine transcribes on this device: offline Whisper on Windows and Linux (after a one-time model download), and Apple speech recognition on macOS, which stays on the Mac wherever the system supports on-device recognition. Only a cloud engine picked below (OpenAI Whisper or Google) uploads the voice message, to that service, on your own API key and quota - LuminaGram never provides a key."_q },
 		{ u"LuminaSttVoskUnsupported"_q, u"The offline engine (Vosk) is not supported on desktop "
 			u"yet: it needs a native library and a voice model packaged "
 			u"separately for Windows, macOS and Linux. Until then, "
@@ -808,6 +796,19 @@ struct Registration {
 			u"LuminaGram, Translation, then try again."_q },
 		{ u"LuminaExplainEnable"_q, u"“Explain this message” menu item"_q },
 		{ u"LuminaSttUiMenuItem"_q, u"Transcribe"_q },
+		{ u"LuminaSttUiModelMissing"_q, u"The offline voice model is not downloaded yet. Download it in Settings, LuminaGram, Voice to Text."_q },
+		{ u"LuminaSttModelNeededTitle"_q, u"Offline voice model"_q },
+		{ u"LuminaSttModelNeededText"_q, u"The offline voice model needs to be downloaded first (about 57 MB). The voice message is transcribed automatically as soon as the download finishes."_q },
+		{ u"LuminaSttModelDownloadAction"_q, u"Download"_q },
+		{ u"LuminaSttModelDownloadingProgress"_q, u"Downloading the offline voice model... {1}%"_q },
+		{ u"LuminaSttModelCancelDownload"_q, u"Cancel download"_q },
+		{ u"LuminaSttModelCancelConfirm"_q, u"Stop downloading the offline voice model?"_q },
+		{ u"LuminaSttModelRetry"_q, u"Try again"_q },
+		{ u"LuminaSttModelFailed"_q, u"Download failed"_q },
+		{ u"LuminaSttModelFailedNetwork"_q, u"Could not download the offline voice model. Check your connection and try again."_q },
+		{ u"LuminaSttModelFailedTimeout"_q, u"The offline voice model download stopped responding and was cancelled. Check your connection and try again."_q },
+		{ u"LuminaSttModelFailedStorage"_q, u"The offline voice model could not be saved. Make sure there is enough free disk space and try again."_q },
+		{ u"LuminaSttModelFailedCorrupt"_q, u"The downloaded offline voice model was damaged and has been removed. Please try again."_q },
 		{ u"LuminaSttUiPickTitle"_q, u"Voice to text"_q },
 		{ u"LuminaSttUiFetching"_q, u"Downloading the voice message..."_q },
 		{ u"LuminaSttUiTranscribing"_q, u"Transcribing..."_q },

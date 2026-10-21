@@ -138,6 +138,12 @@ enum class TranscribeError : uchar {
 	Network,       // Transport failure, timeout, or any other HTTP error.
 	BadResponse,   // The engine answered with something unparseable.
 	NoSpeech,      // It ran, and there was nothing to hear.
+
+	// The offline engine (whisper.cpp) has no model on disk yet. Distinct
+	// from NoKey on purpose: it is fixed by a one-time download, not by a
+	// key, and telling the user to add an API key here sent them looking for
+	// a setting the default engine does not have.
+	ModelMissing,
 };
 
 struct TranscribeResult {

@@ -16,6 +16,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_translate_send.h"
 #include "lumina/lumina_translate_settings.h"
 #include "main/main_session.h"
+#include "ui/effects/radial_animation.h"
 #include "ui/painter.h"
 #include "ui/qt_object_factory.h"
 #include "ui/rp_widget.h"
@@ -44,6 +45,10 @@ constexpr auto kDebounceDelay = crl::time(500);
 	return Tr(u"LuminaTranslatePreviewFailed"_q);
 }
 
+[[nodiscard]] QString SendPendingText() {
+	return Tr(u"LuminaTranslateSendPending"_q);
+}
+
 // Owned and written by lumina_translate_send.cpp; named here only so that a
 // change to the per-dialog lock can wake the bar up.
 [[nodiscard]] QString DialogLanguageKey() {
@@ -68,6 +73,7 @@ public:
 	void placeAt(int left, int top, int width);
 	[[nodiscard]] History *history() const;
 	[[nodiscard]] QString translationFor(const QString &original) const;
+	[[nodiscard]] bool showsText(const QString &original) const;
 
 protected:
 	int resizeGetHeight(int newWidth) override;
@@ -90,6 +96,14 @@ private:
 	[[nodiscard]] QString translationLine() const;
 	[[nodiscard]] TranslateEngine *ensureEngine();
 
+	// A send of exactly the text on screen is held for its translation.
+	[[nodiscard]] bool sendPending() const;
+
+	// Something is on its way: the preview's own translation of the text on
+	// screen, or the one a held send is waiting for.
+	[[nodiscard]] bool busy() const;
+	void refreshBusy();
+
 	const not_null<Ui::RpWidget*> _owner;
 	const not_null<Ui::InputField*> _field;
 
@@ -100,6 +114,7 @@ private:
 	base::weak_ptr<History> _history;
 	Fn<void()> _layoutChanged;
 	base::Timer _debounce;
+	Ui::InfiniteRadialAnimation _busy;
 
 	QString _original;
 	QString _language;
@@ -134,7 +149,8 @@ PreviewBar::PreviewBar(
 : RpWidget(parent.get())
 , _owner(parent)
 , _field(field)
-, _debounce([=] { requestTranslation(); }) {
+, _debounce([=] { requestTranslation(); })
+, _busy([=] { update(); }, st::luminaPreviewBusy) {
 	hide();
 	resize(parent->width(), st::historyReplyHeight);
 
@@ -158,6 +174,13 @@ PreviewBar::PreviewBar(
 	_field->shownValue(
 	) | rpl::on_next([=](bool) {
 		refresh();
+	}, lifetime());
+
+	// A send in this chat started or stopped waiting on its translation.
+	TranslateSendPendingChanges(
+	) | rpl::on_next([=] {
+		refreshBusy();
+		update();
 	}, lifetime());
 }
 
@@ -183,6 +206,12 @@ void PreviewBar::placeAt(int left, int top, int width) {
 
 History *PreviewBar::history() const {
 	return _history.get();
+}
+
+bool PreviewBar::showsText(const QString &original) const {
+	return _shown
+		&& !_original.isEmpty()
+		&& (_original == original.trimmed());
 }
 
 QString PreviewBar::translationFor(const QString &original) const {
@@ -236,6 +265,7 @@ void PreviewBar::refresh() {
 			hide();
 			scheduleLayoutNotify();
 		}
+		refreshBusy();
 		return;
 	}
 	if ((_original != text) || (_language != language)) {
@@ -243,6 +273,8 @@ void PreviewBar::refresh() {
 		_language = language;
 		cancelPending();
 		if ((_translatedFor != text) || (_translatedTo != language)) {
+			// The request waits for typing to pause; the "Translating..."
+			// line and the spinner do not - they are up from this keystroke.
 			_debounce.callOnce(kDebounceDelay);
 		}
 		update();
@@ -251,6 +283,7 @@ void PreviewBar::refresh() {
 		_shown = true;
 		scheduleLayoutNotify();
 	}
+	refreshBusy();
 }
 
 void PreviewBar::cancelPending() {
@@ -295,7 +328,38 @@ QString PreviewBar::resolveLanguage() const {
 	return ResolveSendLanguage(history);
 }
 
+bool PreviewBar::sendPending() const {
+	const auto history = _history.get();
+	return history
+		&& !_original.isEmpty()
+		&& (TranslateSendPendingText(history) == _original);
+}
+
+bool PreviewBar::busy() const {
+	return _shown
+		&& !_original.isEmpty()
+		&& (sendPending()
+			|| (_translatedFor != _original)
+			|| (_translatedTo != _language));
+}
+
+void PreviewBar::refreshBusy() {
+	if (busy()) {
+		if (!_busy.animating()) {
+			_busy.start();
+		}
+	} else if (_busy.animating()) {
+		_busy.stop(anim::type::instant);
+	}
+}
+
 QString PreviewBar::translationLine() const {
+	if (sendPending()) {
+		// Send was pressed and is waiting for this very translation. Saying so
+		// is the whole difference between "it is coming" and "nothing
+		// happened", which is what a slow provider used to look like.
+		return SendPendingText();
+	}
 	return (_original.isEmpty()
 		|| (_translatedFor != _original)
 		|| (_translatedTo != _language))
@@ -362,6 +426,7 @@ void PreviewBar::requestTranslation() {
 			: TranslateFailureText(result, keyed);
 		noteForSendPath(weak.get(), source, language, _translatedText);
 		if ((_original == source) && (_language == language)) {
+			refreshBusy();
 			update();
 		}
 	}));
@@ -397,11 +462,23 @@ void PreviewBar::paint() {
 	p.fillRect(rect(), st::historyComposeAreaBg);
 
 	const auto &icon = st::historyTranslateIcon;
-	icon.paint(
-		p,
-		st::historyReplyIconPosition.x(),
-		(height() - icon.height()) / 2,
-		width());
+	if (_busy.animating()) {
+		// The spinner takes the glyph's place, centred on the same spot.
+		const auto size = st::luminaPreviewBusy.size;
+		_busy.draw(
+			p,
+			QPoint(
+				st::historyReplyIconPosition.x()
+					+ (icon.width() - size.width()) / 2,
+				(height() - size.height()) / 2),
+			width());
+	} else {
+		icon.paint(
+			p,
+			st::historyReplyIconPosition.x(),
+			(height() - icon.height()) / 2,
+			width());
+	}
 
 	const auto left = st::historyReplySkip;
 	const auto available = width() - left - st::msgReplyPadding.right();
@@ -420,7 +497,11 @@ void PreviewBar::paint() {
 		width(),
 		originalFont->elided(_original, available));
 
-	p.setPen(st::historyComposeAreaFgService);
+	// While it is still on its way the line is in the accent colour, so
+	// "Translating..." stands out from a translation that has arrived.
+	p.setPen(busy()
+		? st::windowActiveTextFg
+		: st::historyComposeAreaFgService);
 	p.setFont(translationFont);
 	p.drawTextLeft(
 		left,
@@ -478,6 +559,18 @@ bool TranslatePreviewShown(not_null<History*> history) {
 	for (const auto &entry : Registry()) {
 		if ((entry.second->history() == history.get())
 			&& (entry.second->barHeight() > 0)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool TranslatePreviewShowsText(
+		not_null<History*> history,
+		const QString &original) {
+	for (const auto &entry : Registry()) {
+		if ((entry.second->history() == history.get())
+			&& entry.second->showsText(original)) {
 			return true;
 		}
 	}

@@ -151,6 +151,7 @@ namespace {
 		// The translate-before-send preview bar above the composer.
 		{ u"LuminaTranslatePreviewTranslating"_q, u"Çevriliyor…"_q },
 		{ u"LuminaTranslatePreviewFailed"_q, u"Çeviri kullanılamıyor"_q },
+		{ u"LuminaTranslateSendPending"_q, u"Çevriliyor… hazır olunca gönderilecek"_q },
 
 		// The per-chat translate button in the chat top bar. Both texts name
 		// what pressing the button will do, not what the chat is doing now.
@@ -623,15 +624,25 @@ namespace {
 		{ u"LuminaSttBaseUrl"_q, u"Temel URL"_q },
 		{ u"LuminaSttModel"_q, u"Model"_q },
 		{ u"LuminaSttNotReady"_q, u"Sesi yazıya çevirme açık, ancak aşağıda seçili motorun henüz API anahtarı yok, bu yüzden çalışamaz. Motor bölümünde bir anahtar kaydedin ya da bunu kapatın."_q },
-		{ u"LuminaSttInfoDesktop"_q, u"Dönüştürme kendi API anahtarını ve kendi kotanı kullanır; "
-			u"LuminaGram anahtar sağlamaz. Sesli mesaj aşağıda seçtiğin "
-			u"servise yüklenir, bu yüzden bunu yalnızca mesajlarını "
-			u"göndermeye razı olduğun bir servis için aç."_q },
+		{ u"LuminaSttInfoDesktop"_q, u"Varsayılan motor bu cihazda dönüştürür: Windows ve Linux'ta çevrimdışı Whisper (model bir kez indirildikten sonra), macOS'te ise sistem cihaz üzerinde tanımayı desteklediği sürece Mac'ten çıkmayan Apple konuşma tanıma. Sesli mesaj yalnızca aşağıda bir bulut motoru (OpenAI Whisper veya Google) seçerseniz, kendi API anahtarınız ve kendi kotanızla o hizmete yüklenir; LuminaGram hiçbir zaman anahtar sağlamaz."_q },
 		{ u"LuminaSttVoskUnsupported"_q, u"Çevrimdışı motor (Vosk) masaüstünde henüz desteklenmiyor: "
 			u"Windows, macOS ve Linux için ayrı ayrı paketlenmiş yerel "
 			u"bir kitaplık ve ses modeli gerekiyor. O zamana kadar "
 			u"masaüstünde dönüştürme yalnızca bulut üzerinden çalışır."_q },
 		{ u"LuminaSttUiMenuItem"_q, u"Yazıya dönüştür"_q },
+		{ u"LuminaSttUiModelMissing"_q, u"Çevrimdışı ses modeli henüz indirilmedi. Ayarlar, LuminaGram, Sesi Yazıya Dönüştür bölümünden indirin."_q },
+		{ u"LuminaSttModelNeededTitle"_q, u"Çevrimdışı ses modeli"_q },
+		{ u"LuminaSttModelNeededText"_q, u"Önce çevrimdışı ses modelinin indirilmesi gerekiyor (yaklaşık 57 MB). İndirme biter bitmez sesli mesaj otomatik olarak yazıya dönüştürülür."_q },
+		{ u"LuminaSttModelDownloadAction"_q, u"İndir"_q },
+		{ u"LuminaSttModelDownloadingProgress"_q, u"Çevrimdışı ses modeli indiriliyor… %{1}"_q },
+		{ u"LuminaSttModelCancelDownload"_q, u"İndirmeyi iptal et"_q },
+		{ u"LuminaSttModelCancelConfirm"_q, u"Çevrimdışı ses modelinin indirilmesi durdurulsun mu?"_q },
+		{ u"LuminaSttModelRetry"_q, u"Tekrar dene"_q },
+		{ u"LuminaSttModelFailed"_q, u"İndirme başarısız"_q },
+		{ u"LuminaSttModelFailedNetwork"_q, u"Çevrimdışı ses modeli indirilemedi. Bağlantınızı kontrol edip tekrar deneyin."_q },
+		{ u"LuminaSttModelFailedTimeout"_q, u"Çevrimdışı ses modelinin indirilmesi yanıt vermeyi bıraktı ve iptal edildi. Bağlantınızı kontrol edip tekrar deneyin."_q },
+		{ u"LuminaSttModelFailedStorage"_q, u"Çevrimdışı ses modeli kaydedilemedi. Diskte yeterli boş alan olduğundan emin olup tekrar deneyin."_q },
+		{ u"LuminaSttModelFailedCorrupt"_q, u"İndirilen çevrimdışı ses modeli bozuktu ve silindi. Lütfen tekrar deneyin."_q },
 		{ u"LuminaSttUiPickTitle"_q, u"Sesi yazıya dönüştür"_q },
 		{ u"LuminaSttUiFetching"_q, u"Sesli mesaj indiriliyor…"_q },
 		{ u"LuminaSttUiTranscribing"_q, u"Dönüştürülüyor…"_q },

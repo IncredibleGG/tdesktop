@@ -179,6 +179,7 @@ namespace {
 		// The translate-before-send preview bar above the composer.
 		{ u"LuminaTranslatePreviewTranslating"_q, u"翻譯中…"_q },
 		{ u"LuminaTranslatePreviewFailed"_q, u"無法翻譯"_q },
+		{ u"LuminaTranslateSendPending"_q, u"翻譯中…完成後自動傳送"_q },
 
 		// The per-chat translate button in the chat top bar. Both texts name
 		// what pressing the button will do, not what the chat is doing now.
@@ -832,6 +833,18 @@ namespace {
 		{ u"LuminaSttEngine"_q, u"引擎"_q },
 		{ u"LuminaSttEngineWhisper"_q, u"OpenAI Whisper（自帶 key）"_q },
 		{ u"LuminaSttEngineGoogle"_q, u"Google（自帶 key）"_q },
+		{ u"LuminaSttEngineApple"_q, u"Apple（裝置端，免費）"_q },
+		{ u"LuminaSttEngineWhisperCpp"_q, u"Whisper（離線，裝置端）"_q },
+		{ u"LuminaSttOfflineModel"_q, u"離線模型"_q },
+		{ u"LuminaSttModelAbsent"_q, u"未下載"_q },
+		{ u"LuminaSttModelDownloading"_q, u"下載中 {1}%"_q },
+		{ u"LuminaSttModelReady"_q, u"已就緒"_q },
+		{ u"LuminaSttModelDelete"_q, u"刪除"_q },
+		{ u"LuminaSttModelDeleteConfirm"_q, u"要刪除已下載的離線模型嗎？之後可以再重新下載。"_q },
+		{ u"LuminaSttModelDownloadingStart"_q, u"正在下載離線模型…"_q },
+		{ u"LuminaSttOfflineInfo"_q, u"離線轉錄完全在這台裝置上執行。第一次使用時會下載一次語言模型（約 57 MB），之後語音不會離開你的電腦。"_q },
+		{ u"LuminaSttSetupTitle"_q, u"完成設定"_q },
+		{ u"LuminaSttSetupInfo"_q, u"語音轉文字已開啟，但下方選擇的引擎還沒準備好：雲端引擎需要 API 金鑰，離線引擎需要先下載一次模型（見下方「離線模型」）。第一次點「轉文字」時也會提示下載。"_q },
 		{ u"LuminaSttKey"_q, u"API 金鑰"_q },
 		{ u"LuminaSttBaseUrl"_q, u"介面位址"_q },
 		{ u"LuminaSttModel"_q, u"模型"_q },
@@ -840,10 +853,7 @@ namespace {
 		{ u"LuminaSttProbeFailed"_q, u"無法取得模型清單。請檢查介面位址與 API 金鑰後再試一次。"_q },
 		{ u"LuminaSttProbeEmpty"_q, u"這個端點沒有回傳任何模型。"_q },
 		{ u"LuminaSttNotReady"_q, u"語音轉文字已開啟，但下方選擇的引擎還沒有 API 金鑰，因此無法運作。請到「引擎」儲存金鑰，或關閉這個開關。"_q },
-		{ u"LuminaSttInfoDesktop"_q, u"轉錄用的是你自己的 API key、花你自己的額度，"
-			u"LuminaGram 不提供 key。語音檔會上傳到"
-			u"你選的服務，因此只有在你願意把訊息交給該服務時才開啟"
-			u"。"_q },
+		{ u"LuminaSttInfoDesktop"_q, u"預設引擎在這台裝置上轉錄：Windows 與 Linux 使用離線 Whisper（需先下載一次模型），macOS 使用 Apple 語音辨識，只要系統支援裝置端辨識，就只在 Mac 上處理。只有在下方選擇雲端引擎（OpenAI Whisper 或 Google）時，語音訊息才會上傳到該服務，並使用你自己的 API 金鑰與額度——LuminaGram 不提供金鑰。"_q },
 		{ u"LuminaSttVoskUnsupported"_q, u"離線引擎（Vosk）桌面版尚未支援：它需要在 Windows"
 			u"、macOS、Linux 各自打包原生庫與語音模型。"
 			u"在那之前，桌面版的轉錄只有雲端引擎。"_q },
@@ -856,6 +866,19 @@ namespace {
 			u"、翻譯」填入 LLM 金鑰。"_q },
 		{ u"LuminaExplainEnable"_q, u"「解釋一下」選單項目"_q },
 		{ u"LuminaSttUiMenuItem"_q, u"轉文字"_q },
+		{ u"LuminaSttUiModelMissing"_q, u"離線語音模型尚未下載。請到「設定 → LuminaGram → 語音轉文字」下載。"_q },
+		{ u"LuminaSttModelNeededTitle"_q, u"離線語音模型"_q },
+		{ u"LuminaSttModelNeededText"_q, u"需要先下載離線語音模型（約 57 MB），下載完成後自動轉文字。"_q },
+		{ u"LuminaSttModelDownloadAction"_q, u"下載"_q },
+		{ u"LuminaSttModelDownloadingProgress"_q, u"正在下載離線語音模型… {1}%"_q },
+		{ u"LuminaSttModelCancelDownload"_q, u"取消下載"_q },
+		{ u"LuminaSttModelCancelConfirm"_q, u"要停止下載離線語音模型嗎？"_q },
+		{ u"LuminaSttModelRetry"_q, u"重試"_q },
+		{ u"LuminaSttModelFailed"_q, u"下載失敗"_q },
+		{ u"LuminaSttModelFailedNetwork"_q, u"無法下載離線語音模型，請檢查網路連線後重試。"_q },
+		{ u"LuminaSttModelFailedTimeout"_q, u"離線語音模型下載逾時，已取消。請檢查網路連線後重試。"_q },
+		{ u"LuminaSttModelFailedStorage"_q, u"無法儲存離線語音模型，請確認磁碟空間足夠後重試。"_q },
+		{ u"LuminaSttModelFailedCorrupt"_q, u"下載的離線語音模型已損毀並已刪除，請重試。"_q },
 		{ u"LuminaSttUiPickTitle"_q, u"語音轉文字"_q },
 		{ u"LuminaSttUiFetching"_q, u"正在下載語音訊息…"_q },
 		{ u"LuminaSttUiTranscribing"_q, u"轉錄中…"_q },

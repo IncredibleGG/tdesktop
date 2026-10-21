@@ -25,6 +25,17 @@ luminaTranslationTextStyle: TextStyle(defaultTextStyle) {
 luminaPreviewOriginalFont: semiboldFont;
 luminaPreviewTranslationFont: font(12px);
 
+// Spun in place of the preview's translate glyph while a translation is on its
+// way - the one for the text as typed, or the one a held Send is waiting on -
+// so a slow provider reads as "working", not as a composer that stopped
+// responding. Sized to the glyph it stands in for, in the accent colour the
+// "Translating..." line beside it uses.
+luminaPreviewBusy: InfiniteRadialAnimation(defaultInfiniteRadialAnimation) {
+	color: windowActiveTextFg;
+	thickness: 2px;
+	size: size(18px, 18px);
+}
+
 // The per-chat translate button in the chat top bar. It stands in the same row
 // as the call, search and info buttons, so it inherits topBarSearch and changes
 // nothing but the glyph: the 40x54 hit area, the ripple and the colours have to

@@ -154,6 +154,7 @@ namespace {
 		// The translate-before-send preview bar above the composer.
 		{ u"LuminaTranslatePreviewTranslating"_q, u"Перевод…"_q },
 		{ u"LuminaTranslatePreviewFailed"_q, u"Перевод недоступен"_q },
+		{ u"LuminaTranslateSendPending"_q, u"Перевод… сообщение отправится, когда он будет готов"_q },
 
 		// The per-chat translate button in the chat top bar. Both texts name
 		// what pressing the button will do, not what the chat is doing now.
@@ -985,16 +986,25 @@ namespace {
 		{ u"LuminaSttBaseUrl"_q, u"Базовый URL"_q },
 		{ u"LuminaSttModel"_q, u"Модель"_q },
 		{ u"LuminaSttNotReady"_q, u"Распознавание речи включено, но у выбранного ниже движка ещё нет ключа API, поэтому оно не работает. Сохраните ключ в разделе «Движок» или выключите этот переключатель."_q },
-		{ u"LuminaSttInfoDesktop"_q, u"Расшифровка работает на вашем собственном ключе API и "
-			u"вашей квоте - LuminaGram не предоставляет ключ. Голосовое "
-			u"сообщение загружается в выбранный сервис, поэтому "
-			u"включайте это только для сервиса, которому готовы "
-			u"доверить свои сообщения."_q },
+		{ u"LuminaSttInfoDesktop"_q, u"Движок по умолчанию расшифровывает речь на этом устройстве: офлайн-Whisper в Windows и Linux (после однократной загрузки модели) и распознавание речи Apple в macOS, которое остаётся на Mac, если система поддерживает распознавание на устройстве. Голосовое сообщение отправляется только облачному движку, выбранному ниже (OpenAI Whisper или Google), с вашим собственным ключом API и в рамках вашей квоты; LuminaGram ключей не предоставляет."_q },
 		{ u"LuminaSttVoskUnsupported"_q, u"Офлайн-движок (Vosk) пока не поддерживается в десктопной "
 			u"версии: ему нужна нативная библиотека и голосовая модель, "
 			u"собранные отдельно для Windows, macOS и Linux. До тех пор "
 			u"расшифровка здесь только облачная."_q },
 		{ u"LuminaSttUiMenuItem"_q, u"В текст"_q },
+		{ u"LuminaSttUiModelMissing"_q, u"Офлайн-модель распознавания речи ещё не загружена. Загрузите её в Настройках, LuminaGram, Голос в текст."_q },
+		{ u"LuminaSttModelNeededTitle"_q, u"Офлайн-модель речи"_q },
+		{ u"LuminaSttModelNeededText"_q, u"Сначала нужно загрузить офлайн-модель распознавания речи (около 57 МБ). Голосовое сообщение будет расшифровано автоматически, как только загрузка завершится."_q },
+		{ u"LuminaSttModelDownloadAction"_q, u"Загрузить"_q },
+		{ u"LuminaSttModelDownloadingProgress"_q, u"Загрузка офлайн-модели речи… {1}%"_q },
+		{ u"LuminaSttModelCancelDownload"_q, u"Отменить загрузку"_q },
+		{ u"LuminaSttModelCancelConfirm"_q, u"Остановить загрузку офлайн-модели речи?"_q },
+		{ u"LuminaSttModelRetry"_q, u"Повторить"_q },
+		{ u"LuminaSttModelFailed"_q, u"Ошибка загрузки"_q },
+		{ u"LuminaSttModelFailedNetwork"_q, u"Не удалось загрузить офлайн-модель речи. Проверьте подключение и попробуйте ещё раз."_q },
+		{ u"LuminaSttModelFailedTimeout"_q, u"Загрузка офлайн-модели речи перестала отвечать и была отменена. Проверьте подключение и попробуйте ещё раз."_q },
+		{ u"LuminaSttModelFailedStorage"_q, u"Не удалось сохранить офлайн-модель речи. Убедитесь, что на диске достаточно места, и попробуйте ещё раз."_q },
+		{ u"LuminaSttModelFailedCorrupt"_q, u"Загруженная офлайн-модель речи повреждена и удалена. Попробуйте ещё раз."_q },
 		{ u"LuminaSttUiPickTitle"_q, u"Голос в текст"_q },
 		{ u"LuminaSttUiFetching"_q, u"Загрузка голосового сообщения…"_q },
 		{ u"LuminaSttUiTranscribing"_q, u"Распознавание…"_q },

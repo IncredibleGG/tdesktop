@@ -28,11 +28,14 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
 #include <QtCore/QJsonParseError>
+#include <QtCore/QPointer>
 #include <QtCore/QSet>
 #include <QtCore/QUrl>
 #include <QtNetwork/QNetworkAccessManager>
+#include <QtNetwork/QNetworkProxy>
 #include <QtNetwork/QNetworkReply>
 #include <QtNetwork/QNetworkRequest>
+#include <crl/crl_async.h>
 #include <crl/crl_on_main.h>
 
 namespace Lumina {
@@ -148,7 +151,46 @@ struct HttpHeader {
 		|| (name.compare("X-goog-api-key", Qt::CaseInsensitive) == 0);
 }
 
+// Answers a proxy list that was worked out before the request was made.
+//
+// QNetworkAccessManager asks for its proxy on the thread that owns it - the
+// main one here - at the moment get() / post() is called, and with tdesktop's
+// default "use system proxy" setting that question goes to the operating
+// system. On macOS a proxy auto-config (PAC) file, which proxy tools set up
+// by default, is then fetched and evaluated right there, synchronously, for
+// every request; on Windows WPAD can do the same. That is the composer
+// stalling while a translation starts. So SendHttp() asks the very same
+// question - QNetworkProxyFactory::proxyForQuery() is exactly what the manager
+// itself would call - on a worker, and hands the manager the answer through
+// this factory just before the request, which the manager then uses as is.
+class ResolvedProxyFactory final : public QNetworkProxyFactory {
+public:
+	explicit ResolvedProxyFactory(QList<QNetworkProxy> proxies)
+	: _proxies(std::move(proxies)) {
+	}
+
+	QList<QNetworkProxy> queryProxy(const QNetworkProxyQuery &) override {
+		return _proxies;
+	}
+
+private:
+	const QList<QNetworkProxy> _proxies;
+
+};
+
+void StartHttp(
+		not_null<QNetworkAccessManager*> network,
+		const QUrl &url,
+		const std::vector<HttpHeader> &headers,
+		const QByteArray &body,
+		Fn<void(QByteArray, TranslateError, int)> done);
+
 // An empty `body` sends a GET, anything else a POST.
+//
+// Nothing here blocks the main thread: the proxy lookup runs on a worker (see
+// ResolvedProxyFactory above) and the request itself is asynchronous. `done`
+// still runs on the main thread, exactly once - unless `network` is destroyed
+// first, in which case it never runs, as before.
 //
 // `done` is handed the response body, the mapped error and the raw HTTP status
 // - 0 when the request never got one - and nothing else. Nothing here is ever
@@ -171,6 +213,33 @@ void SendHttp(
 		done(QByteArray(), TranslateError::Network, 0);
 		return;
 	}
+	const auto weak = QPointer<QNetworkAccessManager>(network.get());
+	crl::async([=] {
+		auto proxies = QNetworkProxyFactory::proxyForQuery(
+			QNetworkProxyQuery(url));
+		crl::on_main([=, proxies = std::move(proxies)]() mutable {
+			const auto strong = weak.data();
+			if (!strong) {
+				// The engine that owned the manager is gone, and with it
+				// whoever was waiting - the same silence a reply destroyed
+				// with its manager has always meant.
+				return;
+			}
+			// Takes ownership and drops the previous one. It is consulted
+			// only inside the get() / post() just below, on this thread.
+			strong->setProxyFactory(
+				new ResolvedProxyFactory(std::move(proxies)));
+			StartHttp(strong, url, headers, body, done);
+		});
+	});
+}
+
+void StartHttp(
+		not_null<QNetworkAccessManager*> network,
+		const QUrl &url,
+		const std::vector<HttpHeader> &headers,
+		const QByteArray &body,
+		Fn<void(QByteArray, TranslateError, int)> done) {
 	auto request = QNetworkRequest(url);
 	request.setTransferTimeout(kRequestTimeoutMs);
 	auto keyed = false;

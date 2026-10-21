@@ -30,6 +30,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_translate_gating.h" // AutomaticProcessingBlocked.
 #include "lumina/lumina_translate_providers.h"
 #include "lumina/lumina_translate_readlang.h"
+#include "lumina/lumina_whisper_model.h"
 #include "main/main_session.h"
 #include "settings/sections/settings_lumina_voice.h"
 #include "spellcheck/platform/platform_language.h"
@@ -76,6 +77,8 @@ const auto kKeyAutoTranslate = u"sttAutoTranslate"_q;
 		return Tr(u"LuminaSttUiRoundUnsupported"_q);
 	case TranscribeError::NoSpeech:
 		return Tr(u"LuminaSttUiNoText"_q);
+	case TranscribeError::ModelMissing:
+		return Tr(u"LuminaSttUiModelMissing"_q);
 	case TranscribeError::Unavailable:
 	case TranscribeError::RateLimited:
 	case TranscribeError::Network:
@@ -192,6 +195,159 @@ const auto kKeyAutoTranslate = u"sttAutoTranslate"_q;
 		return fallback;
 	}
 	return code;
+}
+
+#ifndef Q_OS_MAC
+// True while the selected engine is the offline whisper.cpp one and its model
+// is not on disk yet - the one state in which a first transcription can only
+// fail. Windows / Linux only: mac never builds that engine (its default is the
+// Apple one, which has no model to fetch), and this never touches that path.
+[[nodiscard]] bool OfflineModelMissing() {
+	return (CurrentTranscriberId() == WhisperCppTranscriberId())
+		&& !WhisperModelReady();
+}
+
+// The one-time model download, offered at the moment it is needed instead of
+// failing with a message about an API key this engine does not have.
+//
+// The box is the progress display as well: it turns from the offer into a
+// percentage, and closes itself and runs `ready` the moment the model is in
+// place - which is what makes the first tap on Transcribe end in a transcript.
+// It shows a download the settings page already started too, and finishes
+// the same way when that one completes.
+//
+// Closing it any other way gives up on the transcription. A download this box
+// started is cancelled with it; one started from the settings page is left
+// alone, since that page is where it was asked for.
+void OfflineModelBox(not_null<Ui::GenericBox*> box, Fn<void()> ready) {
+	using Stage = WhisperModelState::Stage;
+	using Failure = WhisperModelState::Failure;
+	enum class View {
+		None,
+		Offer,
+		Downloading,
+		Failed,
+	};
+	struct BoxState {
+		rpl::variable<QString> text;
+		View view = View::None;
+		bool started = false;
+		bool delivered = false;
+		bool closing = false;
+	};
+	const auto state = box->lifetime().make_state<BoxState>();
+
+	box->setTitle(TrValue(u"LuminaSttModelNeededTitle"_q));
+
+	// A stray click beside the box must not throw a download away.
+	box->setCloseByOutsideClick(false);
+	box->addRow(object_ptr<Ui::FlatLabel>(
+		box,
+		state->text.value(),
+		st::boxLabel));
+
+	const auto refresh = [=] {
+		if (state->delivered || state->closing) {
+			return;
+		}
+		const auto model = CurrentWhisperModelState();
+		if (model.stage == Stage::Ready) {
+			// Posted, then closed: nothing may run after closeBox(), and
+			// `ready` must outlive the box it was handed to.
+			state->delivered = true;
+			const auto callback = ready;
+			crl::on_main([=] {
+				if (callback) {
+					callback();
+				}
+			});
+			box->closeBox();
+			return;
+		}
+		const auto view = (model.stage == Stage::Downloading)
+			? View::Downloading
+			: (state->started && model.failure != Failure::None)
+			? View::Failed
+			: View::Offer;
+		state->text = (view == View::Downloading)
+			? Tr(
+				u"LuminaSttModelDownloadingProgress"_q,
+				QString::number(model.progress))
+			: (view == View::Failed)
+			? WhisperModelFailureText(model.failure)
+			: Tr(u"LuminaSttModelNeededText"_q);
+		if (state->view == view) {
+			// Only the percentage moved; the buttons stay as they are.
+			return;
+		}
+		state->view = view;
+		box->clearButtons();
+		switch (view) {
+		case View::Offer:
+			box->addButton(TrValue(u"LuminaSttModelDownloadAction"_q), [=] {
+				state->started = true;
+				DownloadWhisperModel();
+			});
+			box->addButton(tr::lng_cancel(), [=] {
+				box->closeBox();
+			});
+			break;
+		case View::Downloading:
+			box->addButton(TrValue(u"LuminaSttModelCancelDownload"_q), [=] {
+				CancelWhisperModelDownload();
+				box->closeBox();
+			});
+			break;
+		case View::Failed:
+			box->addButton(TrValue(u"LuminaSttModelRetry"_q), [=] {
+				DownloadWhisperModel();
+			});
+			box->addButton(tr::lng_close(), [=] {
+				box->closeBox();
+			});
+			break;
+		case View::None:
+			break;
+		}
+	};
+
+	// Every change is applied on a later main-thread turn, never inline: the
+	// change that matters most is fired from inside a button of this box
+	// (Download, Retry, Cancel), and refresh() replaces the buttons - doing
+	// that inline would delete the button whose callback is still running.
+	WhisperModelChanges(
+	) | rpl::on_next([=] {
+		crl::on_main(box, refresh);
+	}, box->lifetime());
+
+	box->boxClosing(
+	) | rpl::on_next([=] {
+		state->closing = true;
+		if (state->started
+			&& !state->delivered
+			&& (CurrentWhisperModelState().stage == Stage::Downloading)) {
+			CancelWhisperModelDownload();
+		}
+	}, box->lifetime());
+
+	refresh();
+}
+#endif // !Q_OS_MAC
+
+// True when the selected engine can run right now. Otherwise it has offered
+// what is missing - today only the offline model - and `ready` runs once,
+// on the main thread, if and when that is sorted out. The caller re-resolves
+// whatever it needs inside `ready`: the message can be gone by then.
+[[nodiscard]] bool EnsureOfflineModel(
+		[[maybe_unused]] not_null<Window::SessionController*> controller,
+		[[maybe_unused]] Fn<void()> ready) {
+#ifndef Q_OS_MAC
+	if (OfflineModelMissing()) {
+		controller->show(Box(OfflineModelBox, std::move(ready)));
+		return false;
+	}
+#endif // !Q_OS_MAC
+	return true;
 }
 
 struct State {
@@ -853,6 +1009,23 @@ void ToggleVoiceToTextInline(
 		return;
 	}
 	const auto itemId = item->fullId();
+
+	// The offline engine with no model yet: offer the one-time download and
+	// come back here when it is done, rather than starting a run that can
+	// only fail - which used to say "no API key" on the very first tap.
+	const auto weak = base::make_weak(controller);
+	if (!EnsureOfflineModel(controller, [=] {
+		const auto strong = weak.get();
+		if (!strong) {
+			return;
+		}
+		const auto item = strong->session().data().message(itemId);
+		if (item) {
+			ToggleVoiceToTextInline(strong, item);
+		}
+	})) {
+		return;
+	}
 	auto &jobs = InlineJobs(session);
 	if (jobs.contains(itemId)) {
 		// A previous run is still tearing down (deferred removal pending); the
@@ -887,17 +1060,14 @@ void AddVoiceToTextMenuRow(
 	}
 
 	// Desktop's default engine is free and on-device (offline whisper.cpp /
-	// Apple Speech), so a fresh profile is ready with no key. Two engines are
-	// NOT ready, and they are handled differently:
+	// Apple Speech), so a fresh profile is ready with no key. The row is
+	// offered for the two engines that are NOT ready as well, and the click
+	// says what is missing instead of failing:
+	//  - the offline engine with its model not yet downloaded: the same
+	//    one-time download box the on-bubble button opens, after which the
+	//    transcription box opens by itself;
 	//  - a cloud engine (OpenAI Whisper / Google) the user picked but gave no
-	//    key: we still offer the row, and on click say what is missing with a
-	//    one-tap jump to the page that fixes it, rather than failing silently;
-	//  - the offline engine with its model not yet downloaded: that funnel
-	//    lives on the settings page, so the row stays hidden as before.
-	if (!TranscriberConfigured(CurrentTranscriberId())
-		&& !CurrentTranscriber().needsKey) {
-		return;
-	}
+	//    key: what is missing, with a one-tap jump to the page that fixes it.
 	const auto session = &item->history()->session();
 	const auto itemId = item->fullId();
 	const auto controller = context.controller;
@@ -910,10 +1080,23 @@ void AddVoiceToTextMenuRow(
 		if (!item) {
 			return;
 		}
-		// Re-checked on click, not captured: the engine or its key can change
-		// while the menu is open. The row is only offered for a ready engine
-		// or a needs-key engine, so an unconfigured engine here always means
-		// "no API key" - hence LuminaSttUiNoKey is the right message.
+		// Re-checked on click, not captured: the engine, its key or its model
+		// can change while the menu is open. Once the offline model is taken
+		// care of, an engine that is still not configured is a cloud engine
+		// with no key - hence LuminaSttUiNoKey is the right message.
+		const auto weak = base::make_weak(controller);
+		if (!EnsureOfflineModel(controller, [=] {
+			const auto strong = weak.get();
+			if (!strong) {
+				return;
+			}
+			const auto item = strong->session().data().message(itemId);
+			if (item) {
+				ShowVoiceToText(strong, item);
+			}
+		})) {
+			return;
+		}
 		if (!TranscriberConfigured(CurrentTranscriberId())) {
 			controller->show(Ui::MakeConfirmBox({
 				.text = Tr(u"LuminaSttUiNoKey"_q),

@@ -151,6 +151,7 @@ namespace {
 		// The translate-before-send preview bar above the composer.
 		{ u"LuminaTranslatePreviewTranslating"_q, u"Traduzindo…"_q },
 		{ u"LuminaTranslatePreviewFailed"_q, u"Tradução indisponível"_q },
+		{ u"LuminaTranslateSendPending"_q, u"Traduzindo… será enviada quando estiver pronta"_q },
 
 		// The per-chat translate button in the chat top bar.
 		{ u"LuminaTranslateChatToggle"_q, u"Traduzir esta conversa"_q },
@@ -914,17 +915,26 @@ namespace {
 		{ u"LuminaSttBaseUrl"_q, u"URL base"_q },
 		{ u"LuminaSttModel"_q, u"Modelo"_q },
 		{ u"LuminaSttNotReady"_q, u"A transcrição de voz está ligada, mas o mecanismo escolhido abaixo ainda não tem chave de API, então não funciona. Salve uma chave em Mecanismo, ou desligue esta opção."_q },
-		{ u"LuminaSttInfoDesktop"_q, u"A transcrição usa sua própria chave de API e sua própria "
-			u"cota; o LuminaGram nunca fornece uma chave. A mensagem de "
-			u"voz é enviada ao serviço escolhido abaixo, então ative "
-			u"isso apenas para um serviço ao qual você aceite enviar "
-			u"suas mensagens."_q },
+		{ u"LuminaSttInfoDesktop"_q, u"O mecanismo padrão transcreve neste dispositivo: Whisper offline no Windows e no Linux (depois de baixar o modelo uma vez) e o reconhecimento de fala da Apple no macOS, que fica no Mac sempre que o sistema oferece reconhecimento no dispositivo. Só um mecanismo na nuvem escolhido abaixo (OpenAI Whisper ou Google) envia a mensagem de voz, para esse serviço, com sua própria chave de API e sua própria cota; o LuminaGram nunca fornece uma chave."_q },
 		{ u"LuminaSttVoskUnsupported"_q, u"O mecanismo offline (Vosk) ainda não é compatível no "
 			u"desktop: ele precisa de uma biblioteca nativa e de um "
 			u"modelo de voz empacotados separadamente para Windows, "
 			u"macOS e Linux. Até lá, a transcrição no desktop é somente "
 			u"na nuvem."_q },
 		{ u"LuminaSttUiMenuItem"_q, u"Transcrever"_q },
+		{ u"LuminaSttUiModelMissing"_q, u"O modelo de voz offline ainda não foi baixado. Baixe-o em Configurações, LuminaGram, Voz para texto."_q },
+		{ u"LuminaSttModelNeededTitle"_q, u"Modelo de voz offline"_q },
+		{ u"LuminaSttModelNeededText"_q, u"É preciso baixar primeiro o modelo de voz offline (cerca de 57 MB). A mensagem de voz será transcrita automaticamente assim que o download terminar."_q },
+		{ u"LuminaSttModelDownloadAction"_q, u"Baixar"_q },
+		{ u"LuminaSttModelDownloadingProgress"_q, u"Baixando o modelo de voz offline… {1}%"_q },
+		{ u"LuminaSttModelCancelDownload"_q, u"Cancelar download"_q },
+		{ u"LuminaSttModelCancelConfirm"_q, u"Parar o download do modelo de voz offline?"_q },
+		{ u"LuminaSttModelRetry"_q, u"Tentar novamente"_q },
+		{ u"LuminaSttModelFailed"_q, u"Falha no download"_q },
+		{ u"LuminaSttModelFailedNetwork"_q, u"Não foi possível baixar o modelo de voz offline. Verifique sua conexão e tente novamente."_q },
+		{ u"LuminaSttModelFailedTimeout"_q, u"O download do modelo de voz offline parou de responder e foi cancelado. Verifique sua conexão e tente novamente."_q },
+		{ u"LuminaSttModelFailedStorage"_q, u"Não foi possível salvar o modelo de voz offline. Verifique se há espaço livre em disco e tente novamente."_q },
+		{ u"LuminaSttModelFailedCorrupt"_q, u"O modelo de voz baixado estava corrompido e foi removido. Tente novamente."_q },
 		{ u"LuminaSttUiPickTitle"_q, u"Voz para texto"_q },
 		{ u"LuminaSttUiFetching"_q, u"Baixando a mensagem de voz…"_q },
 		{ u"LuminaSttUiTranscribing"_q, u"Transcrevendo…"_q },

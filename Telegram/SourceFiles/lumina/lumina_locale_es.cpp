@@ -160,6 +160,7 @@ namespace {
 		// The translate-before-send preview bar above the composer.
 		{ u"LuminaTranslatePreviewTranslating"_q, u"Traduciendo…"_q },
 		{ u"LuminaTranslatePreviewFailed"_q, u"Traducción no disponible"_q },
+		{ u"LuminaTranslateSendPending"_q, u"Traduciendo… se enviará cuando esté lista"_q },
 
 		// The per-chat translate button in the chat top bar. Both texts name
 		// what pressing the button will do, not what the chat is doing now,
@@ -956,17 +957,26 @@ namespace {
 		{ u"LuminaSttBaseUrl"_q, u"URL base"_q },
 		{ u"LuminaSttModel"_q, u"Modelo"_q },
 		{ u"LuminaSttNotReady"_q, u"La transcripción de voz está activada, pero el motor elegido abajo todavía no tiene clave de API, así que no puede funcionar. Guarda una clave en «Motor» o desactiva esta opción."_q },
-		{ u"LuminaSttInfoDesktop"_q, u"La transcripción usa tu propia clave de API y tu propia "
-			u"cuota; LuminaGram nunca proporciona una clave. El mensaje "
-			u"de voz se sube al servicio que elijas abajo, así que "
-			u"actívalo solo para un servicio al que estés dispuesto a "
-			u"enviar tus mensajes."_q },
+		{ u"LuminaSttInfoDesktop"_q, u"El motor predeterminado transcribe en este dispositivo: Whisper sin conexión en Windows y Linux (tras descargar el modelo una vez) y el reconocimiento de voz de Apple en macOS, que se queda en el Mac siempre que el sistema admita el reconocimiento en el dispositivo. Solo un motor en la nube elegido abajo (OpenAI Whisper o Google) sube el mensaje de voz, a ese servicio, con tu propia clave de API y tu propia cuota; LuminaGram nunca proporciona una clave."_q },
 		{ u"LuminaSttVoskUnsupported"_q, u"El motor sin conexión (Vosk) todavía no está disponible "
 			u"en escritorio: necesita una biblioteca nativa y un modelo "
 			u"de voz empaquetados por separado para Windows, macOS y "
 			u"Linux. Hasta entonces, la transcripción en escritorio es "
 			u"solo en la nube."_q },
 		{ u"LuminaSttUiMenuItem"_q, u"Transcribir"_q },
+		{ u"LuminaSttUiModelMissing"_q, u"El modelo de voz sin conexión aún no se ha descargado. Descárgalo en Ajustes, LuminaGram, Voz a texto."_q },
+		{ u"LuminaSttModelNeededTitle"_q, u"Modelo de voz sin conexión"_q },
+		{ u"LuminaSttModelNeededText"_q, u"Primero hay que descargar el modelo de voz sin conexión (unos 57 MB). El mensaje de voz se transcribirá automáticamente en cuanto termine la descarga."_q },
+		{ u"LuminaSttModelDownloadAction"_q, u"Descargar"_q },
+		{ u"LuminaSttModelDownloadingProgress"_q, u"Descargando el modelo de voz sin conexión… {1}%"_q },
+		{ u"LuminaSttModelCancelDownload"_q, u"Cancelar descarga"_q },
+		{ u"LuminaSttModelCancelConfirm"_q, u"¿Detener la descarga del modelo de voz sin conexión?"_q },
+		{ u"LuminaSttModelRetry"_q, u"Reintentar"_q },
+		{ u"LuminaSttModelFailed"_q, u"Error en la descarga"_q },
+		{ u"LuminaSttModelFailedNetwork"_q, u"No se pudo descargar el modelo de voz sin conexión. Comprueba tu conexión e inténtalo de nuevo."_q },
+		{ u"LuminaSttModelFailedTimeout"_q, u"La descarga del modelo de voz sin conexión dejó de responder y se canceló. Comprueba tu conexión e inténtalo de nuevo."_q },
+		{ u"LuminaSttModelFailedStorage"_q, u"No se pudo guardar el modelo de voz sin conexión. Asegúrate de tener espacio libre en el disco e inténtalo de nuevo."_q },
+		{ u"LuminaSttModelFailedCorrupt"_q, u"El modelo de voz descargado estaba dañado y se ha eliminado. Inténtalo de nuevo."_q },
 		{ u"LuminaSttUiPickTitle"_q, u"Voz a texto"_q },
 		{ u"LuminaSttUiFetching"_q, u"Descargando el mensaje de voz…"_q },
 		{ u"LuminaSttUiTranscribing"_q, u"Transcribiendo…"_q },
