@@ -21,7 +21,8 @@ class ForumTopic;
 
 namespace Lumina {
 
-// The "Chat ID" row on a group or channel profile: the peer's canonical
+// The "Group/Channel ID" row (LuminaProfileChatId, worded like Android's
+// ProfileChatId) on a group or channel profile: the peer's canonical
 // Bot-API chat id - "-" + the bare chat id for a basic group
 // (`-<peerToChat(peer->id).bare>`) or "-100" + the bare channel id for a
 // supergroup / channel (`-100<peerToChannel(peer->id).bare>`), the same value
@@ -31,8 +32,9 @@ namespace Lumina {
 // shows on every group and channel and there is no preference to switch it off.
 // A real peer's id is never zero, so the row never resolves to an empty value
 // and is therefore always shown. It is copyable the same way its neighbours
-// are: the value label goes through the same addInfoOneLine factory, which
-// makes it selectable and gives it a "Copy" context-menu entry.
+// are: AddIconInfoRow builds the value label exactly as the addInfoOneLine
+// factory does, which makes it selectable and gives it a "Copy" context-menu
+// entry, and adds the "i" icon of the profile's icon column.
 //
 // The canonical Bot-API form is used (basic group "-<id>", supergroup /
 // channel "-100<id>") so the value matches the reference client and can be

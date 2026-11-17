@@ -706,7 +706,7 @@ namespace {
 		{ u"LuminaProfileRecentActions"_q, u"Acciones recientes"_q },
 		{ u"LuminaProfileDcId"_q, u"Centro de datos"_q },
 		{ u"LuminaProfileUserId"_q, u"ID de usuario"_q },
-		{ u"LuminaProfileChatId"_q, u"ID del chat"_q },
+		{ u"LuminaProfileChatId"_q, u"ID del grupo/canal"_q },
 		{ u"LuminaProfileDcIdValue"_q, u"DC{1}"_q },
 		{ u"LuminaProfileNameWarning"_q, u"Posible suplantación"_q },
 		{ u"LuminaProfileNameWarningLabel"_q, u"El nombre usa caracteres "

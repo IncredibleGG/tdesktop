@@ -805,7 +805,7 @@ namespace {
 		{ u"LuminaProfileShowDcId"_q, u"Показывать дата-центр"_q },
 		{ u"LuminaProfileDcId"_q, u"Дата-центр"_q },
 		{ u"LuminaProfileUserId"_q, u"ID пользователя"_q },
-		{ u"LuminaProfileChatId"_q, u"ID чата"_q },
+		{ u"LuminaProfileChatId"_q, u"ID группы/канала"_q },
 		{ u"LuminaProfileDcIdValue"_q, u"DC{1}"_q },
 		{ u"LuminaProfileNameWarning"_q, u"Возможная подмена личности"_q },
 		{ u"LuminaProfileNameWarningLabel"_q, u"В имени есть похожие символы"_q },

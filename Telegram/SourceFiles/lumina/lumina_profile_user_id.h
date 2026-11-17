@@ -25,8 +25,9 @@ namespace Lumina {
 // there is no preference to switch it off, matching Android where the id is
 // always visible. A user id is never zero, so the row never resolves to an
 // empty value and is therefore always shown. It is copyable the same way its
-// neighbours are: the value label goes through the same addInfoOneLine factory,
-// which makes it selectable and gives it a "Copy" context-menu entry.
+// neighbours are: AddIconInfoRow builds the value label exactly as the
+// addInfoOneLine factory does, which makes it selectable and gives it a "Copy"
+// context-menu entry, and adds the "i" icon of the profile's icon column.
 //
 // Purely local: the id is already part of the peer, so nothing is requested
 // from the server to build this row.

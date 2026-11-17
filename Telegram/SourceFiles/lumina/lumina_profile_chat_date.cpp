@@ -19,6 +19,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_locale.h"
 #include "lumina/lumina_settings.h"
 #include "main/main_session.h"
+#include "styles/style_lumina.h"
 
 #include <memory>
 
@@ -152,10 +153,11 @@ void AddChatCreationDateRow(
 	) | rpl::map([=] {
 		return tr::marked(ChatCreationDateText(peer));
 	});
-	context.addInfoOneLine(
+	AddIconInfoRow(
+		context,
 		TrValue(u"LuminaProfileChatCreated"_q),
 		std::move(text),
-		QString());
+		st::luminaInfoIconDate);
 }
 
 } // namespace Lumina

@@ -522,7 +522,7 @@ namespace {
 		{ u"LuminaProfileRecentActions"_q, u"الإجراءات الأخيرة"_q },
 		{ u"LuminaProfileDcId"_q, u"مركز البيانات"_q },
 		{ u"LuminaProfileUserId"_q, u"معرّف المستخدم"_q },
-		{ u"LuminaProfileChatId"_q, u"معرّف الدردشة"_q },
+		{ u"LuminaProfileChatId"_q, u"معرّف المجموعة/القناة"_q },
 		{ u"LuminaProfileDcIdValue"_q, u"DC{1}"_q },
 		{ u"LuminaProfileNameWarning"_q, u"انتحال شخصية محتمل"_q },
 		{ u"LuminaProfileNameWarningLabel"_q, u"يستخدم الاسم محارف متشابهة الشكل"_q },

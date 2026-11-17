@@ -524,7 +524,7 @@ namespace {
 		{ u"LuminaProfileRecentActions"_q, u"Son İşlemler"_q },
 		{ u"LuminaProfileDcId"_q, u"Veri merkezi"_q },
 		{ u"LuminaProfileUserId"_q, u"Kullanıcı kimliği"_q },
-		{ u"LuminaProfileChatId"_q, u"Sohbet kimliği"_q },
+		{ u"LuminaProfileChatId"_q, u"Grup/kanal kimliği"_q },
 		{ u"LuminaProfileDcIdValue"_q, u"DC{1}"_q },
 		{ u"LuminaProfileNameWarning"_q, u"Olası kimlik taklidi"_q },
 		{ u"LuminaProfileNameWarningLabel"_q, u"Ad, birbirine benzeyen karakterler içeriyor"_q },

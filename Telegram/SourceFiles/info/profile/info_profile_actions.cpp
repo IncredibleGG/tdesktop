@@ -1605,6 +1605,14 @@ Section DetailsFiller::makeInfo() {
 			std::move(onClick),
 			icon));
 	};
+	// LuminaGram: registers a row Lumina built and added to `result` itself
+	// (Lumina::AddIconInfoRow, a value row with an icon) with `tracker`, the
+	// same way addInfoLineGeneric registers its rows. Call-scoped like the
+	// factories above (Lumina::ProfileRowsContext::trackRow).
+	const auto trackLuminaRow = [&](
+			not_null<Ui::SlideWrap<Ui::VerticalLayout>*> row) {
+		tracker.track(row.get());
+	};
 	const auto fitLabelToButton = [&](
 			not_null<Ui::RpWidget*> button,
 			not_null<Ui::FlatLabel*> label,
@@ -1811,6 +1819,7 @@ Section DetailsFiller::makeInfo() {
 					contextCopyText);
 			},
 			.addClickableRow = addLuminaClickableRow,
+			.trackRow = trackLuminaRow,
 		}, user);
 
 		if (!user->isBot()) {
@@ -1925,6 +1934,16 @@ Section DetailsFiller::makeInfo() {
 			).text->setLinksTrusted();
 		}
 
+		const auto about = addInfoLine(tr::lng_info_about_label(), _topic
+			? rpl::single(TextWithEntities())
+			: AboutWithAdvancedValue(_peer));
+		if (!_topic) {
+			setupAboutContextMenu(about.text, AboutWithAdvancedValue(_peer));
+			SetupAboutPeerIdDrag(about.text, _peer);
+		}
+
+		// LuminaGram: after the description, so the block reads upstream text
+		// rows, then Lumina's value rows (with icons), then its action rows.
 		Lumina::AddChatInfoRows({
 			.container = result,
 			.controller = controller,
@@ -1938,15 +1957,8 @@ Section DetailsFiller::makeInfo() {
 					contextCopyText);
 			},
 			.addClickableRow = addLuminaClickableRow,
+			.trackRow = trackLuminaRow,
 		}, _peer, _topic);
-
-		const auto about = addInfoLine(tr::lng_info_about_label(), _topic
-			? rpl::single(TextWithEntities())
-			: AboutWithAdvancedValue(_peer));
-		if (!_topic) {
-			setupAboutContextMenu(about.text, AboutWithAdvancedValue(_peer));
-			SetupAboutPeerIdDrag(about.text, _peer);
-		}
 	}
 	raw->toggleOn(tracker.atLeastOneShownValue());
 	raw->finishAnimating();

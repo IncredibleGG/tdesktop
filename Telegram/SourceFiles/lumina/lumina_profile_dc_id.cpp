@@ -14,6 +14,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_settings.h"
 #include "main/main_session.h"
 #include "ui/image/image_location.h"
+#include "styles/style_lumina.h"
 
 namespace Lumina {
 namespace {
@@ -67,10 +68,11 @@ void AddProfileDcIdRow(
 	) | rpl::map([=] {
 		return tr::marked(ProfileDcIdText(peer));
 	});
-	context.addInfoOneLine(
+	AddIconInfoRow(
+		context,
 		TrValue(u"LuminaProfileDcId"_q),
 		std::move(text),
-		QString());
+		st::luminaInfoIconDc);
 }
 
 } // namespace Lumina

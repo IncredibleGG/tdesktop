@@ -12,6 +12,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_keys.h"
 #include "lumina/lumina_locale.h"
 #include "main/main_session.h"
+#include "styles/style_lumina.h"
 
 namespace Lumina {
 
@@ -47,10 +48,11 @@ void AddChatIdRow(
 	) | rpl::map([=] {
 		return tr::marked(ChatIdText(peer));
 	});
-	context.addInfoOneLine(
+	AddIconInfoRow(
+		context,
 		TrValue(u"LuminaProfileChatId"_q),
 		std::move(text),
-		QString());
+		st::luminaInfoIconId);
 }
 
 } // namespace Lumina

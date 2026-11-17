@@ -67,3 +67,29 @@ luminaSettingsFactRow: SettingsButton(settingsButtonNoIcon) {
 		textFg: windowSubTextFg;
 	}
 }
+
+// The profile details block (lumina_profile_rows.cpp). LuminaGram's value rows
+// (ID, creation / registration date, data centre) and its two action rows
+// (Group Settings, Recent Actions) share one icon column with the upstream
+// rows that carry an icon - the shared-media and action buttons: a 32px icon
+// slot at x = 20px with the text at x = 79px. The padding is the labelled-row
+// padding (infoProfileLabeledPadding) moved over to infoProfileButton's 79px
+// text column, the same move upstream's own personal-channel row makes.
+luminaProfileIconRowPadding: margins(79px, 9px, 20px, 7px);
+luminaProfileIconRowIconLeft: 20px;
+
+// Height of that slot. A value row centres the slot vertically on the row
+// rather than pinning it at a fixed y, so the icon stays centred when a long
+// label wraps onto a second line (lumina_profile_rows.cpp, AddIconInfoRow).
+luminaProfileIconRowIconSlot: 32px;
+
+// The glyphs are 24px menu icons dropped into that 32px info slot, so each one
+// carries the point(4px, 4px) offset upstream gives every menu glyph it puts
+// there (infoIconSettings, infoIconMediaChannel); without it the glyph sits
+// 4px up and to the left of its neighbours'. infoIconFg is the colour those
+// neighbours draw with.
+luminaInfoIconGroupSettings: icon {{ "menu/settings", infoIconFg, point(4px, 4px) }};
+luminaInfoIconRecentActions: icon {{ "menu/show_in_chat", infoIconFg, point(4px, 4px) }};
+luminaInfoIconId: icon {{ "menu/info", infoIconFg, point(4px, 4px) }};
+luminaInfoIconDate: icon {{ "menu/calendar", infoIconFg, point(4px, 4px) }};
+luminaInfoIconDc: icon {{ "menu/devices", infoIconFg, point(4px, 4px) }};

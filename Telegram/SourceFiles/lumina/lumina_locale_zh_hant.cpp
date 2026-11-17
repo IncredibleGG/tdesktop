@@ -564,7 +564,7 @@ namespace {
 		{ u"LuminaProfileRecentActions"_q, u"最近操作"_q },
 		{ u"LuminaProfileDcId"_q, u"資料中心"_q },
 		{ u"LuminaProfileUserId"_q, u"用戶 ID"_q },
-		{ u"LuminaProfileChatId"_q, u"對話 ID"_q },
+		{ u"LuminaProfileChatId"_q, u"群組/頻道 ID"_q },
 		{ u"LuminaProfileDcIdValue"_q, u"DC{1}"_q },
 		{ u"LuminaProfileNameWarning"_q, u"可能冒充他人"_q },
 		{ u"LuminaProfileNameWarningLabel"_q, u"名稱含視覺近似字元"_q },

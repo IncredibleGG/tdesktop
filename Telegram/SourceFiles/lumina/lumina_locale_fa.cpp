@@ -501,7 +501,7 @@ namespace {
 		{ u"LuminaProfileRecentActions"_q, u"کنش‌های اخیر"_q },
 		{ u"LuminaProfileDcId"_q, u"مرکز داده"_q },
 		{ u"LuminaProfileUserId"_q, u"شناسه کاربر"_q },
-		{ u"LuminaProfileChatId"_q, u"شناسه گفتگو"_q },
+		{ u"LuminaProfileChatId"_q, u"شناسه گروه/کانال"_q },
 		{ u"LuminaProfileDcIdValue"_q, u"DC{1}"_q },
 		{ u"LuminaProfileNameWarning"_q, u"احتمال جعل هویت"_q },
 		{ u"LuminaProfileNameWarningLabel"_q, u"نام از نویسه‌های مشابه استفاده می‌کند"_q },

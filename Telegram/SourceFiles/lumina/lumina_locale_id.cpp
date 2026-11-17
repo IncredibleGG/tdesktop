@@ -679,7 +679,7 @@ namespace {
 		{ u"LuminaProfileRecentActions"_q, u"Tindakan Terbaru"_q },
 		{ u"LuminaProfileDcId"_q, u"Pusat data"_q },
 		{ u"LuminaProfileUserId"_q, u"ID pengguna"_q },
-		{ u"LuminaProfileChatId"_q, u"ID obrolan"_q },
+		{ u"LuminaProfileChatId"_q, u"ID grup/kanal"_q },
 		{ u"LuminaProfileDcIdValue"_q, u"DC{1}"_q },
 		{ u"LuminaProfileNameWarning"_q, u"Kemungkinan peniruan identitas"_q },
 		{ u"LuminaProfileNameWarningLabel"_q, u"Nama memakai karakter yang mirip"_q },

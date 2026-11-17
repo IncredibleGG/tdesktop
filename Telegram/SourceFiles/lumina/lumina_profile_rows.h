@@ -29,9 +29,13 @@ namespace Lumina {
 
 // The single seam LuminaGram has into the profile "details" block built by
 // Info::Profile::DetailsFiller::makeInfo() (info/profile/info_profile_actions
-// .cpp). That file is 3000+ lines of upstream-hot code, so it holds exactly two
-// calls into this header and nothing else; every LuminaGram profile row is
-// added from here instead.
+// .cpp). That file is 3000+ lines of upstream-hot code, so all it holds is two
+// calls into this header (Lumina::AddUserInfoRows / AddChatInfoRows) and the
+// two call-scoped lambdas they hand over beside addInfoOneLine
+// (addLuminaClickableRow and trackLuminaRow, see ProfileRowsContext below);
+// every LuminaGram profile row is added from here instead. After an upstream
+// merge, grep that file for `Lumina::`, `addLuminaClickableRow` and
+// `trackLuminaRow` - if any of them is gone, the merge ate the seam.
 //
 // Mirrors the `addInfoOneLine` factory local to makeInfo(). Rows created
 // through it are added to the same Ui::VerticalLayout and tracked by the same
@@ -86,8 +90,8 @@ struct ProfileRowsContext {
 	// and the whole block is toggled on `tracker.atLeastOneShownValue()` - so
 	// on a peer where every upstream row happens to be empty an untracked
 	// Lumina row is built but never shown. If a future row really cannot go
-	// through the factory, wrap it in a Ui::SlideWrap and extend this struct
-	// with a tracking callback rather than adding it bare.
+	// through the factories, wrap it in a Ui::SlideWrap and register it through
+	// `trackRow` (the way AddIconInfoRow does) rather than adding it bare.
 	not_null<Ui::VerticalLayout*> container;
 	not_null<Window::SessionController*> controller;
 	InfoOneLineFactory addInfoOneLine;
@@ -96,7 +100,36 @@ struct ProfileRowsContext {
 	// through it is tracked exactly like an addInfoOneLine row. May be empty in
 	// contexts that do not provide it, so check it before calling.
 	ClickableRowFactory addClickableRow;
+
+	// Optional: registers a row LuminaGram built itself and already added to
+	// `container` with makeInfo()'s Ui::MultiSlideTracker, so it slides and
+	// collapses exactly like an addInfoOneLine row. AddIconInfoRow() below is
+	// the one user; go through it rather than calling this directly.
+	//
+	// !! CALL-SCOPED, exactly like addInfoOneLine: it holds a reference to
+	// makeInfo()'s local tracker. Never copy it into a later callback.
+	Fn<void(not_null<Ui::SlideWrap<Ui::VerticalLayout>*>)> trackRow;
 };
+
+// A labelled one-line value row, like `context.addInfoOneLine`, with a
+// leading icon: the icon sits in the column the upstream shared-media and
+// action buttons draw theirs in, and the text moves over to their 79px text
+// column, so a LuminaGram value row lines up with every other icon row of
+// the profile instead of with the icon-less upstream text rows (phone, bio,
+// username). `icon` must be a static style icon sized for a 32px info slot
+// (see luminaInfoIcon* in lumina.style).
+//
+// The row is selectable, double-click selects the value and the context menu
+// copies `contextCopyText` - the same as an addInfoOneLine row - and it is
+// tracked the same way: an empty value slides the row, icon included, away.
+// Without `context.trackRow` it falls back to `context.addInfoOneLine`, i.e.
+// the same row without the icon. Call-scoped like the factories it uses.
+Info::Profile::TextWithLabel AddIconInfoRow(
+	const ProfileRowsContext &context,
+	v::text::data label,
+	rpl::producer<TextWithEntities> text,
+	const style::icon &icon,
+	QString contextCopyText = QString());
 
 // Both functions are called once per built details section, from the matching
 // branch of makeInfo().
