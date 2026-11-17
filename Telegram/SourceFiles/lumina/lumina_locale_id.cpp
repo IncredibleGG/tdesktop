@@ -529,12 +529,16 @@ namespace {
 		{ u"LuminaLinkSafetyDestination"_q, u"Tujuan asli"_q },
 		{ u"LuminaLinkSafetyInfo"_q, u"Menanyakan sebelum membuka tautan yang "
 			u"menyembunyikan tujuan aslinya di balik teks sebelum tanda @, "
-			u"yang menulis domainnya dalam punycode, atau yang lewat pemendek "
-			u"tautan yang dikenal. Konfirmasinya menampilkan host tujuan asli "
-			u"dan alamat lengkapnya. Telegram Desktop sendiri sudah "
-			u"menanyakan tentang domain mirip yang ditulis dengan abjad lain. "
-			u"Tidak ada pemeriksaan daring — tidak ada alamat yang Anda buka "
-			u"meninggalkan perangkat ini."_q },
+			u"yang menulis domainnya dalam punycode, atau yang lewat "
+			u"pemendek tautan yang dikenal. Konfirmasinya menampilkan host "
+			u"tujuan asli dan alamat lengkapnya; untuk tautan pendek, "
+			u"alamatnya juga bisa diubah sebelum dibuka. Telegram Desktop "
+			u"sendiri sudah menanyakan tentang domain mirip yang ditulis "
+			u"dengan abjad lain. Semua pemeriksaan lain hanya berjalan di "
+			u"perangkat ini.\nUntuk menunjukkan ke mana tautan pendek "
+			u"mengarah, konfirmasi menghubungi layanan tautan pendek itu "
+			u"satu kali — situs tujuannya sendiri tidak dihubungi sampai "
+			u"Anda membukanya."_q },
 		{ u"LuminaLinkSafetyRow"_q, u"Pemeriksa keamanan tautan"_q },
 		{ u"LuminaMessageWidgetsRow"_q, u"Widget bot di pesan"_q },
 		{ u"LuminaMessageWidgetsInfo"_q, u"Beberapa bot mengirim pesan dengan widget interaktif: halaman kecil buatan bot yang berjalan di dalam chat, di lingkungan terisolasi. Matikan untuk menampilkan pemberitahuan singkat sebagai gantinya, sehingga tidak ada bagian widget yang dijalankan atau dimuat. Bagian lain pesan tetap ditampilkan."_q },
@@ -571,6 +575,24 @@ namespace {
 			u"tersandi (punycode) yang bisa meniru situs terkenal."_q },
 		{ u"LuminaLinkSafetyWarnShortener"_q, u"Ini pemendek tautan — tujuan "
 			u"aslinya tetap tersembunyi sampai Anda membukanya."_q },
+		{ u"LuminaShortLinkIntro"_q, u"Ini adalah tautan pendek:"_q },
+		{ u"LuminaShortLinkResolving"_q, u"Mengambil alamat asli…"_q },
+		{ u"LuminaShortLinkResolved"_q, u"Alamat asli (pengalihan: {1})"_q },
+		{ u"LuminaShortLinkUnresolved"_q, u"Alamat asli tidak dapat diketahui sebelum dibuka"_q },
+		{ u"LuminaShortLinkFailTimeout"_q, u"Layanan tautan pendek tidak menjawab tepat waktu."_q },
+		{ u"LuminaShortLinkFailNetwork"_q, u"Layanan tautan pendek tidak dapat dihubungi."_q },
+		{ u"LuminaShortLinkFailStatus"_q, u"Layanan tautan pendek menjawab dengan galat {1}."_q },
+		{ u"LuminaShortLinkFailNoTarget"_q, u"Layanan tautan pendek tidak memberi "
+			u"tahu ke mana tautan ini mengarah."_q },
+		{ u"LuminaShortLinkFailNotWeb"_q, u"Tautan ini mengarah ke alamat yang bukan halaman web."_q },
+		{ u"LuminaShortLinkFailInvalid"_q, u"Layanan tautan pendek memberikan alamat yang tidak valid."_q },
+		{ u"LuminaShortLinkFailTooMany"_q, u"Tautan ini melewati terlalu banyak tautan pendek."_q },
+		{ u"LuminaShortLinkEdit"_q, u"Alamat yang akan dibuka (bisa diubah):"_q },
+		{ u"LuminaShortLinkOnlyWeb"_q, u"Hanya alamat http:// dan https:// yang dapat dibuka di sini."_q },
+		{ u"LuminaShortLinkWarnMixed"_q, u"Alamat ini berisi karakter dari abjad "
+			u"yang berbeda dengan bagian lainnya, yang dapat meniru situs "
+			u"terkenal."_q },
+		{ u"LuminaShortLinkOpenAgain"_q, u"Tekan “{1}” sekali lagi untuk tetap membuka alamat ini."_q },
 		{ u"LuminaMediaAutoPauseBgVideo"_q,
 			u"Jeda video saat aplikasi berpindah ke latar belakang"_q },
 		{ u"LuminaMediaAutoPauseBgVideoInfo"_q, u"Otomatis menjeda video yang "
