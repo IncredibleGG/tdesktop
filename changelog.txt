@@ -1,3 +1,22 @@
+7.4.1 (18.11.26)
+
+- Hide repeated ads: a new option in Settings > LuminaGram > Chats, off by
+  default. In groups, a message with a link that keeps being re-posted (by
+  the same sender, or by several members) is folded into one line, "N
+  repeated messages folded (suspected ads) - click to show"; a click shows
+  them again. It only hides on this device: nothing is deleted, reported or
+  muted, other members and the sender see no change, and only hashes and
+  message numbers are kept, never text. Choose how strict it is and who is
+  exempt (contacts, bots, replies and mentions of you; you and the admins
+  are never folded), try it with a trial run that only marks the messages,
+  or turn it on or off for one group from the group's menu. Private chats,
+  channels and secret chats are never touched.
+- Short links: opening a short link (t.co, bit.ly and the like) now shows
+  where it really leads. The link safety box looks up the real address,
+  without visiting the destination site, instead of naming the shortener
+  itself. The address to open can be edited first; the usual warnings are
+  shown for an edited address before it opens.
+
 7.4.0 (17.11.26)
 
 - LuminaGram is now based on the official Telegram Desktop 7.4.4 (was
