@@ -794,6 +794,7 @@ namespace {
 			u"鎖相同。"_q },
 		{ u"LuminaSecurityFakeCrashCodeSameAsVault"_q, u"此密碼不能與偽裝保險箱的秘密密碼相同。"_q },
 		{ u"LuminaVaultCodeSameAsDuress"_q, u"秘密密碼不能與脅迫密碼相同。"_q },
+		{ u"LuminaPasscodeSameAsDuress"_q, u"密碼鎖不能與脅迫密碼相同。"_q },
 		{ u"LuminaSecurityFakeCrashInfo"_q, u"第二組密碼，只保存在本機，絕不會傳送到任何地方。在密碼鎖畫面輸入它永遠不會解鎖 LuminaGram，而是執行你在下方選擇的動作。登出選項在偽裝保險箱輸入秘密密碼的地方也有效，偽裝畫面會照常顯示。只有輸入這組特定密碼才會觸發——一般的密碼打錯不會有任何影響。"_q },
 		{ u"LuminaSecurityFakeCrashBiometricInfo"_q, u"在此功能開啟且已設定密"
 			u"碼期間，使用 Touch ID、"
@@ -806,9 +807,7 @@ namespace {
 			u"沒有設定密碼鎖，因此鎖定畫面永遠不會出現，也就永"
 			u"遠不會用到這個密碼。請先在「隱私與安全性」中開啟"
 			u"密碼鎖。"_q },
-		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"這個密碼現在與你的密碼"
-			u"鎖相同，因此永遠不會觸發——密碼鎖會先把應用程式"
-			u"解鎖。請換一個密碼。"_q },
+		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"這個密碼現在與你的密碼鎖相同。在密碼鎖畫面密碼鎖一定優先，所以它在那裡不會有作用——但在偽裝保險箱輸入你的密碼鎖密碼就會觸發它。請換一個密碼。"_q },
 		{ u"LuminaSecurityFakeCrashVaultClashInfo"_q, u"這個密碼現在與偽裝保險箱的秘密密碼相同，在偽裝畫面輸入會直接打開 LuminaGram。請換一個密碼。"_q },
 		{ u"LuminaFakeCrashModeHeader"_q, u"輸入此密碼後"_q },
 		{ u"LuminaFakeCrashModeExit"_q, u"直接退出 App"_q },
@@ -818,7 +817,7 @@ namespace {
 		{ u"LuminaDuressLogoutCurrentWarning"_q, u"觸發後只登出目前帳號。請先確認這個帳號在其他裝置也有登入，才收得到登入驗證碼。"_q },
 		{ u"LuminaDuressLogoutAllWarning"_q, u"觸發後這台裝置上的所有帳號都會登出。請確認每個帳號的手機號碼都能收簡訊驗證碼，否則帳號將無法再登入。"_q },
 		{ u"LuminaDuressLocalDataWarning"_q, u"這台裝置上的私密聊天會永久消失，這台裝置為該帳號保存的草稿、快取與本機設定也會一併清除。"_q },
-		{ u"LuminaDuressDeferredInfo"_q, u"在密碼鎖畫面觸發時，LuminaGram 會立刻隱藏、完成登出，幾秒後關閉。在偽裝保險箱輸入時，以及 LuminaGram 剛啟動、還沒解鎖就在密碼鎖畫面觸發「登出目前帳號」時，帳號資料仍是加密封存的，因此會先記下，等下次用真正的密碼打開帳號時，在顯示任何內容之前完成登出。"_q },
+		{ u"LuminaDuressDeferredInfo"_q, u"在密碼鎖畫面觸發時，LuminaGram 會立刻隱藏、完成登出，幾秒後關閉。在偽裝保險箱輸入時，偽裝畫面會像輸入錯誤密碼一樣照常顯示；偽裝畫面一關閉，LuminaGram 就會在背景完成登出（不顯示任何畫面）然後結束（若改為在偽裝畫面輸入真正的秘密密碼，會在顯示任何帳號之前完成登出）。如果帳號仍被密碼鎖加密封存：選擇「登出所有帳號」時，關閉偽裝畫面會改為直接清除這台裝置上 LuminaGram 的所有資料，和密碼鎖畫面本身的「登出」相同；其他情況則要等下次用真正的密碼鎖密碼打開帳號時，在顯示任何內容之前完成登出。"_q },
 		{ u"LuminaDuressConfirmButton"_q, u"啟用"_q },
 		// login guard (D-32)
 		{ u"LuminaSessionGuardHeader"_q, u"登入守衛"_q },

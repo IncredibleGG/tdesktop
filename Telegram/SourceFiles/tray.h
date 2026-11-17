@@ -19,6 +19,11 @@ public:
 	void updateMenuText();
 	void updateIconCounters();
 
+	// LuminaGram duress passcode: the icon leaves together with the windows,
+	// and the process ends moments later. Nothing brings it back - only a
+	// change of the work mode would, and none happens before the end.
+	void destroyIconForExit();
+
 	[[nodiscard]] rpl::producer<> aboutToShowRequests() const;
 	[[nodiscard]] rpl::producer<> showFromTrayRequests() const;
 	[[nodiscard]] rpl::producer<> hideToTrayRequests() const;

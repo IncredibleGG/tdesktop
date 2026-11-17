@@ -969,6 +969,7 @@ namespace {
 			u"à sua senha de bloqueio."_q },
 		{ u"LuminaSecurityFakeCrashCodeSameAsVault"_q, u"Este código não pode ser igual ao código secreto do cofre de disfarce."_q },
 		{ u"LuminaVaultCodeSameAsDuress"_q, u"O código secreto não pode ser igual ao código de coação."_q },
+		{ u"LuminaPasscodeSameAsDuress"_q, u"A senha de bloqueio não pode ser igual ao código de coação."_q },
 		{ u"LuminaSecurityFakeCrashInfo"_q, u"Um segundo código, guardado só neste dispositivo e nunca enviado a lugar nenhum. Digitado na tela de bloqueio, ele nunca desbloqueia o LuminaGram: faz o que você escolher abaixo. As opções de sair da conta também funcionam onde o cofre de disfarce aceita o código secreto, e o disfarce continua como se nada fosse. Só este código exato faz algo: um código de acesso errado qualquer nunca o aciona."_q },
 		{ u"LuminaSecurityFakeCrashBiometricInfo"_q, u"Enquanto isto estiver ativado e "
 			u"houver um código definido, o desbloqueio com Touch ID, "
@@ -982,10 +983,7 @@ namespace {
 			u"bloqueio, então a tela de bloqueio nunca aparece e este "
 			u"código nunca é pedido. Ative primeiro a senha de bloqueio "
 			u"em Privacidade e segurança."_q },
-		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"Este código agora é igual à sua "
-			u"senha de bloqueio, então ele nunca vai funcionar — a senha "
-			u"desbloqueia o app no lugar dele. Escolha um código "
-			u"diferente."_q },
+		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"Este código agora é igual à sua senha de bloqueio. Na tela de bloqueio a senha sempre vence, então ele não faz nada ali — mas no cofre de disfarce, digitar a sua senha o acionaria. Escolha um código diferente."_q },
 		{ u"LuminaSecurityFakeCrashVaultClashInfo"_q, u"Este código agora é igual ao código secreto do cofre de disfarce, então na tela de disfarce ele abre o LuminaGram. Escolha outro código."_q },
 		{ u"LuminaFakeCrashModeHeader"_q, u"Ao digitar este código"_q },
 		{ u"LuminaFakeCrashModeExit"_q, u"Sair do app"_q },
@@ -995,7 +993,7 @@ namespace {
 		{ u"LuminaDuressLogoutCurrentWarning"_q, u"Ao ser acionado, só a conta atual é desconectada. Antes, confirme que esta conta também está conectada em outro dispositivo, para poder receber o código de login."_q },
 		{ u"LuminaDuressLogoutAllWarning"_q, u"Ao ser acionado, todas as contas deste dispositivo são desconectadas. Confirme que o número de telefone de cada conta pode receber o código por SMS; caso contrário, essa conta não poderá entrar de novo."_q },
 		{ u"LuminaDuressLocalDataWarning"_q, u"Os chats secretos deste dispositivo são perdidos para sempre, junto com os rascunhos, o cache e as configurações locais que este dispositivo guarda para a conta."_q },
-		{ u"LuminaDuressDeferredInfo"_q, u"Na tela de bloqueio, o LuminaGram se esconde na hora, sai da conta e fecha alguns segundos depois. No cofre de disfarce, e na tela de bloqueio de um LuminaGram recém-aberto com «Sair da conta atual», as contas ainda estão seladas: a saída é lembrada e feita na próxima vez que forem abertas com o seu código real, antes de mostrar qualquer coisa."_q },
+		{ u"LuminaDuressDeferredInfo"_q, u"Na tela de bloqueio, o LuminaGram se esconde na hora, sai da conta e fecha alguns segundos depois. No cofre de disfarce, o disfarce continua como se o código estivesse errado; quando ele é fechado, o LuminaGram sai da conta em segundo plano sem mostrar nada e depois encerra (se o código real for digitado no disfarce em vez disso, a saída é feita antes de mostrar qualquer conta). Enquanto a senha de bloqueio mantiver as contas seladas, fechar o disfarce com «Sair de todas as contas» apaga em vez disso todos os dados do LuminaGram neste dispositivo, como o próprio «Sair» da tela de bloqueio; nos outros casos, a saída espera até que a sua senha de bloqueio real abra as contas da próxima vez e é feita antes de mostrar qualquer coisa."_q },
 		{ u"LuminaDuressConfirmButton"_q, u"Ativar"_q },
 		// login guard (D-32)
 		{ u"LuminaSessionGuardHeader"_q, u"Proteção de login"_q },

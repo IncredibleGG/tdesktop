@@ -1009,6 +1009,7 @@ namespace {
 			u"que tu código de acceso."_q },
 		{ u"LuminaSecurityFakeCrashCodeSameAsVault"_q, u"Este código no puede ser igual al código secreto de la caja fuerte de disfraz."_q },
 		{ u"LuminaVaultCodeSameAsDuress"_q, u"El código secreto no puede ser igual al código de coacción."_q },
+		{ u"LuminaPasscodeSameAsDuress"_q, u"El código de acceso no puede ser igual al código de coacción."_q },
 		{ u"LuminaSecurityFakeCrashInfo"_q, u"Un segundo código, guardado solo en este dispositivo y nunca enviado a ningún sitio. Escrito en la pantalla de bloqueo nunca desbloquea LuminaGram: hace lo que elijas abajo. Las opciones de cerrar sesión también funcionan donde la caja fuerte de disfraz acepta su código secreto, y el señuelo sigue como si nada. Solo este código exacto hace algo: un código de acceso incorrecto cualquiera nunca lo activa."_q },
 		{ u"LuminaSecurityFakeCrashBiometricInfo"_q, u"Mientras esto esté activado y haya "
 			u"un código establecido, el desbloqueo con Touch ID, Windows "
@@ -1023,10 +1024,7 @@ namespace {
 			u"acceso, así que la pantalla de bloqueo nunca aparece y "
 			u"este código nunca se pide. Activa primero el código de "
 			u"acceso en Privacidad y seguridad."_q },
-		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"Este código ahora es igual que tu "
-			u"código de acceso, así que nunca se activará: el código de "
-			u"acceso desbloquea la aplicación en su lugar. Elige un "
-			u"código diferente."_q },
+		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"Este código ahora es igual que tu código de acceso. En la pantalla de bloqueo siempre gana el código de acceso, así que ahí no hace nada, pero en la caja fuerte de disfraz escribir tu código de acceso lo activaría. Elige un código diferente."_q },
 		{ u"LuminaSecurityFakeCrashVaultClashInfo"_q, u"Este código ahora es igual al código secreto de la caja fuerte de disfraz, así que en la pantalla de disfraz abre LuminaGram. Elige otro código."_q },
 		{ u"LuminaFakeCrashModeHeader"_q, u"Al escribir este código"_q },
 		{ u"LuminaFakeCrashModeExit"_q, u"Salir de la app"_q },
@@ -1036,7 +1034,7 @@ namespace {
 		{ u"LuminaDuressLogoutCurrentWarning"_q, u"Al activarse, solo se cierra la sesión de la cuenta actual. Antes, asegúrate de que esta cuenta también tenga la sesión iniciada en otro dispositivo, para poder recibir el código de inicio de sesión."_q },
 		{ u"LuminaDuressLogoutAllWarning"_q, u"Al activarse, se cierra la sesión de todas las cuentas de este dispositivo. Asegúrate de que el número de teléfono de cada cuenta pueda recibir el código por SMS; si no, esa cuenta no podrá volver a iniciar sesión."_q },
 		{ u"LuminaDuressLocalDataWarning"_q, u"Los chats secretos de este dispositivo se pierden para siempre, junto con los borradores, la caché y los ajustes locales que este dispositivo guarda para la cuenta."_q },
-		{ u"LuminaDuressDeferredInfo"_q, u"En la pantalla de bloqueo, LuminaGram se oculta al instante, cierra la sesión y se cierra unos segundos después. En la caja fuerte de disfraz, y en la pantalla de bloqueo de un LuminaGram recién iniciado con «Cerrar sesión de la cuenta actual», las cuentas siguen selladas: el cierre de sesión se recuerda y se hace la próxima vez que se abran con tu código real, antes de mostrar nada."_q },
+		{ u"LuminaDuressDeferredInfo"_q, u"En la pantalla de bloqueo, LuminaGram se oculta al instante, cierra la sesión y se cierra unos segundos después. En la caja fuerte de disfraz, el señuelo sigue como si el código fuera incorrecto; al cerrarlo, LuminaGram cierra la sesión en segundo plano sin mostrar nada y luego termina (si en cambio se escribe el código real en el señuelo, la sesión se cierra antes de mostrar ninguna cuenta). Mientras un código de acceso mantenga las cuentas selladas, cerrar el señuelo con «Cerrar sesión de todas las cuentas» borra en su lugar todos los datos de LuminaGram en este dispositivo, como el propio «Cerrar sesión» de la pantalla de bloqueo; en los demás casos, el cierre de sesión espera a que tu código de acceso real abra las cuentas la próxima vez y se hace antes de mostrar nada."_q },
 		{ u"LuminaDuressConfirmButton"_q, u"Activar"_q },
 		// login guard (D-32)
 		{ u"LuminaSessionGuardHeader"_q, u"Protección de inicio de sesión"_q },

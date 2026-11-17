@@ -135,9 +135,10 @@ void CheckCodeIsLocalPasscode(
 }
 
 // The explicit confirmation every logout mode goes through before it can be
-// armed - picking it, or switching the feature on while it is the stored
-// mode. Nothing else ever arms a logout: the fake-crash alert's users were
-// moved to Exit, and a missing or unknown mode reads as Exit.
+// armed: picking it below is the only way to arm one. Switching the feature
+// on starts at Exit, the fake-crash era's users start off, a missing or
+// unknown mode reads as off, and a restored backup never carries a logout
+// mode (FilterDuressBackupPayload()).
 //
 // `done(true)` once confirmed; `done(false)` however else the box goes away
 // (Cancel, Escape, a click outside - Ui::ConfirmBox reports all of them as a
@@ -165,17 +166,13 @@ void ConfirmLogoutMode(
 	}));
 }
 
-// The feature switch. Not the shared toggle-row shape: switching on with a
-// logout mode stored has to stop for the confirmation, and a cancelled
-// confirmation has to put the switch back. `revert` re-reads the store, which
-// still says "off"; the guard on toggledChanges() then keeps every
-// programmatic flip - this one, a restored backup, a panic wipe - from being
-// written straight back into the store.
-void AddEnableRow(
-		not_null<Ui::VerticalLayout*> container,
-		not_null<Window::SessionController*> controller) {
-	const auto revert = container->lifetime().make_state<
-		rpl::event_stream<>>();
+// The feature switch. On means Exit, the one mode that destroys nothing; off
+// forgets the mode (the code is kept), so a logout mode is always chosen
+// again, through its confirmation, after the feature was off - the same as on
+// Android, where "off" is one more value of the same preference. The guard on
+// toggledChanges() keeps every programmatic flip - a restored backup, a panic
+// wipe - from being written straight back into the store.
+void AddEnableRow(not_null<Ui::VerticalLayout*> container) {
 	const auto button = container->add(object_ptr<Ui::SettingsButton>(
 		container,
 		TrValue(u"LuminaSecurityFakeCrashEnable"_q),
@@ -183,31 +180,15 @@ void AddEnableRow(
 	))->toggleOn(rpl::single(
 		rpl::empty
 	) | rpl::then(
-		rpl::merge(Changes(), revert->events())
+		Changes()
 	) | rpl::map([] {
 		return FakeCrashEnabled();
 	}));
 	button->toggledChanges(
-	) | rpl::on_next([=](bool value) {
-		if (value == FakeCrashEnabled()) {
-			return;
-		} else if (!value) {
-			SetFakeCrashEnabled(false);
-			return;
-		}
-		const auto mode = CurrentDuressMode();
-		if (!IsLogoutMode(mode)) {
-			SetFakeCrashEnabled(true);
-			return;
-		}
-		ConfirmLogoutMode(controller, mode, crl::guard(button, [=](
-				bool confirmed) {
-			if (confirmed) {
-				SetFakeCrashEnabled(true);
-			} else {
-				revert->fire({});
-			}
-		}));
+	) | rpl::filter([](bool value) {
+		return (value != FakeCrashEnabled());
+	}) | rpl::on_next([](bool value) {
+		SetFakeCrashEnabled(value);
 	}, button->lifetime());
 }
 
@@ -269,8 +250,10 @@ void EditCodeBox(not_null<Ui::GenericBox*> box) {
 		// The duress code must not be the passcode. The lock screen would
 		// still behave sanely if it were - it only consults the duress code
 		// after the passcode has already been rejected, so a collision costs
-		// the feature, not the account - but a code that silently never fires
-		// is worth refusing at the one moment we can explain why.
+		// the feature there, not the account - but the disguise vault cannot
+		// check the passcode at all, so in a logout mode typing the passcode
+		// there would log out. The passcode page refuses the same collision
+		// from its side (settings_local_passcode.cpp).
 		*checking = true;
 		CheckCodeIsLocalPasscode(entered, box, [=](bool clash) {
 			*checking = false;
@@ -294,8 +277,8 @@ void EditCodeBox(not_null<Ui::GenericBox*> box) {
 // "When this code is entered": the three modes, as radio rows inside the
 // block that only shows while the feature is on. Placed under the code row
 // rather than above it, so the code row is not read as another choice; Exit
-// is listed first because it is this platform's default and the only one that
-// destroys nothing.
+// is listed first because switching the feature on selects it, and it is the
+// only one that destroys nothing.
 void AddModeRows(
 		not_null<Ui::VerticalLayout*> container,
 		not_null<Window::SessionController*> controller) {
@@ -397,8 +380,10 @@ void AddModeRows(
 		lines.append(Tr(u"LuminaSecurityFakeCrashNoPasscodeInfo"_q));
 	}
 	if (FakeCrashArmed() && codeIsPasscode) {
-		// Only reachable by changing the passcode lock to the duress code
-		// after setting it, which the passcode page knows nothing about.
+		// This page refuses a duress code equal to the passcode, and the
+		// passcode page now refuses a passcode equal to the duress code, so
+		// this is only reachable through a restored backup or a passcode
+		// changed to the duress code before the passcode page checked it.
 		lines.append(Tr(u"LuminaSecurityFakeCrashCodeClashInfo"_q));
 	}
 	if (FakeCrashArmed() && SameAsVaultCode(FakeCrashCode())) {
@@ -417,7 +402,7 @@ void AddFakeCrashRows(
 	Ui::AddSubsectionTitle(
 		container,
 		TrValue(u"LuminaSecurityFakeCrashHeader"_q));
-	AddEnableRow(container, controller);
+	AddEnableRow(container);
 
 	// Built once and toggled reactively, like the provider blocks on the
 	// translation page: switching the toggle never rebuilds the block and

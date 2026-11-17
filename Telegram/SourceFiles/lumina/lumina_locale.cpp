@@ -731,11 +731,12 @@ struct Registration {
 		{ u"LuminaSecurityFakeCrashCodeSameAsPasscode"_q, u"This code can't be the same as your passcode lock."_q },
 		{ u"LuminaSecurityFakeCrashCodeSameAsVault"_q, u"This code can't be the same as the disguise vault's secret code."_q },
 		{ u"LuminaVaultCodeSameAsDuress"_q, u"The secret code can't be the same as the duress passcode."_q },
+		{ u"LuminaPasscodeSameAsDuress"_q, u"The passcode can't be the same as the duress passcode."_q },
 		{ u"LuminaSecurityFakeCrashInfo"_q, u"A second code, kept only on this device and never sent anywhere. Typed on the passcode lock screen it never unlocks LuminaGram - it does what you choose below. The logout options also work wherever the disguise vault takes its secret code, and the decoy simply carries on. Only this exact code does anything: an ordinary wrong passcode never triggers it."_q },
 		{ u"LuminaSecurityFakeCrashBiometricInfo"_q, u"While this is on and a code is set, unlocking with Touch ID, Windows Hello or your system password is turned off: a fingerprint opens the app without ever asking for the passcode, so it would go straight past this code. Clearing the code, or turning this off, brings it back."_q },
 		{ u"LuminaSecurityFakeCrashNoCodeInfo"_q, u"No code is set yet, so nothing will happen on the lock screen."_q },
 		{ u"LuminaSecurityFakeCrashNoPasscodeInfo"_q, u"LuminaGram has no passcode lock, so the lock screen never appears and this code is never asked for. Turn on the passcode lock in Privacy and Security first."_q },
-		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"This code is now the same as your passcode lock, so it will never fire - the passcode unlocks the app instead. Choose a different code."_q },
+		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"This code is now the same as your passcode lock. On the lock screen the passcode always wins, so the code does nothing there - but at the disguise vault, typing your passcode would trigger it. Choose a different code."_q },
 		{ u"LuminaSecurityFakeCrashVaultClashInfo"_q, u"This code is now the same as the disguise vault's secret code, so at the disguise screen it opens LuminaGram instead. Choose a different code."_q },
 		{ u"LuminaFakeCrashModeHeader"_q, u"When this code is entered"_q },
 		{ u"LuminaFakeCrashModeExit"_q, u"Exit the app"_q },
@@ -745,7 +746,7 @@ struct Registration {
 		{ u"LuminaDuressLogoutCurrentWarning"_q, u"When triggered, only the current account is logged out. First make sure this account is also logged in on another device, so you can still receive the login code."_q },
 		{ u"LuminaDuressLogoutAllWarning"_q, u"When triggered, every account on this device is logged out. Make sure each account's phone number can receive SMS login codes - otherwise that account can't be logged in again."_q },
 		{ u"LuminaDuressLocalDataWarning"_q, u"Secret chats on this device are lost for good, along with the drafts, cache and local settings this device keeps for the account."_q },
-		{ u"LuminaDuressDeferredInfo"_q, u"On the lock screen LuminaGram hides at once, logs out, and closes a few seconds later. At the disguise vault - and on the lock screen of a LuminaGram that was just started, for “Log out the current account” - the accounts are still sealed, so the logout is remembered and done the next time they are opened with your real code, before anything is shown."_q },
+		{ u"LuminaDuressDeferredInfo"_q, u"On the lock screen LuminaGram hides at once, logs out, and closes a few seconds later. At the disguise vault the decoy carries on as if the code were wrong; once it is closed, LuminaGram logs out in the background without showing anything and then quits (if the real code is typed into the decoy instead, the logout is done before any account is shown). While a passcode lock still seals the accounts, closing the decoy with “Log out all accounts” wipes all of LuminaGram's data on this device instead, like the lock screen's own “Log out”; otherwise the logout waits until your real passcode next opens the accounts, and runs before anything is shown."_q },
 		{ u"LuminaDuressConfirmButton"_q, u"Turn on"_q },
 		// login guard (D-32). Keys and texts are Android's; LuminaSessionQr* has no
 		// caller on desktop - see lumina_session_guard.h.

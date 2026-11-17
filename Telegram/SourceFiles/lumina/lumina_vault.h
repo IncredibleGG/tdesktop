@@ -130,7 +130,10 @@ void SetDecoyNotepadContent(const QString &content);
 [[nodiscard]] rpl::producer<> VaultChanges();
 
 // The gate. True means "carry on into the real app", false means the caller
-// must quit. Never throws.
+// must quit - unless the duress passcode left a logout pending at the gate,
+// in which case Core::Application::run() starts without showing anything,
+// logs out and ends the process itself (Lumina::DuressLogoutPending(),
+// lumina_fake_crash.h). Never throws.
 [[nodiscard]] bool VaultGatePassed();
 
 namespace VaultDetail {
