@@ -1,3 +1,27 @@
+7.4.2 (18.11.26)
+
+- Hide repeated ads now recognises edited repeats. A long post that the
+  same sender posts again with a line added on top (a short heading, for
+  example), one line added, removed or changed, or most of its paragraphs
+  unchanged counts as the same post. Windows line endings no longer make
+  two copies look different. After the update the data it keeps is
+  rebuilt, so messages already folded fold again once they are seen again.
+- Hide repeated ads: a new per-group option, "Also fold admins and the
+  group's channel", in the group's menu > Hide repeated ads, off by
+  default. When it is on, repeats that the owner, an admin or the group's
+  linked channel post themselves (pinned posts and the channel's automatic
+  forwards included) are folded like anyone else's. Members' re-posts of
+  their announcements stay protected, and your own messages are never
+  folded.
+- Profile: the info rows LuminaGram adds (IDs, creation and registration
+  dates, data centre, Group Settings, Recent Actions) now have icons in the
+  same column as the other rows. On group and channel profiles they come
+  after the description.
+- Formatting toolbar: select text in the message field and a small bar
+  with Bold, Italic, Underline, Strikethrough, Monospace, Spoiler, Quote,
+  Link and Clear formatting appears above the input area. Off by default;
+  turn it on in Settings > LuminaGram > Chats > "Formatting toolbar".
+
 7.4.1 (18.11.26)
 
 - Hide repeated ads: a new option in Settings > LuminaGram > Chats, off by
