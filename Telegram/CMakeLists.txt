@@ -2006,6 +2006,13 @@ PRIVATE
     settings/sections/settings_lumina_translate.h
     settings/sections/settings_lumina_voice.cpp
     settings/sections/settings_lumina_voice.h
+    lumina/ad_shield_tables.h
+    lumina/lumina_ad_shield.cpp
+    lumina/lumina_ad_shield.h
+    lumina/lumina_ad_shield_account.cpp
+    lumina/lumina_ad_shield_account.h
+    lumina/lumina_ad_shield_store.cpp
+    lumina/lumina_ad_shield_store.h
     lumina/lumina_ai_editor.cpp
     lumina/lumina_ai_editor.h
     # LuminaGram: shared 16k mono PCM decoder used by the on-device STT engine.

@@ -13,3 +13,9 @@ Telegram/Resources/zxcvbn/*.txt text eol=lf
 
 # Raw float tables, such as the 3D diamond model data
 *.bin binary
+
+# AdShield conformance data must stay byte-identical (no CRLF conversion)
+lumina-dev/adshield-check/vectors/** -text
+lumina-dev/adshield-check/corpus/** -text
+lumina-dev/adshield-check/golden/** -text
+Telegram/SourceFiles/lumina/ad_shield_tables.h -text
