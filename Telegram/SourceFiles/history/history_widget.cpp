@@ -169,6 +169,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_keys.h"
 #include "lumina/lumina_ad_fold.h"
 #include "lumina/lumina_ai_editor.h"
+#include "lumina/lumina_format_bar.h"
 #include "lumina/lumina_quick_replies.h"
 #include "lumina/lumina_send_pipeline.h"
 #include "lumina/lumina_translate_caption.h"
@@ -599,6 +600,22 @@ HistoryWidget::HistoryWidget(
 		return false;
 	});
 	InitMessageFieldFade(_field, st::historyComposeField.textBg);
+
+	// LuminaGram #23: the floating formatting bar (off by default; nothing
+	// is created before the user turns it on and selects text). The message
+	// list ends where the compose stack starts, reply bar and translate
+	// preview included.
+	Lumina::AttachFormatBar({
+		.field = _field.data(),
+		.overlay = this,
+		.composeTop = [=] { return _scroll->y() + _scroll->height(); },
+		.suppressed = [=] {
+			return (_tabbedPanel && !_tabbedPanel->isHidden())
+				|| (_autocomplete && !_autocomplete->isHidden())
+				|| (_inlineResults && !_inlineResults->isHidden())
+				|| (_attachBotsMenu && !_attachBotsMenu->isHidden());
+		},
+	});
 
 	setupFastButtonMode();
 	initAiButton();
@@ -2309,6 +2326,7 @@ void HistoryWidget::orderWidgets() {
 	if (_sendAsFileTooltipManager) {
 		_sendAsFileTooltipManager->raise();
 	}
+	Lumina::RaiseFormatBar(_field.data()); // LuminaGram #23
 	_attachDragAreas.document->raise();
 	_attachDragAreas.photo->raise();
 }
@@ -7865,6 +7883,7 @@ void HistoryWidget::moveFieldControls() {
 	if (_sendRestriction) {
 		_sendRestriction->setGeometry(fullWidthButtonRect);
 	}
+	Lumina::MoveFormatBar(_field.data()); // LuminaGram #23
 }
 
 void HistoryWidget::updateFieldSize() {

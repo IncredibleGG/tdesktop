@@ -959,6 +959,8 @@ namespace {
 		{ u"LuminaHideVoiceButton"_q, u"隐藏语音消息按钮"_q },
 		{ u"LuminaHideSendAsButton"_q, u"隐藏发送身份按钮"_q },
 		{ u"LuminaInputRowInfo"_q, u"隐藏输入框为空时出现的语音／视频消息按钮，以及用来选择以哪个账号或频道身份发送消息的发送身份按钮。默认关闭；其他输入控件不受影响。"_q },
+		{ u"LuminaFormattingBar"_q, u"格式工具栏"_q },
+		{ u"LuminaFormattingBarInfo"_q, u"在输入框中选中文字时，在输入区上方浮现格式按钮：粗体、斜体、下划线、删除线、等宽、剧透、引用、链接和清除格式，效果与右键“格式”菜单及快捷键相同。默认关闭。"_q },
 		// LuminaGram Batch 4 (#14 double-tap edit, #16 call confirm, #17 menu, #22 keyword filter).
 		{ u"LuminaDoubleTapEditTitle"_q, u"编辑"_q },
 		{ u"LuminaDoubleTapEditRow"_q, u"双击自己的消息以编辑"_q },

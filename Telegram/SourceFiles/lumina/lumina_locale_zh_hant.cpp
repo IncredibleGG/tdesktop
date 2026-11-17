@@ -959,6 +959,8 @@ namespace {
 		{ u"LuminaHideVoiceButton"_q, u"隱藏語音訊息按鈕"_q },
 		{ u"LuminaHideSendAsButton"_q, u"隱藏傳送身分按鈕"_q },
 		{ u"LuminaInputRowInfo"_q, u"隱藏輸入框為空時出現的語音／視訊訊息按鈕，以及用來選擇以哪個帳號或頻道身分發送訊息的傳送身分按鈕。預設關閉；其他輸入控制項不受影響。"_q },
+		{ u"LuminaFormattingBar"_q, u"格式工具列"_q },
+		{ u"LuminaFormattingBarInfo"_q, u"在輸入框中選取文字時，於輸入區上方浮現格式按鈕：粗體、斜體、底線、刪除線、等寬、劇透、引用、連結和清除格式，效果與右鍵「格式」選單及快捷鍵相同。預設關閉。"_q },
 		// LuminaGram Batch 4 (#14 double-tap edit, #16 call confirm, #17 menu, #22 keyword filter).
 		{ u"LuminaDoubleTapEditTitle"_q, u"編輯"_q },
 		{ u"LuminaDoubleTapEditRow"_q, u"雙擊自己的訊息以編輯"_q },

@@ -792,6 +792,8 @@ namespace {
 		{ u"LuminaHideVoiceButton"_q, u"Sesli mesaj düğmesini gizle"_q },
 		{ u"LuminaHideSendAsButton"_q, u"«Şu olarak gönder» düğmesini gizle"_q },
 		{ u"LuminaInputRowInfo"_q, u"Mesaj alanı boşken görünen sesli/görüntülü mesaj düğmesini ve bir mesajın hangi hesap ya da kanal adına gönderileceğini seçmeye yarayan «Şu olarak gönder» düğmesini gizler. Varsayılan olarak kapalıdır; diğer giriş denetimleri değişmez."_q },
+		{ u"LuminaFormattingBar"_q, u"Biçimlendirme araç çubuğu"_q },
+		{ u"LuminaFormattingBarInfo"_q, u"Mesaj alanında metin seçtiğinizde, yazma alanının üstünde Kalın, İtalik, Altı çizili, Üstü çizili, Eş aralıklı, Spoiler, Alıntı, Bağlantı ve Biçimlendirmeyi temizle düğmelerini içeren küçük bir araç çubuğu belirir; sağ tık «Biçimlendirme» menüsü ve klavye kısayollarıyla aynı işlemleri yapar. Varsayılan olarak kapalıdır."_q },
 		// LuminaGram Batch 4 (#14 double-tap edit, #16 call confirm, #17 menu, #22 keyword filter).
 		{ u"LuminaDoubleTapEditTitle"_q, u"Düzenleme"_q },
 		{ u"LuminaDoubleTapEditRow"_q, u"Düzenlemek için kendi mesajınıza çift dokunun"_q },

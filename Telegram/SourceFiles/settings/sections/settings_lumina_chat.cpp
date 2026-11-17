@@ -68,6 +68,18 @@ void AddInputRowToggles(not_null<Ui::VerticalLayout*> container) {
 	Ui::AddDividerText(
 		container,
 		Lumina::TrValue(u"LuminaInputRowInfo"_q));
+
+	// #23: the floating formatting bar (lumina/lumina_format_bar.h). Off by
+	// default, the key Android uses; open composers follow the switch live.
+	Ui::AddSkip(container);
+	AddToggle(
+		container,
+		Lumina::TrValue(u"LuminaFormattingBar"_q),
+		u"formattingBar"_q);
+	Ui::AddSkip(container);
+	Ui::AddDividerText(
+		container,
+		Lumina::TrValue(u"LuminaFormattingBarInfo"_q));
 }
 
 // #21: experimental larger MTProto transfer parts / more parallel download

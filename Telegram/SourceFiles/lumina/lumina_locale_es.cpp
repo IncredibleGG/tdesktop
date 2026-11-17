@@ -1207,6 +1207,12 @@ namespace {
 			u"como» para elegir con qué cuenta o canal se publica un mensaje. "
 			u"Desactivado por defecto; los demás controles de escritura no "
 			u"cambian."_q },
+		{ u"LuminaFormattingBar"_q, u"Barra de formato"_q },
+		{ u"LuminaFormattingBarInfo"_q, u"Al seleccionar texto en el campo de mensaje, aparece sobre el área de "
+			u"escritura una pequeña barra con Negrita, Cursiva, Subrayado, Tachado, "
+			u"Monoespaciado, Spoiler, Cita, Enlace y Borrar formato: las mismas "
+			u"acciones que el menú «Formato» del clic derecho y los atajos de "
+			u"teclado. Desactivada por defecto."_q },
 		// LuminaGram Batch 4 (#14 double-tap edit, #16 call confirm, #17 menu, #22 keyword filter).
 		{ u"LuminaDoubleTapEditTitle"_q, u"Edición"_q },
 		{ u"LuminaDoubleTapEditRow"_q, u"Doble toque en tu mensaje para editar"_q },

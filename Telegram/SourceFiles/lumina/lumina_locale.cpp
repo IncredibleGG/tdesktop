@@ -884,6 +884,8 @@ struct Registration {
 		{ u"LuminaHideVoiceButton"_q, u"Hide voice message button"_q },
 		{ u"LuminaHideSendAsButton"_q, u"Hide send-as button"_q },
 		{ u"LuminaInputRowInfo"_q, u"Hide the voice/video message button that appears when the message field is empty, and the send-as button for choosing which account or channel a message is posted as. Off by default; other input controls are unchanged."_q },
+		{ u"LuminaFormattingBar"_q, u"Formatting toolbar"_q },
+		{ u"LuminaFormattingBarInfo"_q, u"When you select text in the message field, a small toolbar appears above the input area with Bold, Italic, Underline, Strikethrough, Monospace, Spoiler, Quote, Link and Clear formatting - the same actions as the right-click Formatting menu and the keyboard shortcuts. Off by default."_q },
 
 		// LuminaGram #21: increase MTProto transfer part size / parallelism.
 		{ u"LuminaTransferBoostTitle"_q, u"Large file transfers"_q },

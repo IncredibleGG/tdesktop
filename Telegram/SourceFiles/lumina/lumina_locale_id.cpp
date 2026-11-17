@@ -1160,6 +1160,12 @@ namespace {
 			u"muncul saat kolom pesan kosong, dan tombol «Kirim sebagai» untuk "
 			u"memilih akun atau kanal yang dipakai untuk memposting pesan. "
 			u"Nonaktif secara bawaan; kontrol input lainnya tidak berubah."_q },
+		{ u"LuminaFormattingBar"_q, u"Bilah alat format"_q },
+		{ u"LuminaFormattingBarInfo"_q, u"Saat Anda memilih teks di kolom pesan, bilah alat kecil muncul di atas "
+			u"area ketik dengan Tebal, Miring, Garis bawah, Coret, Monospace, "
+			u"Spoiler, Kutipan, Tautan, dan Hapus format - tindakan yang sama "
+			u"dengan menu «Format» klik kanan dan pintasan keyboard. Nonaktif "
+			u"secara bawaan."_q },
 		// LuminaGram Batch 4 (#14 double-tap edit, #16 call confirm, #17 menu, #22 keyword filter).
 		{ u"LuminaDoubleTapEditTitle"_q, u"Pengeditan"_q },
 		{ u"LuminaDoubleTapEditRow"_q, u"Ketuk dua kali pesan Anda untuk mengedit"_q },

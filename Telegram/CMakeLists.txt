@@ -2092,6 +2092,8 @@ PRIVATE
     lumina/lumina_file_guard.h
     lumina/lumina_file_guard_settings.cpp
     lumina/lumina_file_guard_settings.h
+    lumina/lumina_format_bar.cpp
+    lumina/lumina_format_bar.h
     lumina/lumina_forward_actions.cpp
     lumina/lumina_forward_actions.h
     lumina/lumina_glossary.cpp

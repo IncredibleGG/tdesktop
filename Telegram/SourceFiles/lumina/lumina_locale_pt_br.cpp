@@ -1164,6 +1164,12 @@ namespace {
 			u"como», usado para escolher com qual conta ou canal a mensagem é "
 			u"publicada. Desativado por padrão; os outros controles de "
 			u"digitação não mudam."_q },
+		{ u"LuminaFormattingBar"_q, u"Barra de formatação"_q },
+		{ u"LuminaFormattingBarInfo"_q, u"Ao selecionar texto no campo de mensagem, uma pequena barra aparece "
+			u"acima da área de digitação com Negrito, Itálico, Sublinhado, Tachado, "
+			u"Monoespaçado, Spoiler, Citação, Link e Limpar formatação: as mesmas "
+			u"ações do menu «Formatação» do clique direito e dos atalhos de "
+			u"teclado. Desativada por padrão."_q },
 		// LuminaGram Batch 4 (#14 double-tap edit, #16 call confirm, #17 menu, #22 keyword filter).
 		{ u"LuminaDoubleTapEditTitle"_q, u"Edição"_q },
 		{ u"LuminaDoubleTapEditRow"_q, u"Toque duplo na sua mensagem para editar"_q },

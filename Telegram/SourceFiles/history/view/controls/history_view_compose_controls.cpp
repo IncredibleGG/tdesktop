@@ -105,6 +105,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "iv/iv_rich_page.h"
 #include "lang/lang_keys.h"
 #include "lumina/lumina_ai_editor.h"
+#include "lumina/lumina_format_bar.h"
 #include "lumina/lumina_quick_replies.h"
 #include "lumina/lumina_translate_preview_bar.h"
 #include "lumina/lumina_settings.h"
@@ -146,6 +147,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_credits.h"
 #include "styles/style_iv.h"
 #include "styles/style_layers.h"
+#include "styles/style_media_view.h" // LuminaGram #23: storiesComposeControls
 
 namespace HistoryView {
 namespace {
@@ -2494,6 +2496,7 @@ void ComposeControls::raisePanels() {
 	if (_sendAsFileTooltipManager) {
 		_sendAsFileTooltipManager->raise();
 	}
+	Lumina::RaiseFormatBar(_field); // LuminaGram #23
 }
 
 void ComposeControls::showForGrab() {
@@ -3350,6 +3353,23 @@ void ComposeControls::initField() {
 	) | rpl::on_next([=] {
 		saveDraftDelayed();
 	}, _field->lifetime());
+
+	// LuminaGram #23: the floating formatting bar (off by default). Chats,
+	// threads, topics, scheduled, business shortcut / welcome messages - but
+	// not the story reply field, a dark overlay with its own style.
+	if (&_st != &st::storiesComposeControls) {
+		Lumina::AttachFormatBar({
+			.field = _field,
+			.overlay = _parent,
+			.composeTop = [=] { return _wrap->y(); },
+			.suppressed = [=] {
+				return (_tabbedPanel && !_tabbedPanel->isHidden())
+					|| (_autocomplete && !_autocomplete->isHidden())
+					|| (_inlineResults && !_inlineResults->isHidden())
+					|| (_attachBotsMenu && !_attachBotsMenu->isHidden());
+			},
+		});
+	}
 }
 
 void ComposeControls::updateSubmitSettings() {
@@ -5321,6 +5341,7 @@ void ComposeControls::updateControlsGeometry(QSize size) {
 	_voiceRecordBar->moveToLeft(
 		0,
 		size.height() - _voiceRecordBar->height());
+	Lumina::MoveFormatBar(_field); // LuminaGram #23
 }
 
 void ComposeControls::updateControlsVisibility() {

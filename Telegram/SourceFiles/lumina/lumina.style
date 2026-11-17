@@ -93,3 +93,42 @@ luminaInfoIconRecentActions: icon {{ "menu/show_in_chat", infoIconFg, point(4px,
 luminaInfoIconId: icon {{ "menu/info", infoIconFg, point(4px, 4px) }};
 luminaInfoIconDate: icon {{ "menu/calendar", infoIconFg, point(4px, 4px) }};
 luminaInfoIconDc: icon {{ "menu/devices", infoIconFg, point(4px, 4px) }};
+
+// LuminaGram #23: the floating formatting bar above the composer
+// (lumina_format_bar.cpp). A pill of 32px buttons carrying upstream's own
+// rich-text glyphs (Resources/icons/menu/rich, the ones the Instant View
+// editor toolbar shows) in the colour every menu glyph uses; the pill, its
+// outline and its shadow are the editor's pill (Dialogs::PaintPillBackground,
+// ivEditorPillShadow's values).
+luminaFormatBarButtonSize: 32px;
+luminaFormatBarButton: IconButton(defaultIconButton) {
+	width: luminaFormatBarButtonSize;
+	height: luminaFormatBarButtonSize;
+	iconPosition: point(-1px, -1px);
+	rippleAreaPosition: point(0px, 0px);
+	rippleAreaSize: luminaFormatBarButtonSize;
+	ripple: defaultRippleAnimationBgOver;
+}
+luminaFormatBarPadding: 4px;
+luminaFormatBarGroupSkip: 9px;
+luminaFormatBarDividerMargin: 10px;
+luminaFormatBarShadow: BoxShadow {
+	blurRadius: 3px;
+	offset: point(0px, 1px);
+	opacity: 0.09;
+}
+
+// Kept this far from the host's sides, and this far above the top of the
+// compose stack (reply / edit bar and translate preview included).
+luminaFormatBarSkip: 8px;
+luminaFormatBarOffset: 8px;
+
+luminaFormatBarBold: icon {{ "menu/rich/bold-24x24", menuIconColor }};
+luminaFormatBarItalic: icon {{ "menu/rich/italic-24x24", menuIconColor }};
+luminaFormatBarUnderline: icon {{ "menu/rich/underline-24x24", menuIconColor }};
+luminaFormatBarStrikeOut: icon {{ "menu/rich/strikeout-24x24", menuIconColor }};
+luminaFormatBarMonospace: icon {{ "menu/rich/code-24x24", menuIconColor }};
+luminaFormatBarSpoiler: icon {{ "menu/rich/spoiler-24x24", menuIconColor }};
+luminaFormatBarQuote: icon {{ "menu/rich/blockquote-24x24", menuIconColor }};
+luminaFormatBarLink: icon {{ "menu/rich/link-24x24", menuIconColor }};
+luminaFormatBarClear: icon {{ "menu/rich/plain_text-24x24", menuIconColor }};
