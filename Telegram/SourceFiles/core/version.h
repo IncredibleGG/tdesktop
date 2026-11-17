@@ -23,6 +23,6 @@ constexpr auto AppNameOld = "Telegram Win (Unofficial)"_cs;
 constexpr auto AppName = "LuminaGram"_cs;
 constexpr auto AppFile = "LuminaGram"_cs;
 constexpr auto AppVersion = 7004000;
-constexpr auto AppVersionStr = "7.4.0";
+constexpr auto AppVersionStr = "7.4";
 constexpr auto AppBetaVersion = false;
 constexpr auto AppAlphaVersion = TDESKTOP_ALPHA_VERSION;
