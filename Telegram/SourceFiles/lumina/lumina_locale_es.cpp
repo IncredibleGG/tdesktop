@@ -1278,7 +1278,7 @@ namespace {
 		{ u"LuminaAdShieldExemptContacts"_q, u"Contactos"_q },
 		{ u"LuminaAdShieldExemptBots"_q, u"Bots"_q },
 		{ u"LuminaAdShieldExemptReplies"_q, u"Respuestas y menciones a mí"_q },
-		{ u"LuminaAdShieldExemptInfo"_q, u"Tus propios mensajes y los de los administradores nunca se pliegan."_q },
+		{ u"LuminaAdShieldExemptInfo"_q, u"Tus propios mensajes nunca se pliegan. Los de los administradores y del canal del grupo tampoco, salvo que actives «Plegar también a los administradores y al canal del grupo» en ese grupo."_q },
 		{ u"LuminaAdShieldTrial"_q, u"Modo de prueba"_q },
 		{ u"LuminaAdShieldTrialInfo"_q, u"Solo marca los mensajes como «Posible anuncio repetido», sin plegarlos"_q },
 		{ u"LuminaAdShieldClear"_q, u"Borrar datos locales"_q },

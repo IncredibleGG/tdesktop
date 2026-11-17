@@ -1235,7 +1235,7 @@ namespace {
 		{ u"LuminaAdShieldExemptContacts"_q, u"Contatos"_q },
 		{ u"LuminaAdShieldExemptBots"_q, u"Bots"_q },
 		{ u"LuminaAdShieldExemptReplies"_q, u"Respostas e menções a mim"_q },
-		{ u"LuminaAdShieldExemptInfo"_q, u"Suas próprias mensagens e as dos administradores nunca são recolhidas."_q },
+		{ u"LuminaAdShieldExemptInfo"_q, u"Suas próprias mensagens nunca são recolhidas. As dos administradores e do canal do grupo também não, a menos que você ative “Recolher também administradores e o canal do grupo” nesse grupo."_q },
 		{ u"LuminaAdShieldTrial"_q, u"Modo de teste"_q },
 		{ u"LuminaAdShieldTrialInfo"_q, u"Apenas marca as mensagens como “Possível anúncio repetido”, sem recolhê-las"_q },
 		{ u"LuminaAdShieldClear"_q, u"Limpar dados locais"_q },

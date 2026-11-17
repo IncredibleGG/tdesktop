@@ -845,7 +845,7 @@ namespace {
 		{ u"LuminaAdShieldExemptContacts"_q, u"مخاطبان"_q },
 		{ u"LuminaAdShieldExemptBots"_q, u"ربات‌ها"_q },
 		{ u"LuminaAdShieldExemptReplies"_q, u"پاسخ‌ها و اشاره‌ها به من"_q },
-		{ u"LuminaAdShieldExemptInfo"_q, u"پیام‌های خود شما و پیام‌های مدیران هرگز جمع نمی‌شوند."_q },
+		{ u"LuminaAdShieldExemptInfo"_q, u"پیام‌های خود شما هرگز جمع نمی‌شوند. پیام‌های مدیران و کانال گروه هم جمع نمی‌شوند، مگر اینکه «مدیران و کانال گروه را هم جمع کن» را در آن گروه روشن کنید."_q },
 		{ u"LuminaAdShieldTrial"_q, u"حالت آزمایشی"_q },
 		{ u"LuminaAdShieldTrialInfo"_q, u"فقط کنار پیام برچسب «تبلیغ تکراری احتمالی» می‌گذارد و آن را جمع نمی‌کند"_q },
 		{ u"LuminaAdShieldClear"_q, u"پاک کردن داده‌های محلی"_q },

@@ -390,6 +390,9 @@ void ChatModeBox(not_null<Ui::GenericBox*> box, not_null<PeerData*> peer) {
 	) | rpl::then(AdShield::PrefsChanges() | rpl::map([=] {
 		return AdShield::ChatFoldPrivileged(peer);
 	})), true);
+	// The label does not fit on one line next to the toggle in several
+	// languages (es, pt_br, ru, and en at the edge): wrap, don't elide.
+	privileged->setAllowTextLines();
 	privileged->setClickedCallback([=] {
 		AdShield::SetChatFoldPrivileged(
 			peer,

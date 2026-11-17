@@ -856,7 +856,7 @@ namespace {
 		{ u"LuminaAdShieldExemptContacts"_q, u"جهات الاتصال"_q },
 		{ u"LuminaAdShieldExemptBots"_q, u"البوتات"_q },
 		{ u"LuminaAdShieldExemptReplies"_q, u"الردود عليّ والإشارات إليّ"_q },
-		{ u"LuminaAdShieldExemptInfo"_q, u"لا تُطوى رسائلك ولا رسائل المشرفين أبدًا."_q },
+		{ u"LuminaAdShieldExemptInfo"_q, u"لا تُطوى رسائلك أبدًا. ولا تُطوى رسائل المشرفين وقناة المجموعة أيضًا ما لم تُفعّل «اطوِ أيضًا رسائل المشرفين وقناة المجموعة» في تلك المجموعة."_q },
 		{ u"LuminaAdShieldTrial"_q, u"وضع التجربة"_q },
 		{ u"LuminaAdShieldTrialInfo"_q, u"يضع على الرسائل علامة «إعلان متكرر مشتبه به» فقط دون طيّها"_q },
 		{ u"LuminaAdShieldClear"_q, u"مسح البيانات المحلية"_q },

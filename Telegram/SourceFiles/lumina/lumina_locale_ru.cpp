@@ -1297,7 +1297,7 @@ namespace {
 		{ u"LuminaAdShieldExemptContacts"_q, u"Контакты"_q },
 		{ u"LuminaAdShieldExemptBots"_q, u"Боты"_q },
 		{ u"LuminaAdShieldExemptReplies"_q, u"Ответы мне и упоминания меня"_q },
-		{ u"LuminaAdShieldExemptInfo"_q, u"Ваши собственные сообщения и сообщения администраторов никогда не сворачиваются."_q },
+		{ u"LuminaAdShieldExemptInfo"_q, u"Ваши собственные сообщения никогда не сворачиваются. Сообщения администраторов и канала группы тоже не сворачиваются, если в этой группе не включено «Сворачивать и сообщения админов и канала группы»."_q },
 		{ u"LuminaAdShieldTrial"_q, u"Пробный режим"_q },
 		{ u"LuminaAdShieldTrialInfo"_q, u"Только помечает сообщения как «Возможно, повторяющаяся реклама», не сворачивая их"_q },
 		{ u"LuminaAdShieldClear"_q, u"Очистить локальные данные"_q },

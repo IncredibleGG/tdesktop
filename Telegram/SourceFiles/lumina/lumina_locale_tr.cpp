@@ -859,7 +859,7 @@ namespace {
 		{ u"LuminaAdShieldExemptContacts"_q, u"Kişiler"_q },
 		{ u"LuminaAdShieldExemptBots"_q, u"Botlar"_q },
 		{ u"LuminaAdShieldExemptReplies"_q, u"Bana verilen yanıtlar ve benden bahsedenler"_q },
-		{ u"LuminaAdShieldExemptInfo"_q, u"Kendi mesajlarınız ve yöneticilerin mesajları asla katlanmaz."_q },
+		{ u"LuminaAdShieldExemptInfo"_q, u"Kendi mesajlarınız asla katlanmaz. Yöneticilerin ve grubun kanalının mesajları da, o grupta “Yöneticileri ve grubun kanalını da katla” açık değilse katlanmaz."_q },
 		{ u"LuminaAdShieldTrial"_q, u"Deneme modu"_q },
 		{ u"LuminaAdShieldTrialInfo"_q, u"Mesajları katlamadan yalnızca “Şüpheli tekrarlanan reklam” olarak işaretler"_q },
 		{ u"LuminaAdShieldClear"_q, u"Yerel verileri temizle"_q },

@@ -1026,7 +1026,7 @@ namespace {
 		{ u"LuminaAdShieldExemptContacts"_q, u"联系人"_q },
 		{ u"LuminaAdShieldExemptBots"_q, u"机器人"_q },
 		{ u"LuminaAdShieldExemptReplies"_q, u"回复或提及我的消息"_q },
-		{ u"LuminaAdShieldExemptInfo"_q, u"自己和管理员一律不收。"_q },
+		{ u"LuminaAdShieldExemptInfo"_q, u"自己的消息一律不收；管理员和群组频道的默认不收，可在各群打开「连管理员和频道的也收」。"_q },
 		{ u"LuminaAdShieldTrial"_q, u"试运行"_q },
 		{ u"LuminaAdShieldTrialInfo"_q, u"只在消息旁标「疑似重复广告」，不收合"_q },
 		{ u"LuminaAdShieldClear"_q, u"清除本机数据"_q },

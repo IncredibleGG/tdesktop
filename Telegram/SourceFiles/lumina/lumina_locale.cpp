@@ -952,7 +952,7 @@ struct Registration {
 		{ u"LuminaAdShieldExemptContacts"_q, u"Contacts"_q },
 		{ u"LuminaAdShieldExemptBots"_q, u"Bots"_q },
 		{ u"LuminaAdShieldExemptReplies"_q, u"Replies to me and mentions of me"_q },
-		{ u"LuminaAdShieldExemptInfo"_q, u"Your own messages and those of admins are never folded."_q },
+		{ u"LuminaAdShieldExemptInfo"_q, u"Your own messages are never folded. Messages from admins and the group's channel are not folded either, unless “Also fold admins and the group's channel” is on for that group."_q },
 		{ u"LuminaAdShieldTrial"_q, u"Trial run"_q },
 		{ u"LuminaAdShieldTrialInfo"_q, u"Only marks messages as “Suspected repeated ad” and does not fold them"_q },
 		{ u"LuminaAdShieldClear"_q, u"Clear local data"_q },

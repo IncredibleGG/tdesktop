@@ -1231,7 +1231,7 @@ namespace {
 		{ u"LuminaAdShieldExemptContacts"_q, u"Kontak"_q },
 		{ u"LuminaAdShieldExemptBots"_q, u"Bot"_q },
 		{ u"LuminaAdShieldExemptReplies"_q, u"Balasan dan sebutan untuk saya"_q },
-		{ u"LuminaAdShieldExemptInfo"_q, u"Pesan Anda sendiri dan pesan admin tidak pernah dilipat."_q },
+		{ u"LuminaAdShieldExemptInfo"_q, u"Pesan Anda sendiri tidak pernah dilipat. Pesan admin dan kanal grup juga tidak dilipat, kecuali “Lipat juga admin dan kanal grup” diaktifkan di grup tersebut."_q },
 		{ u"LuminaAdShieldTrial"_q, u"Mode uji coba"_q },
 		{ u"LuminaAdShieldTrialInfo"_q, u"Hanya menandai pesan sebagai “Diduga iklan berulang” tanpa melipatnya"_q },
 		{ u"LuminaAdShieldClear"_q, u"Hapus data lokal"_q },
