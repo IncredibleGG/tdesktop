@@ -6,7 +6,7 @@
 //   ./adshield-check <dir containing vectors/ corpus/ golden/>
 //
 // vectors/ and corpus/ are unmodified copies of the shared adshield/ package
-// (tablesVersion f40fc4cc, algoVersion 2, formatVersion 2), as is
+// (tablesVersion 25528dcc, algoVersion 3, formatVersion 3), as is
 // Telegram/SourceFiles/lumina/ad_shield_tables.h (adshield/out/). golden/ is
 // produced from the reference engine by gen_golden.py; rerun it whenever the
 // shared package changes. Exit code 0 only when every check passes.
@@ -338,6 +338,9 @@ A::Settings SettingsFrom(const Json &s, A::Sensitivity sensitivity) {
 	if (s.has("dryRun")) {
 		result.dryRun = s["dryRun"].truthy();
 	}
+	if (s.has("foldPrivilegedRepeats")) {
+		result.foldPrivilegedRepeats = s["foldPrivilegedRepeats"].truthy();
+	}
 	return result;
 }
 
@@ -540,8 +543,8 @@ void CheckSipHash(const std::string &dir) {
 // ---- fingerprint ----
 
 void CheckFingerprint(const std::string &dir) {
-	auto &tally = Section("fingerprint 57");
 	const auto v = LoadJson(dir + "/vectors/fingerprint_vectors.json");
+	auto &tally = Section("fingerprint " + std::to_string(v["cases"].array.size()));
 	const auto key = KeyFromHex(Narrow(v["key"]));
 	const auto context = ContextFrom(v["context"]);
 	for (const auto &c : v["cases"].array) {
@@ -562,6 +565,8 @@ void CheckFingerprint(const std::string &dir) {
 		field(fp.cjkCount == e["cjkCount"].asInt(), "cjkCount");
 		field(fp.otherLetterCount == e["otherLetterCount"].asInt(), "otherLetterCount");
 		field(fp.paragraphs == StringList(e["paragraphs"]), "paragraphs");
+		field(fp.contentLines == StringList(e["contentLines"]), "contentLines");
+		field(fp.blocks == StringList(e["blocks"]), "blocks");
 		const auto &links = e["links"].array;
 		auto linksOk = (links.size() == fp.links.size());
 		for (std::size_t i = 0; linksOk && i != links.size(); ++i) {
@@ -598,6 +603,7 @@ void CheckFingerprint(const std::string &dir) {
 		field(A::Hex64(fp.senderKey) == Narrow(e["senderKey"]), "senderKey");
 		field(fp.store == e["store"].truthy(), "store");
 		field(fp.endorsing == e["endorsing"].truthy(), "endorsing");
+		field(fp.privileged == e["privileged"].truthy(), "privileged");
 		auto what = "fingerprint " + id;
 		for (const auto &name : bad) {
 			what += " " + name;
@@ -741,7 +747,8 @@ std::map<std::string, std::pair<std::size_t, std::string>> LoadGolden(
 }
 
 void CheckScenarios(const std::string &dir, const Json &data) {
-	auto &tally = Section("scenarios 97");
+	auto &tally = Section(
+		"scenarios " + std::to_string(data["scenarios"].array.size()));
 	auto &expects = Section("scenario expect checks (x3 sensitivities)");
 	auto &golden = Section("scenario end state == reference blob");
 	const auto states = LoadGolden(dir);
@@ -939,10 +946,16 @@ std::string FingerprintCanon(const A::FingerprintResult &fp) {
 		}
 		return result;
 	};
-	auto paragraphs = std::vector<std::string>();
-	for (const auto &p : fp.paragraphs) {
-		paragraphs.push_back(U8(p));
-	}
+	const auto narrow = [](const std::vector<std::u32string> &list) {
+		auto result = std::vector<std::string>();
+		for (const auto &item : list) {
+			result.push_back(U8(item));
+		}
+		return result;
+	};
+	const auto paragraphs = narrow(fp.paragraphs);
+	const auto contentLines = narrow(fp.contentLines);
+	const auto blocks = narrow(fp.blocks);
 	auto links = std::vector<std::string>();
 	for (std::size_t i = 0; i != fp.links.size(); ++i) {
 		const auto &l = fp.links[i];
@@ -978,7 +991,10 @@ std::string FingerprintCanon(const A::FingerprintResult &fp) {
 		A::Hex64(fp.senderKey),
 		fp.store ? "1" : "0",
 		fp.endorsing ? "1" : "0",
-		std::to_string(fp.mentionCount) }, "\x1f");
+		std::to_string(fp.mentionCount),
+		join(contentLines, "\x1e"),
+		join(blocks, "\x1e"),
+		fp.privileged ? "1" : "0" }, "\x1f");
 }
 
 void CheckFuzzFingerprint(const std::string &dir) {
@@ -1048,26 +1064,30 @@ void CheckFuzzStore(const std::string &dir) {
 			} else if (op == "e") {
 				now = e[1].isNull() ? now : e[1].asInt();
 				++expects;
-				for (auto s = 0; s != 3; ++s) {
-					auto settings = A::Settings();
-					settings.sensitivity = kSensitivities[s];
-					for (const auto id : seen) {
-						const auto d = chat->decide(id, *context, settings, now);
-						char buffer[256] = { 0 };
-						std::snprintf(
-							buffer,
-							sizeof(buffer),
-							"%s %lld:%s:%d:%s:%s:%d:%d:%d",
-							kSensitivityNames[s],
-							static_cast<long long>(id),
-							std::string(A::StateName(d.state)).c_str(),
-							d.fold ? 1 : 0,
-							std::string(A::DecisionClassName(d.cls)).c_str(),
-							std::string(A::DecisionRuleName(d.rule)).c_str(),
-							d.occurrence,
-							d.groupSize,
-							d.replyToMe ? 1 : 0);
-						lines.push_back(buffer);
+				for (const auto privileged : { false, true }) {
+					for (auto s = 0; s != 3; ++s) {
+						auto settings = A::Settings();
+						settings.sensitivity = kSensitivities[s];
+						settings.foldPrivilegedRepeats = privileged;
+						for (const auto id : seen) {
+							const auto d = chat->decide(id, *context, settings, now);
+							char buffer[256] = { 0 };
+							std::snprintf(
+								buffer,
+								sizeof(buffer),
+								"%s%s %lld:%s:%d:%s:%s:%d:%d:%d",
+								kSensitivityNames[s],
+								privileged ? "+priv" : "",
+								static_cast<long long>(id),
+								std::string(A::StateName(d.state)).c_str(),
+								d.fold ? 1 : 0,
+								std::string(A::DecisionClassName(d.cls)).c_str(),
+								std::string(A::DecisionRuleName(d.rule)).c_str(),
+								d.occurrence,
+								d.groupSize,
+								d.replyToMe ? 1 : 0);
+							lines.push_back(buffer);
+						}
 					}
 				}
 			}
@@ -1088,7 +1108,7 @@ void CheckFuzzStore(const std::string &dir) {
 		}
 		Expect(tally, TestDigest(canon) == Narrow(c["digest"]), what + "\n" + canon);
 	}
-	std::printf("  store differential: %zu sequences, %d expect points (all Decision fields x3)\n",
+	std::printf("  store differential: %zu sequences, %d expect points (all Decision fields, 3 sensitivities x foldPrivilegedRepeats off/on)\n",
 		v["cases"].array.size(),
 		expects);
 }
@@ -1358,17 +1378,25 @@ void CheckStorage(const Json &data) {
 			}
 		}
 		Expect(tally, results.size() == 1, "not-ad record independent of load order");
-		Expect(tally, lastKeys.size() == A::kMaxRecordKeys, "not-ad record capped at 64 keys");
-		auto sawPara = false;
-		auto exactAfterPara = false;
-		for (const auto &k : lastKeys) {
-			if (k.kind == A::KeyKind::Para) {
-				sawPara = true;
-			} else if (sawPara) {
-				exactAfterPara = true;
+		Expect(tally, lastKeys.size() == A::kMaxRecordKeys, "not-ad record capped at 128 keys");
+		// v2 exact keys, then paragraph keys (= the v2 record, 64), then v3.
+		const auto rank = [](A::KeyKind kind) {
+			return (kind == A::KeyKind::Para)
+				? 1
+				: (int(kind) <= 7)
+				? 0
+				: 2;
+		};
+		auto ordered = true;
+		auto v2Keys = std::size_t(0);
+		for (std::size_t i = 0; i != lastKeys.size(); ++i) {
+			v2Keys += (rank(lastKeys[i].kind) < 2) ? 1 : 0;
+			if (i > 0 && rank(lastKeys[i - 1].kind) > rank(lastKeys[i].kind)) {
+				ordered = false;
 			}
 		}
-		Expect(tally, !exactAfterPara, "not-ad record exact keys first");
+		Expect(tally, ordered, "not-ad record: exact keys, paragraph keys, then v3 keys");
+		Expect(tally, v2Keys == A::kRecordV2Keys, "not-ad record: 64 v2 keys first");
 		const auto fp3 = A::Fingerprint(messages[2], context, key);
 		auto ownKept = true;
 		for (const auto &k : fp3.keys) {
@@ -1434,6 +1462,7 @@ struct BlobRecord {
 	std::uint8_t kind = 1;
 	std::int64_t stamp = 1000;
 	std::uint64_t msgKey = 0;
+	std::uint64_t author = 0;
 	std::vector<std::pair<std::uint8_t, std::uint64_t>> keys;
 	std::vector<std::uint64_t> links;
 };
@@ -1447,8 +1476,8 @@ struct BlobHandle {
 
 struct Blob {
 	char magic[4] = { 'L', 'G', 'A', 'S' };
-	std::uint16_t formatVersion = 2;
-	std::uint16_t algoVersion = 2;
+	std::uint16_t formatVersion = 3;
+	std::uint16_t algoVersion = 3;
 	std::uint32_t tablesVersion = T::kTablesVersionU32;
 	std::uint32_t reserved = 0;
 	A::Key checkKey = TestKey();
@@ -1500,6 +1529,7 @@ std::vector<unsigned char> BuildBlob(const Blob &b) {
 		Put(body, r.kind, 1);
 		Put(body, std::uint64_t(r.stamp), 8);
 		Put(body, r.msgKey, 8);
+		Put(body, r.author, 8);
 		Put(body, r.keys.size(), 1);
 		for (const auto &[kind, hash] : r.keys) {
 			Put(body, kind, 1);
@@ -1562,7 +1592,8 @@ Blob ValidBlob() {
 	auto endorse = BlobRecord();
 	endorse.kind = 1;
 	endorse.msgKey = 0x99;
-	endorse.keys = { { 6, 0x1 }, { 6, 0x2 } };
+	endorse.author = 0x1234;
+	endorse.keys = { { 6, 0x1 }, { 6, 0x2 }, { 9, 0x3 }, { 11, 0x4 } };
 	endorse.links = { 0x11 };
 	auto notAd = BlobRecord();
 	notAd.kind = 2;
@@ -1604,7 +1635,7 @@ void CheckRejections() {
 		b.magic[3] = 'T';
 		reject(b, "magic");
 	}
-	for (const auto version : { 1, 3 }) {
+	for (const auto version : { 1, 2, 4 }) {
 		auto b = ValidBlob();
 		b.formatVersion = std::uint16_t(version);
 		reject(b, "formatVersion " + std::to_string(version));
@@ -1738,17 +1769,39 @@ void CheckRejections() {
 		b.handles[1].hash = b.handles[0].hash;
 		reject(b, "duplicate handle");
 	}
-	for (const auto bit : { 9, 15, 17, 31 }) {
+	for (const auto bit : { 17, 31 }) {
 		auto b = ValidBlob();
 		b.rows[0].flags |= (1U << bit);
 		reject(b, "flag bit " + std::to_string(bit));
 	}
 	{
+		// v3: PRIV needs ENDORSING, PRIV_STRONG needs PRIV.
+		auto b = ValidBlob();
+		b.rows[0].flags |= A::Flag::kPriv;
+		reject(b, "PRIV without ENDORSING");
+		b.rows[0].flags |= A::Flag::kEndorsing;
+		accept(b, "PRIV with ENDORSING");
+		b.rows[0].flags |= A::Flag::kPrivStrong;
+		accept(b, "PRIV_STRONG with PRIV");
+		b = ValidBlob();
+		b.rows[0].flags |= A::Flag::kPrivStrong | A::Flag::kEndorsing;
+		reject(b, "PRIV_STRONG without PRIV");
+		b = ValidBlob();
+		b.records[1].author = 5;
+		reject(b, "not-ad record with author");
+		b = ValidBlob();
+		b.records[1].msgKey = 5;
+		reject(b, "not-ad record with msgKey");
+		b = ValidBlob();
+		b.records[0].author = 0;
+		accept(b, "endorse record without author");
+	}
+	{
 		auto b = ValidBlob();
 		b.rows[0].keys.assign(A::kMaxRowKeys, { 3, 1 });
-		accept(b, "row with 22 keys");
+		accept(b, "row with 72 keys");
 		b.rows[0].keys.push_back({ 3, 2 });
-		reject(b, "row with 23 keys");
+		reject(b, "row with 73 keys");
 		b = ValidBlob();
 		b.rows[0].links.assign(A::kMaxLinksPerRow, 1);
 		accept(b, "row with 16 links");
@@ -1762,15 +1815,21 @@ void CheckRejections() {
 		b = ValidBlob();
 		b.records[0].keys.assign(A::kMaxRecordKeys, { 6, 1 });
 		b.records[0].links.assign(A::kMaxRecordLinks, 1);
-		accept(b, "record with 64 keys and 64 links");
+		accept(b, "record with 128 keys and 64 links");
 		auto more = b;
 		more.records[0].keys.push_back({ 6, 2 });
-		reject(more, "record with 65 keys");
+		reject(more, "record with 129 keys");
 		more = b;
 		more.records[0].links.push_back(2);
 		reject(more, "record with 65 links");
 	}
-	for (const auto kind : { 0, 8, 255 }) {
+	for (const auto kind : { 8, 9, 10, 11 }) {
+		auto b = ValidBlob();
+		b.rows[0].keys[0].first = std::uint8_t(kind);
+		b.records[1].keys[0].first = std::uint8_t(kind);
+		accept(b, "key kind " + std::to_string(kind));
+	}
+	for (const auto kind : { 0, 12, 255 }) {
 		auto b = ValidBlob();
 		b.rows[0].keys[0].first = std::uint8_t(kind);
 		reject(b, "row key kind " + std::to_string(kind));
@@ -1803,6 +1862,446 @@ void CheckRejections() {
 		b.rowCount = 3;
 		reject(b, "header rowCount larger than body");
 	}
+}
+
+// ---- v3: edit-tolerant keys, privileged authors (ref TestV3 / TestV3Fixes) ----
+
+using VarList = std::vector<std::pair<int, std::u32string>>;
+
+A::MessageInput V3Message(
+		std::int64_t id,
+		std::int64_t date,
+		std::int64_t sender,
+		A::Role role,
+		std::u32string text) {
+	auto m = A::MessageInput();
+	m.id = id;
+	m.date = date;
+	m.sender.id = sender;
+	m.sender.role = role;
+	m.text = std::move(text);
+	return m;
+}
+
+std::uint64_t SenderKey(std::int64_t id) {
+	return A::Hash(TestKey(), "sender", std::string_view(std::to_string(id)));
+}
+
+std::uint64_t MsgKey(std::int64_t id) {
+	return A::Hash(TestKey(), "msg", std::string_view(std::to_string(id)));
+}
+
+A::ChatContext V3Context(std::int64_t chatId, std::int64_t linked) {
+	auto data = A::ChatContextData();
+	data.chatId = chatId;
+	data.linkedChannelId = linked;
+	return A::ChatContext(std::move(data));
+}
+
+void CheckV3Keys(Tally &tally) {
+	const auto var = int(A::KeyKind::Var);
+	const auto varL = int(A::KeyKind::VarL);
+	const auto varS = int(A::KeyKind::VarS);
+	{
+		const auto lines = std::vector<std::u32string>{
+			U"丝滑提交",
+			U"限时特价云端会员年卡全网最低价格",
+			U"有需要的请私聊我下单先到先得",
+		};
+		Expect(tally, A::VarKeys(lines) == VarList{
+			{ var, lines[0] + lines[1] + lines[2] },
+			{ varS, lines[1] + lines[2] },
+		}, "VarKeys: VAR and a strict VARS (D=8, K=60)");
+		auto loose = lines;
+		loose[0] = U"一二三四五六七八九十";
+		Expect(tally, A::VarKeys(loose) == VarList{
+			{ var, loose[0] + loose[1] + loose[2] },
+			{ varL, loose[1] + loose[2] },
+		}, "VarKeys: wide VARL (D=20, K=60)");
+		Expect(tally, A::VarKeys({ U"短" }).empty(), "VarKeys: nothing below 24");
+		Expect(tally, A::VarKeys({ U"一二三四五六七八九十一二" }) == VarList{
+			{ var, U"一二三四五六七八九十一二" },
+		}, "VarKeys: full text at exactly 24");
+		const auto dup = A::VarKeys({
+			U"价目表如下请参考",
+			U"#件起",
+			U"#件起",
+			U"详情请私聊客服人员",
+		});
+		auto payloads = std::set<std::u32string>();
+		for (const auto &[kind, payload] : dup) {
+			payloads.insert(payload);
+		}
+		Expect(tally, payloads.size() == dup.size(), "VarKeys: deduplicated by payload");
+		auto many = std::vector<std::u32string>();
+		for (auto i = 0; i != 50; ++i) {
+			char buffer[8] = { 0 };
+			std::snprintf(buffer, sizeof(buffer), "%02d", i);
+			many.push_back(U"第" + U32(buffer) + U"行商品名称");
+		}
+		const auto v = A::VarKeys(many);
+		auto kinds = std::vector<int>();
+		auto set = std::set<std::u32string>();
+		for (const auto &[kind, payload] : v) {
+			kinds.push_back(kind);
+			set.insert(payload);
+		}
+		auto expected = std::vector<int>(A::kMaxVar, varS);
+		expected[0] = var;
+		Expect(tally, v.size() == A::kMaxVar && kinds == expected, "VarKeys: 34 at most (full + 16 + 16 + both ends)");
+		const auto without = [&](std::size_t skip) {
+			auto result = std::u32string();
+			for (std::size_t i = 0; i != many.size(); ++i) {
+				if (i != skip) {
+					result += many[i];
+				}
+			}
+			return result;
+		};
+		Expect(tally, !set.count(without(25)) && set.count(without(15)) && set.count(without(34)), "VarKeys: leave-one only for the first and last 16 lines");
+	}
+	{
+		const auto f = A::ExtractLinks(T::Fold(
+			U"標題\n\n第一區塊的內容長度足夠\n第二行\n🔥🔥🔥\n第二區塊的內容長度也足夠\n\n短\n\n第一區塊的內容長度足夠\n第二行")).foldNoLinks;
+		const auto blocks = A::Blocks(f);
+		Expect(tally, blocks == std::vector<std::u32string>{
+			U"标题",
+			U"第一区块的内容长度足够第二行",
+			U"第二区块的内容长度也足够",
+			U"短",
+			U"第一区块的内容长度足够第二行",
+		}, "Blocks: separated by non-content lines");
+		Expect(tally, A::BlockPayloads(blocks) == std::vector<std::u32string>{
+			U"第一区块的内容长度足够第二行",
+			U"第二区块的内容长度也足够",
+		}, "BlockPayloads: wlen >= 16, deduplicated");
+		Expect(tally, A::BlockPayloads({ U"第一区块的内容长度足够第二行", U"短" }).empty(), "BlockPayloads: none with fewer than 2");
+		Expect(tally, A::ContentLines(f) == std::vector<std::u32string>{
+			U"标题",
+			U"第一区块的内容长度足够",
+			U"第二行",
+			U"第二区块的内容长度也足够",
+			U"短",
+			U"第一区块的内容长度足够",
+			U"第二行",
+		}, "ContentLines");
+	}
+	{
+		const auto context = PlainContext(-1);
+		auto lf = std::u32string(U"雲端會員限時調價\n企業採購請私聊\n\n雲端硬碟會員年卡特價\n季卡特價月卡特價");
+		auto crlf = std::u32string();
+		for (const auto c : lf) {
+			if (c == U'\n') {
+				crlf.push_back(U'\r');
+			}
+			crlf.push_back(c);
+		}
+		const auto a = A::Fingerprint(V3Message(1, 1, 5, A::Role::Member, lf), context, TestKey());
+		const auto b = A::Fingerprint(V3Message(1, 1, 5, A::Role::Member, crlf), context, TestKey());
+		auto same = (a.fold == b.fold) && (a.blocks == b.blocks) && (a.flags == b.flags) && (a.keys.size() == b.keys.size());
+		for (std::size_t i = 0; same && i != a.keys.size(); ++i) {
+			same = (a.keys[i].kind == b.keys[i].kind) && (a.keys[i].hash == b.keys[i].hash);
+		}
+		Expect(tally, same, "CR LF collapsed before fold");
+		Expect(tally, A::CollapseCrlf(U"a\r\r\nb\rc\n\r") == U"a\r\nb\rc\n\r", "CollapseCrlf: only a CR right before LF, one pass");
+		Expect(tally, A::Blocks(T::Fold(U"一 二\n \t\n三\n🔥\n四")) == std::vector<std::u32string>{ U"一二", U"三", U"四" }, "Blocks: U+2028 is a line break, blank and emoji lines separate");
+	}
+	{
+		// Row key cap: 6 + 16 PARA + 34 VAR family + 16 BLOCK = 72, in order.
+		auto text = std::u32string();
+		const auto digits = std::u32string(U"零一二三四五六七八九");
+		const auto stems = std::u32string(U"甲乙丙丁戊");
+		for (auto i = 0; i != 40; ++i) {
+			text += U"第" + digits.substr(std::size_t(i % 10), 1)
+				+ U"段是一行足夠長的內容，用來產生段落鍵與區塊鍵，順便測試上限"
+				+ stems.substr(std::size_t(i / 10), 1) + U"\n\n";
+		}
+		text += U"客服電話 0912-345-678 有需要私聊";
+		auto m = V3Message(1, 1000, 5, A::Role::Member, text);
+		m.media.kind = A::MediaKind::Photo;
+		m.media.id = "-42";
+		auto forward = A::Forward();
+		forward.fromKind = A::ForwardKind::User;
+		forward.fromId = 77;
+		forward.date = 900;
+		m.forward = forward;
+		const auto context = PlainContext(-1);
+		const auto fp = A::Fingerprint(m, context, TestKey());
+		auto para = 0;
+		auto vars = 0;
+		auto blocks = 0;
+		auto ordered = true;
+		const auto rank = [](A::KeyKind kind) {
+			switch (kind) {
+			case A::KeyKind::Fwd: return 0;
+			case A::KeyKind::Media: return 1;
+			case A::KeyKind::Text: return 2;
+			case A::KeyKind::Cjk: return 3;
+			case A::KeyKind::Tmpl: return 4;
+			case A::KeyKind::Contact: return 5;
+			case A::KeyKind::Para: return 6;
+			case A::KeyKind::Var:
+			case A::KeyKind::VarL:
+			case A::KeyKind::VarS: return 7;
+			case A::KeyKind::Block: return 8;
+			}
+			return 9;
+		};
+		for (std::size_t i = 0; i != fp.keys.size(); ++i) {
+			const auto kind = fp.keys[i].kind;
+			para += (kind == A::KeyKind::Para) ? 1 : 0;
+			vars += (rank(kind) == 7) ? 1 : 0;
+			blocks += (kind == A::KeyKind::Block) ? 1 : 0;
+			if (i > 0 && rank(fp.keys[i - 1].kind) > rank(kind)) {
+				ordered = false;
+			}
+		}
+		Expect(tally, fp.keys.size() == A::kMaxRowKeys && para == 16 && vars == 34 && blocks == 16, "row reaches the 72 key cap");
+		Expect(tally, ordered, "key order FWD MEDIA TEXT CJK TMPL CONTACT PARA VAR* BLOCK");
+		auto chat = A::Store(-1, TestKey());
+		Observe(chat, m, context, 2000);
+		const auto blob = chat.serialize();
+		const auto back = A::Store::Deserialize(blob.data(), blob.size(), -1, TestKey());
+		Expect(tally, back && back->serialize() == blob, "72 key row serializes and loads back");
+	}
+}
+
+void CheckV3Privileged(Tally &tally, const Json &data) {
+	const auto key = TestKey();
+	{
+		struct Case {
+			std::int64_t sender = 0;
+			A::Role role = A::Role::Member;
+			bool pinned = false;
+			bool autoForward = false;
+			int forward = 0; // 0 none, 1 user, 2 linked channel, 3 other channel
+			bool endorsing = false;
+			bool privileged = false;
+			const char *what = "";
+		};
+		const auto context = V3Context(-100, -200);
+		const auto cases = std::vector<Case>{
+			{ 1, A::Role::Admin, false, false, 0, true, true, "admin" },
+			{ 1, A::Role::Creator, false, false, 0, true, true, "creator" },
+			{ -100, A::Role::AnonAdmin, false, false, 0, true, true, "anonymous admin" },
+			{ -200, A::Role::Channel, false, false, 0, true, true, "the linked channel" },
+			{ -300, A::Role::Channel, false, false, 0, false, false, "another channel" },
+			{ -200, A::Role::Channel, false, true, 0, true, true, "automatic forward" },
+			{ 1, A::Role::Self, false, false, 0, true, false, "self" },
+			{ 1, A::Role::Member, true, false, 0, true, false, "pinned member message" },
+			{ 1, A::Role::Member, false, false, 2, true, false, "member forwards the linked channel" },
+			{ 1, A::Role::Admin, false, false, 1, false, false, "admin forwards a user" },
+			{ 1, A::Role::Admin, false, false, 3, true, true, "admin forwards another channel" },
+			{ -200, A::Role::Self, false, false, 0, true, false, "self as the linked channel" },
+			{ -100, A::Role::Self, false, false, 0, true, false, "self as anonymous admin" },
+		};
+		for (const auto &c : cases) {
+			auto m = V3Message(1, 1, c.sender, c.role, U"本群公告：雲端會員特價，私聊客服");
+			m.pinned = c.pinned;
+			m.autoForward = c.autoForward;
+			if (c.forward) {
+				auto forward = A::Forward();
+				forward.fromKind = (c.forward == 1) ? A::ForwardKind::User : A::ForwardKind::Channel;
+				forward.fromId = (c.forward == 1) ? 5 : (c.forward == 2) ? -200 : -900;
+				forward.postId = (c.forward == 1) ? 0 : 5;
+				forward.date = 1;
+				m.forward = forward;
+			}
+			const auto fp = A::Fingerprint(m, context, key);
+			Expect(
+				tally,
+				fp.endorsing == c.endorsing
+					&& fp.privileged == c.privileged
+					&& ((fp.flags & A::Flag::kPriv) != 0) == c.privileged,
+				std::string("privileged definition: ") + c.what);
+		}
+	}
+	{
+		auto d = A::ChatContextData();
+		d.chatId = -100;
+		d.username = U"grp_demo";
+		d.linkedChannelId = -200;
+		d.linkedChannelUsername = U"ch_demo";
+		d.description = U"官方客服 @desk_demo_helper";
+		d.pinnedTexts = { U"最新價目 私聊 @seller_demo_a 交流群 t.me/+PinInvDemo" };
+		const auto context = A::ChatContext(std::move(d));
+		const auto text = std::u32string(U"最新價目 有需要聯繫 @seller_demo_a 交流群 t.me/+PinInvDemo");
+		const auto channelForward = [](std::int64_t fromId) {
+			auto forward = A::Forward();
+			forward.fromKind = A::ForwardKind::Channel;
+			forward.fromId = fromId;
+			forward.postId = 9;
+			forward.username = U"ch_demo";
+			forward.date = 1;
+			return forward;
+		};
+		const auto fp = [&](std::int64_t sender, A::Role role, std::int64_t forwardFrom, std::u32string body) {
+			auto m = V3Message(1, 1, sender, role, std::move(body));
+			if (forwardFrom) {
+				m.forward = channelForward(forwardFrom);
+			}
+			return A::Fingerprint(m, context, key);
+		};
+		const auto admin = fp(7, A::Role::Admin, 0, text);
+		Expect(tally, A::StrongNames(admin.flags).empty() && (admin.flags & A::Flag::kPrivStrong) && admin.senderKey == SenderKey(7), "PRIV_STRONG: pinned-only handle and invite of an admin");
+		const auto member = fp(8, A::Role::Member, 0, text);
+		Expect(tally, !(member.flags & (A::Flag::kPriv | A::Flag::kPrivStrong)) && member.senderKey == SenderKey(8), "member: no PRIV bits");
+		Expect(tally, fp(7, A::Role::Admin, -200, text).senderKey == SenderKey(-200), "admin forwarding the linked channel: author is the channel");
+		Expect(tally, fp(8, A::Role::Member, -200, text).senderKey == SenderKey(8), "member forwarding the linked channel: author is the member");
+		Expect(tally, fp(7, A::Role::Admin, -900, text).senderKey == SenderKey(7), "admin forwarding another channel: author is the admin");
+		auto automatic = V3Message(2, 1, -200, A::Role::Channel, U"新品上架 私訊 @other_seller_demo");
+		automatic.autoForward = true;
+		automatic.forward = channelForward(-200);
+		Expect(tally, (A::Fingerprint(automatic, context, key).flags & A::Flag::kPrivStrong) != 0, "automatic forward: demoted handle is PRIV_STRONG");
+		const auto description = fp(7, A::Role::Admin, 0, U"有問題找 @desk_demo_helper 或看 @ch_demo");
+		Expect(tally, !(description.flags & A::Flag::kPrivStrong), "description tokens and own usernames are not PRIV_STRONG");
+	}
+	{
+		auto chat = A::Store(-1, key);
+		const auto context = V3Context(-1, -100777);
+		Observe(chat, V3Message(1, 1000, 9, A::Role::Admin, U"本群合作推廣：雲端會員特價，私聊管理員"), context, 2000);
+		auto pinned = V3Message(2, 1001, 8, A::Role::Member, U"本群公告：雲端會員特價，私聊管理員");
+		pinned.pinned = true;
+		Observe(chat, pinned, context, 2000);
+		Observe(chat, V3Message(3, 1002, -100777, A::Role::Channel, U"頻道公告：私聊客服"), context, 2000);
+		Observe(chat, V3Message(4, 1003, 10, A::Role::Self, U"我的公告：私聊我報名"), context, 2000);
+		auto authors = std::map<std::uint64_t, std::uint64_t>();
+		for (const auto &record : chat.records()) {
+			authors[record.msgKey] = record.author;
+		}
+		Expect(tally, authors == std::map<std::uint64_t, std::uint64_t>{
+			{ MsgKey(1), SenderKey(9) },
+			{ MsgKey(2), 0 },
+			{ MsgKey(3), SenderKey(-100777) },
+			{ MsgKey(4), 0 },
+		}, "endorsement record authors");
+		const auto blob = chat.serialize();
+		const auto back = A::Store::Deserialize(blob.data(), blob.size(), -1, key);
+		auto same = back && back->records().size() == chat.records().size();
+		for (std::size_t i = 0; same && i != chat.records().size(); ++i) {
+			same = back->records()[i].author == chat.records()[i].author
+				&& back->records()[i].msgKey == chat.records()[i].msgKey;
+		}
+		Expect(tally, same, "record authors round-trip");
+		Expect(tally, blob.size() > 8 && blob[4] == 3 && blob[5] == 0 && blob[6] == 3 && blob[7] == 0, "header formatVersion 3, algoVersion 3");
+		auto old = blob;
+		old[4] = 2;
+		Expect(tally, !A::Store::Deserialize(old.data(), old.size(), -1, key), "a v2 file is discarded");
+	}
+	{
+		// Members re-post an admin announcement, each adding a line with
+		// their own link: only edited overlap, never an impersonation (P1).
+		const auto context = PlainContext(-1);
+		auto chat = A::Store(-1, key);
+		const auto announcement = std::u32string(U"本週六下午兩點社區讀書會\n地點在市立圖書館三樓會議室\n歡迎大家帶朋友一起參加");
+		Observe(chat, V3Message(1, 1000, 1, A::Role::Admin, announcement), context, 9000);
+		Observe(chat, V3Message(2, 2000, 2, A::Role::Member, announcement + U"\n我整理的書單 https://notes-alpha.example/l"), context, 9000);
+		Observe(chat, V3Message(3, 3000, 3, A::Role::Member, announcement + U"\n我整理的書單 https://notes-beta.example/l"), context, 9000);
+		Observe(chat, V3Message(4, 4000, 4, A::Role::Member, announcement + U"\n讀書會加油"), context, 9000);
+		auto ok = true;
+		auto fourth = A::State::NotTriggered;
+		for (const auto sensitivity : kSensitivities) {
+			auto settings = A::Settings();
+			settings.sensitivity = sensitivity;
+			for (const auto id : { 2, 3, 4 }) {
+				const auto d = chat.decide(id, context, settings, 9000);
+				ok = ok && !d.fold && (id == 4 || d.cls == A::DecisionClass::Weak);
+				if (id == 4) {
+					fourth = d.state;
+				}
+			}
+		}
+		Expect(tally, ok && fourth == A::State::Endorsed, "edited overlap with a record protects, never impersonates");
+	}
+	{
+		// Group membership of the VAR rules (ref test_var_matching_rules).
+		const auto context = PlainContext(-1);
+		const auto groupSize = [&](const std::vector<std::u32string> &texts) {
+			auto chat = A::Store(-1, key);
+			for (std::size_t i = 0; i != texts.size(); ++i) {
+				Observe(chat, V3Message(std::int64_t(i + 1), 1000 + std::int64_t(i), 5, A::Role::Member, texts[i]), context, 2000);
+			}
+			return chat.decide(1, context, A::Settings(), 2000).groupSize;
+		};
+		const auto head = std::u32string(U"【社區公告】本週社區活動與重要事項");
+		const auto tail = std::u32string(U"如有疑問請私聊管理員\n感謝各位鄰居配合");
+		Expect(tally, groupSize({ head + U"\n週六上午九點大樓消防演練\n" + tail, head + U"\n週日下午兩點社區二手市集\n" + tail }) == 1, "VAR: replacing a long line does not link (P2a)");
+		Expect(tally, groupSize({ head + U"\n" + tail, head + U"\n週六上午九點大樓消防演練\n" + tail }) == 2, "VAR: one line added links");
+		const auto longText = std::u32string(U"本店雲端會員年卡限時特價全網最低價格\n季卡月卡全部現貨下單後五分鐘內開通\n企業採購量大可議歡迎私聊客服詢價\n售後保固一年有任何問題隨時找我們");
+		Expect(tally, groupSize({ longText + U"\n今日特價", longText + U"\n明日特價" }) == 2, "VAR: replacing a short line links (both strict)");
+	}
+	{
+		// The option changes nothing for a non-privileged message, and with
+		// the option off a privileged message is always endorsed.
+		auto checkedPrivileged = 0;
+		auto same = true;
+		auto endorsed = true;
+		for (const auto &sc : data["scenarios"].array) {
+			auto account = A::Account(424242, key);
+			auto context = std::make_unique<A::ChatContext>(ContextFrom(sc["context"]));
+			const auto chat = account.chat(context->chatId());
+			auto seen = std::vector<std::int64_t>();
+			auto now = std::int64_t(0);
+			for (const auto &ev : sc["events"].array) {
+				const auto op = Narrow(ev["op"]);
+				if (op == "observe") {
+					const auto &m = ev["message"];
+					now = ev.has("now") ? ev["now"].asInt() : std::max(now, m["date"].asInt());
+					Observe(*chat, MessageFrom(m), *context, now);
+					if (std::find(seen.begin(), seen.end(), m["id"].asInt()) == seen.end()) {
+						seen.push_back(m["id"].asInt());
+					}
+				} else if (op == "delete") {
+					now = ev.has("now") ? ev["now"].asInt() : now;
+					auto ids = std::vector<std::int64_t>();
+					for (const auto &id : ev["ids"].array) {
+						ids.push_back(id.asInt());
+					}
+					(void)chat->remove(ids, now);
+				} else if (op == "notAd") {
+					now = ev.has("now") ? ev["now"].asInt() : now;
+					(void)chat->markNotAd(ev["id"].asInt(), *context, now);
+				} else if (op == "context") {
+					context = std::make_unique<A::ChatContext>(ContextFrom(ev["context"]));
+				} else if (op == "expect") {
+					now = ev.has("now") ? ev["now"].asInt() : now;
+					for (const auto id : seen) {
+						auto privileged = false;
+						for (const auto &[rid, row] : chat->rows()) {
+							if (row.msgId == std::uint32_t(id)) {
+								privileged = (row.flags & A::Flag::kPriv) != 0;
+							}
+						}
+						for (const auto sensitivity : kSensitivities) {
+							auto off = SettingsFrom(sc["settings"], sensitivity);
+							off.foldPrivilegedRepeats = false;
+							auto on = off;
+							on.foldPrivilegedRepeats = true;
+							const auto a = chat->decide(id, *context, off, now);
+							const auto b = chat->decide(id, *context, on, now);
+							if (privileged) {
+								++checkedPrivileged;
+								if (context->adminsKnown() && context->eligible()) {
+									endorsed = endorsed && (a.state == A::State::Endorsed);
+								}
+							} else {
+								same = same && (a == b);
+							}
+						}
+					}
+				}
+			}
+		}
+		Expect(tally, same, "foldPrivilegedRepeats changes nothing for non-privileged messages");
+		Expect(tally, endorsed, "foldPrivilegedRepeats off: privileged messages are endorsed");
+		Expect(tally, checkedPrivileged > 50, "privileged decisions checked: " + std::to_string(checkedPrivileged));
+	}
+}
+
+void CheckV3(const Json &data) {
+	auto &tally = Section("v3 unit checks (ref TestV3/TestV3Fixes)");
+	CheckV3Keys(tally);
+	CheckV3Privileged(tally, data);
 }
 
 // ---- account: forgetAll, orphans, panic wipe, total cap ----
@@ -2021,10 +2520,57 @@ void CheckRowCapAndPerformance() {
 	Expect(tally, first.state == A::State::Fold && mixedFolded > 2000, "mixed chat folds repeated contact ads");
 	Expect(tally, clusters == std::set<int>{ 10 }, "mixed chat clusters have 10 units each");
 
+	// v3: the linked channel floods a 14-line price list, each copy with its
+	// own short first line (linked only by the VAR family and BLOCK keys;
+	// about 30 keys a row). Off: all endorsed; on: all folded.
+	const auto linked = std::int64_t(-1002000000002);
+	auto priceData = A::ChatContextData();
+	priceData.chatId = -3;
+	priceData.linkedChannelId = linked;
+	const auto priceContext = A::ChatContext(std::move(priceData));
+	auto prices = A::Store(-3, key);
+	// Digits fold to '#', so the lines and the first lines differ by
+	// ideographs: 12 different price lines, 900 different first lines.
+	const auto stems = std::u32string(U"甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥天地玄黄宇宙洪荒");
+	auto list = std::u32string();
+	for (std::size_t line = 0; line != 12; ++line) {
+		list += U"\n" + std::u32string(line % 4 ? U"" : U"\n") + U"云端会员 "
+			+ stems.substr(line, 1) + U"档 特价" + U32(std::to_string(100 + line * 7)) + U"元";
+	}
+	list += U"\n\n下单私聊 @shop_demo_flood\n售后 t.me/+FloodDemoInv";
+	const auto priceStarted = std::chrono::steady_clock::now();
+	for (auto i = 1; i <= 3000; ++i) {
+		auto m = SimpleMessage(i, now - 6 * A::kDay + i * 120, 0, "");
+		m.sender.id = linked;
+		m.sender.role = A::Role::Channel;
+		m.text = stems.substr(std::size_t(i % 30), 1)
+			+ stems.substr(std::size_t((i / 30) % 30), 1) + U"提交：\n" + list;
+		Observe(prices, m, priceContext, now);
+	}
+	const auto priceObserved = std::chrono::steady_clock::now();
+	auto keys = std::size_t(0);
+	for (const auto &[rid, row] : prices.rows()) {
+		keys += row.keys.size();
+	}
+	auto on = A::Settings();
+	on.foldPrivilegedRepeats = true;
+	auto onFolded = 0;
+	for (auto i = 1; i <= 3000; ++i) {
+		onFolded += prices.decide(i, priceContext, on, now).fold ? 1 : 0;
+	}
+	const auto priceDecided = std::chrono::steady_clock::now();
+	auto offEndorsed = 0;
+	for (auto i = 1; i <= 3000; ++i) {
+		offEndorsed += (prices.decide(i, priceContext, settings, now).state == A::State::Endorsed) ? 1 : 0;
+	}
+	const auto priceBlob = prices.serialize();
+	Expect(tally, onFolded == 3000 && offEndorsed == 3000, "v3 channel price-list flood: off endorsed, on folded");
+
 	std::printf(
 		"  timing: observe 3005 msgs %.1f ms (%.1f us/msg)\n"
 		"          flood (1 cluster x 3000): decide cold %.2f ms, decide x3000 %.1f ms (%.1f us each)\n"
-		"          mixed (300 clusters x 10): decide cold %.2f ms, decide x3000 %.1f ms (%.1f us each)\n",
+		"          mixed (300 clusters x 10): decide cold %.2f ms, decide x3000 %.1f ms (%.1f us each)\n"
+		"          v3 price-list flood (3000 rows, %.1f keys a row, file %zu bytes): observe %.1f ms, decide x3000 (option on) %.1f ms (%.1f us each)\n",
 		Milliseconds(observed - started),
 		1000. * Milliseconds(observed - started) / total,
 		Milliseconds(coldEnd - coldStart),
@@ -2032,7 +2578,12 @@ void CheckRowCapAndPerformance() {
 		1000. * Milliseconds(allEnd - allStart) / (total - 5),
 		Milliseconds(mixedColdEnd - mixedCold),
 		Milliseconds(mixedAllEnd - mixedColdEnd),
-		1000. * Milliseconds(mixedAllEnd - mixedColdEnd) / 3000);
+		1000. * Milliseconds(mixedAllEnd - mixedColdEnd) / 3000,
+		double(keys) / double(std::max<std::size_t>(prices.rows().size(), 1)),
+		priceBlob.size(),
+		Milliseconds(priceObserved - priceStarted),
+		Milliseconds(priceDecided - priceObserved),
+		1000. * Milliseconds(priceDecided - priceObserved) / 3000);
 }
 
 } // namespace
@@ -2056,6 +2607,7 @@ int main(int argc, char **argv) {
 	CheckFuzzStore(dir);
 	CheckStorage(scenarios);
 	CheckRejections();
+	CheckV3(scenarios);
 	CheckAccount(scenarios);
 	CheckTables();
 	CheckRowCapAndPerformance();

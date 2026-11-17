@@ -373,7 +373,33 @@ void ChatModeBox(not_null<Ui::GenericBox*> box, not_null<PeerData*> peer) {
 	LangChanges(
 	) | rpl::on_next(refreshCount, content->lifetime());
 
+	// "Also fold admins and the group's channel" (SPEC 6.12): this group
+	// only, off by default, in effect while the group is on. Members'
+	// re-posts of their announcements stay protected either way.
 	Ui::AddSkip(content, st::settingsSendTypeSkip);
+	Ui::AddDivider(content);
+	Ui::AddSkip(content);
+	const auto privileged = content->add(object_ptr<Ui::SettingsButton>(
+		content,
+		TrValue(u"LuminaAdShieldChatFoldPrivileged"_q),
+		st::settingsButtonNoIcon));
+	// Follows the preference (a restored backup, another window); the click
+	// handler is the only writer.
+	privileged->toggleOn(rpl::single(
+		AdShield::ChatFoldPrivileged(peer)
+	) | rpl::then(AdShield::PrefsChanges() | rpl::map([=] {
+		return AdShield::ChatFoldPrivileged(peer);
+	})), true);
+	privileged->setClickedCallback([=] {
+		AdShield::SetChatFoldPrivileged(
+			peer,
+			!AdShield::ChatFoldPrivileged(peer));
+	});
+	Ui::AddSkip(content);
+	Ui::AddDividerText(
+		content,
+		TrValue(u"LuminaAdShieldChatFoldPrivilegedInfo"_q));
+
 	box->addButton(tr::lng_close(), [=] {
 		box->closeBox();
 	});

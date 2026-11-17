@@ -964,6 +964,8 @@ struct Registration {
 		{ u"LuminaAdShieldChatOn"_q, u"On in this group"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"Off in this group"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"Folded in the last 7 days: {1}"_q },
+		{ u"LuminaAdShieldChatFoldPrivileged"_q, u"Also fold admins and the group's channel"_q },
+		{ u"LuminaAdShieldChatFoldPrivilegedInfo"_q, u"Repeats posted by the group's owner, admins or channel themselves are folded too; announcements re-posted by members are still not folded."_q },
 		{ u"LuminaAdShieldFoldMany"_q, u"{1} repeated messages folded (suspected ads) · Click to show"_q },
 		{ u"LuminaAdShieldFoldOne"_q, u"1 repeated message folded (suspected ad, appearance {1} within 7 days) · Click to show"_q },
 		{ u"LuminaAdShieldFoldReply"_q, u"{1} repeated replies to you folded (suspected ads) · Click to show"_q },

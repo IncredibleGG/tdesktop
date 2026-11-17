@@ -1038,6 +1038,8 @@ namespace {
 		{ u"LuminaAdShieldChatOn"_q, u"在此群开启"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"在此群关闭"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"最近 7 天已收合 {1} 条"_q },
+		{ u"LuminaAdShieldChatFoldPrivileged"_q, u"连管理员和频道的也收"_q },
+		{ u"LuminaAdShieldChatFoldPrivilegedInfo"_q, u"群主、管理员或群组频道自己重复发的也收合；成员转贴的公告仍不收。"_q },
 		{ u"LuminaAdShieldFoldMany"_q, u"已收合 {1} 条重复消息（疑似广告）· 点击显示"_q },
 		{ u"LuminaAdShieldFoldOne"_q, u"已收合 1 条重复消息（疑似广告，7 天内第 {1} 次出现）· 点击显示"_q },
 		{ u"LuminaAdShieldFoldReply"_q, u"已收合 {1} 条回复你的重复消息（疑似广告）· 点击显示"_q },

@@ -871,6 +871,8 @@ namespace {
 		{ u"LuminaAdShieldChatOn"_q, u"Bu grupta açık"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"Bu grupta kapalı"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"Son 7 günde katlanan: {1}"_q },
+		{ u"LuminaAdShieldChatFoldPrivileged"_q, u"Yöneticileri ve grubun kanalını da katla"_q },
+		{ u"LuminaAdShieldChatFoldPrivilegedInfo"_q, u"Grubun sahibinin, yöneticilerinin veya kanalının kendi tekrarladığı mesajlar da katlanır; üyelerin yeniden paylaştığı duyurular yine katlanmaz."_q },
 		{ u"LuminaAdShieldFoldMany"_q, u"{1} tekrarlanan mesaj katlandı (şüpheli reklam) · Göstermek için tıklayın"_q },
 		{ u"LuminaAdShieldFoldOne"_q, u"1 tekrarlanan mesaj katlandı (şüpheli reklam, 7 gün içinde {1}. görülme) · Göstermek için tıklayın"_q },
 		{ u"LuminaAdShieldFoldReply"_q, u"Size gelen {1} tekrarlanan yanıt katlandı (şüpheli reklam) · Göstermek için tıklayın"_q },

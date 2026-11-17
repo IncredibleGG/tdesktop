@@ -868,6 +868,8 @@ namespace {
 		{ u"LuminaAdShieldChatOn"_q, u"مفعّل في هذه المجموعة"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"معطّل في هذه المجموعة"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"ما طُوي خلال آخر 7 أيام: {1}"_q },
+		{ u"LuminaAdShieldChatFoldPrivileged"_q, u"اطوِ أيضًا رسائل المشرفين وقناة المجموعة"_q },
+		{ u"LuminaAdShieldChatFoldPrivilegedInfo"_q, u"تُطوى أيضًا الرسائل المكررة التي ينشرها مالك المجموعة أو مشرفوها أو قناتها بأنفسهم؛ أما الإعلانات التي يعيد الأعضاء نشرها فلا تُطوى."_q },
 		{ u"LuminaAdShieldFoldMany"_q, u"طُويت رسائل مكررة: {1} (يُشتبه أنها إعلانات) · انقر للعرض"_q },
 		{ u"LuminaAdShieldFoldOne"_q, u"طُويت رسالة مكررة واحدة (يُشتبه أنها إعلان، الظهور رقم {1} خلال 7 أيام) · انقر للعرض"_q },
 		{ u"LuminaAdShieldFoldReply"_q, u"طُويت ردود مكررة عليك: {1} (يُشتبه أنها إعلانات) · انقر للعرض"_q },

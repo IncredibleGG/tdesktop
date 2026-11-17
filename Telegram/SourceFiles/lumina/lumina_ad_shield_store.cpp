@@ -83,11 +83,55 @@ struct RuleSet {
 	return (value >= 0) && (value <= kMaxDate);
 }
 
+// The v2 exact kinds: one shared key links any two senders (SPEC 1).
 [[nodiscard]] bool IsExact(KeyKind kind) {
-	return kind != KeyKind::Para;
+	switch (kind) {
+	case KeyKind::Fwd:
+	case KeyKind::Media:
+	case KeyKind::Text:
+	case KeyKind::Cjk:
+	case KeyKind::Tmpl:
+	case KeyKind::Contact: return true;
+	case KeyKind::Para:
+	case KeyKind::Var:
+	case KeyKind::VarL:
+	case KeyKind::VarS:
+	case KeyKind::Block: return false;
+	}
+	return false;
 }
 
-[[nodiscard]] bool Overlap(
+[[nodiscard]] bool IsV2Kind(KeyKind kind) {
+	return IsExact(kind) || (kind == KeyKind::Para);
+}
+
+// v3: VAR, VARL and VARS share the tag "var" and match across kinds.
+[[nodiscard]] bool IsVarFamily(KeyKind kind) {
+	return (kind == KeyKind::Var)
+		|| (kind == KeyKind::VarL)
+		|| (kind == KeyKind::VarS);
+}
+
+// Block containment (SPEC 2.7): at least 2 shared, and
+// 5 x shared >= 4 x min(both sides' block key counts).
+[[nodiscard]] bool BlockContained(
+		std::size_t shared,
+		std::size_t a,
+		std::size_t b) {
+	return (shared >= kBlockMinShared)
+		&& (kBlockContainDen * shared >= kBlockContainNum * std::min(a, b));
+}
+
+[[nodiscard]] std::size_t BlockCount(const std::vector<KeyRef> &keys) {
+	return std::size_t(std::count_if(keys.begin(), keys.end(), [](
+			const KeyRef &key) {
+		return key.kind == KeyKind::Block;
+	}));
+}
+
+// "Exact overlap" of a message with a record (= the v2 overlap, SPEC 6.3):
+// any shared v2 exact key, or at least 2 shared paragraph keys. Both sorted.
+[[nodiscard]] bool OverlapExact(
 		const std::vector<KeyRef> &a,
 		const std::vector<KeyRef> &b) {
 	auto paragraphs = 0;
@@ -101,7 +145,7 @@ struct RuleSet {
 		} else {
 			if (IsExact(i->kind)) {
 				return true;
-			} else if (++paragraphs >= 2) {
+			} else if (i->kind == KeyKind::Para && ++paragraphs >= 2) {
 				return true;
 			}
 			++i;
@@ -109,6 +153,45 @@ struct RuleSet {
 		}
 	}
 	return false;
+}
+
+// v3 "edited overlap" of message `a` with record `b` (SPEC 6.3): any VAR
+// family hash in common (across the three kinds), or `a` has at least 2
+// block keys and 5 x (those found in b) >= 4 x (a's block keys). It only
+// ever protects; it never makes an impersonation. Both sorted.
+[[nodiscard]] bool OverlapTolerant(
+		const std::vector<KeyRef> &a,
+		const std::vector<KeyRef> &b) {
+	auto bVar = std::vector<std::uint64_t>();
+	for (const auto &key : b) {
+		if (IsVarFamily(key.kind)) {
+			bVar.push_back(key.hash);
+		}
+	}
+	std::sort(bVar.begin(), bVar.end());
+	auto blocks = std::size_t(0);
+	auto shared = std::size_t(0);
+	for (const auto &key : a) {
+		if (IsVarFamily(key.kind)) {
+			if (std::binary_search(bVar.begin(), bVar.end(), key.hash)) {
+				return true;
+			}
+		} else if (key.kind == KeyKind::Block) {
+			++blocks;
+			if (std::binary_search(b.begin(), b.end(), key)) {
+				++shared;
+			}
+		}
+	}
+	return (blocks > 0) && BlockContained(shared, blocks, blocks);
+}
+
+[[nodiscard]] bool SameSender(
+		bool aLive,
+		std::uint64_t aSender,
+		bool bLive,
+		std::uint64_t bSender) {
+	return aLive && bLive && (aSender != 0) && (aSender == bSender);
 }
 
 [[nodiscard]] bool Subset(
@@ -135,14 +218,22 @@ struct RuleSet {
 		seen.insert(i, key);
 		unique.push_back(key);
 	}
+	// What a v2 record held (exact keys, then paragraph keys, at most 64),
+	// then the v3 keys (SPEC 6.4): paragraph keys are never pushed out by
+	// the many VAR keys.
 	auto result = std::vector<KeyRef>();
 	for (const auto &key : unique) {
-		if (IsExact(key.kind) && result.size() < kMaxRecordKeys) {
+		if (IsExact(key.kind) && result.size() < kRecordV2Keys) {
 			result.push_back(key);
 		}
 	}
 	for (const auto &key : unique) {
-		if (!IsExact(key.kind) && result.size() < kMaxRecordKeys) {
+		if (key.kind == KeyKind::Para && result.size() < kRecordV2Keys) {
+			result.push_back(key);
+		}
+	}
+	for (const auto &key : unique) {
+		if (!IsV2Kind(key.kind) && result.size() < kMaxRecordKeys) {
 			result.push_back(key);
 		}
 	}
@@ -279,7 +370,7 @@ private:
 	for (auto i = 0; i != count; ++i) {
 		auto kind = std::uint8_t();
 		auto hash = std::uint64_t();
-		if (!reader.u8(kind) || !reader.u64(hash) || kind < 1 || kind > 7) {
+		if (!reader.u8(kind) || !reader.u64(hash) || kind < 1 || kind > 11) {
 			return false;
 		}
 		keys.push_back({ KeyKind(kind), hash });
@@ -538,6 +629,7 @@ const Store::Units &Store::units(
 				unit.order.minKey = hash;
 			}
 		}
+		unit.blockKeys = BlockCount(unit.keys);
 	}
 	for (std::size_t index = 0; index != u.list.size(); ++index) {
 		for (const auto &key : u.list[index].keys) {
@@ -572,31 +664,96 @@ std::optional<std::size_t> Store::unitOf(
 	return u->second;
 }
 
-std::vector<std::size_t> Store::group(
-		const Units &all,
-		std::size_t m) const {
-	auto marked = std::vector<std::uint8_t>(all.list.size(), 0);
-	auto paragraphs = std::unordered_map<std::size_t, int>();
-	auto result = std::vector<std::size_t>{ m };
-	marked[m] = 1;
-	for (const auto &key : all.list[m].keys) {
-		const auto i = all.index.find(key);
-		if (i == all.index.end()) {
-			continue;
+Store::Group Store::group(const Units &all, std::size_t m) const {
+	// G(m), SPEC 1: the v2 rules (any shared exact key, or 2 shared
+	// paragraph keys) link any senders; the v3 rules link only live units of
+	// m's own sender: one line added or removed (m's VAR is the other's VARL
+	// or VARS, or the other way round), one line replaced (a shared VARS),
+	// block containment.
+	auto result = Group();
+	result.how.assign(all.list.size(), 0);
+	const auto &unit = all.list[m];
+	const auto mark = [&](std::size_t other, std::uint8_t how) {
+		if (!result.how[other]) {
+			result.members.push_back(other);
 		}
-		for (const auto other : i->second) {
-			if (IsExact(key.kind)) {
-				if (!marked[other]) {
-					marked[other] = 1;
-					result.push_back(other);
+		result.how[other] = std::max(result.how[other], how);
+	};
+	mark(m, 2);
+	const auto lookup = [&](KeyKind kind, std::uint64_t hash) {
+		const auto i = all.index.find(KeyRef{ kind, hash });
+		return (i != all.index.end()) ? &i->second : nullptr;
+	};
+	const auto varHit = [&](KeyKind kind, std::uint64_t hash) {
+		if (const auto list = lookup(kind, hash)) {
+			for (const auto other : *list) {
+				const auto &u = all.list[other];
+				if (SameSender(u.live, u.sender, unit.live, unit.sender)) {
+					mark(other, 1);
 				}
-			} else if (++paragraphs[other] >= 2 && !marked[other]) {
-				marked[other] = 1;
-				result.push_back(other);
+			}
+		}
+	};
+	// Shared paragraph / BLOCK keys per unit (an album unit unites the
+	// keys of its rows; sized on first use), and the units that share a
+	// BLOCK key with m.
+	auto paragraphs = std::vector<std::uint16_t>();
+	auto blocks = std::vector<std::uint16_t>();
+	auto withBlocks = std::vector<std::size_t>();
+	const auto counter = [&](std::vector<std::uint16_t> &counts)
+	-> std::vector<std::uint16_t>& {
+		if (counts.empty()) {
+			counts.assign(all.list.size(), 0);
+		}
+		return counts;
+	};
+	for (const auto &key : unit.keys) {
+		if (IsExact(key.kind)) {
+			if (const auto list = lookup(key.kind, key.hash)) {
+				for (const auto other : *list) {
+					mark(other, 2);
+				}
+			}
+		} else if (key.kind == KeyKind::Para) {
+			if (const auto list = lookup(key.kind, key.hash)) {
+				auto &counts = counter(paragraphs);
+				for (const auto other : *list) {
+					if (++counts[other] >= 2) {
+						mark(other, 2);
+					}
+				}
+			}
+		} else if (key.kind == KeyKind::Block) {
+			if (const auto list = lookup(key.kind, key.hash)) {
+				auto &counts = counter(blocks);
+				for (const auto other : *list) {
+					if (!counts[other]++) {
+						withBlocks.push_back(other);
+					}
+				}
+			}
+		} else if (key.kind == KeyKind::Var) {
+			// m's full text is the other one minus a line (m lacks a line).
+			varHit(KeyKind::VarL, key.hash);
+			varHit(KeyKind::VarS, key.hash);
+		} else {
+			// m minus a line is the other one's full text (m has one more).
+			varHit(KeyKind::Var, key.hash);
+			if (key.kind == KeyKind::VarS) {
+				// Both minus a line are equal (one line replaced): both
+				// sides must be strict.
+				varHit(KeyKind::VarS, key.hash);
 			}
 		}
 	}
-	std::sort(result.begin(), result.end(), [&](
+	for (const auto other : withBlocks) {
+		const auto &u = all.list[other];
+		if (SameSender(u.live, u.sender, unit.live, unit.sender)
+			&& BlockContained(blocks[other], unit.blockKeys, u.blockKeys)) {
+			mark(other, 1);
+		}
+	}
+	std::sort(result.members.begin(), result.members.end(), [&](
 			std::size_t a,
 			std::size_t b) {
 		return UnitLess(all.list[a], all.list[b]);
@@ -638,60 +795,130 @@ Decision Store::decide(
 	const auto &list = all.list;
 	const auto &m = list[mi];
 	result.replyToMe = (m.flags & Flag::kReplyMe) != 0;
-	if (m.flags & Flag::kEndorsing) {
+	// v3, SPEC 6.12: with "Also fold admins and the group's channel" on, a
+	// privileged author's message is not endorsed by itself; only that
+	// author's own repeats are counted. Off: exactly v2.
+	const auto privMode = settings.foldPrivilegedRepeats
+		&& (m.flags & Flag::kPriv)
+		&& !(m.flags & Flag::kSelf);
+	if ((m.flags & Flag::kEndorsing) && !privMode) {
 		result.state = State::Endorsed;
 		return result;
 	}
-	const auto members = group(all, mi);
+	const auto grouped = group(all, mi);
+	const auto &members = grouped.members;
+	const auto sortedUnique = [](std::vector<std::uint64_t> &list) {
+		std::sort(list.begin(), list.end());
+		list.erase(std::unique(list.begin(), list.end()), list.end());
+	};
 
 	auto endorseLinks = std::vector<std::uint64_t>();
-	auto endorsedHit = false;
-	for (const auto &record : _records) {
-		if (record.kind != kRecordEndorse
-			|| Older(now, record.stamp, kRecordTtl)) {
-			continue;
-		}
-		if (Overlap(m.keys, record.keySet)) {
-			endorsedHit = true;
-			endorseLinks.insert(
-				endorseLinks.end(),
-				record.links.begin(),
-				record.links.end());
-		}
-	}
-	for (const auto u : members) {
-		if (u != mi && (list[u].flags & Flag::kEndorsing)) {
-			endorsedHit = true;
-			endorseLinks.insert(
-				endorseLinks.end(),
-				list[u].links.begin(),
-				list[u].links.end());
-		}
-	}
-	std::sort(endorseLinks.begin(), endorseLinks.end());
-	endorseLinks.erase(
-		std::unique(endorseLinks.begin(), endorseLinks.end()),
-		endorseLinks.end());
 	auto impersonating = false;
-	if (endorsedHit) {
-		if (Subset(m.links, endorseLinks)) {
+	if (privMode) {
+		// Only another privileged author's endorsement protects m (another
+		// admin posted the same); m's own author's, and those with no author
+		// (self, a pinned member message, a member forwarding the channel),
+		// do not. No impersonation here.
+		for (const auto &record : _records) {
+			if (record.kind != kRecordEndorse
+				|| Older(now, record.stamp, kRecordTtl)
+				|| record.author == 0
+				|| record.author == m.sender) {
+				continue;
+			}
+			if (OverlapExact(m.keys, record.keySet)
+				|| OverlapTolerant(m.keys, record.keySet)) {
+				result.state = State::Endorsed;
+				return result;
+			}
+		}
+		for (const auto u : members) {
+			const auto &unit = list[u];
+			if (u != mi
+				&& unit.live
+				&& (unit.flags & Flag::kPriv)
+				&& unit.sender != m.sender) {
+				result.state = State::Endorsed;
+				return result;
+			}
+		}
+	} else {
+		// E1: exact overlap (v2) - endorsed or impersonation, as in v2.
+		// E2: only edited overlap (VAR family / BLOCK) - it can endorse, it
+		// never makes an impersonation.
+		auto exactHit = false;
+		auto tolerantHit = false;
+		auto exactLinks = std::vector<std::uint64_t>();
+		auto tolerantLinks = std::vector<std::uint64_t>();
+		for (const auto &record : _records) {
+			if (record.kind != kRecordEndorse
+				|| Older(now, record.stamp, kRecordTtl)) {
+				continue;
+			}
+			if (OverlapExact(m.keys, record.keySet)) {
+				exactHit = true;
+				exactLinks.insert(
+					exactLinks.end(),
+					record.links.begin(),
+					record.links.end());
+			} else if (OverlapTolerant(m.keys, record.keySet)) {
+				tolerantHit = true;
+				tolerantLinks.insert(
+					tolerantLinks.end(),
+					record.links.begin(),
+					record.links.end());
+			}
+		}
+		for (const auto u : members) {
+			if (u != mi && (list[u].flags & Flag::kEndorsing)) {
+				const auto exact = (grouped.how[u] == 2);
+				(exact ? exactHit : tolerantHit) = true;
+				auto &links = exact ? exactLinks : tolerantLinks;
+				links.insert(
+					links.end(),
+					list[u].links.begin(),
+					list[u].links.end());
+			}
+		}
+		sortedUnique(exactLinks);
+		sortedUnique(tolerantLinks);
+		if (exactHit) {
+			if (Subset(m.links, exactLinks)) {
+				result.state = State::Endorsed;
+				return result;
+			}
+			impersonating = true;
+			endorseLinks = std::move(exactLinks);
+		} else if (tolerantHit && Subset(m.links, tolerantLinks)) {
 			result.state = State::Endorsed;
 			return result;
 		}
-		impersonating = true;
 	}
 
+	// "Not an ad": exact overlap; or edited overlap and m's links are all in
+	// that record's (an edit that swaps in a scam link is not let through).
 	for (const auto &record : _records) {
 		if (record.kind != kRecordNotAd
 			|| Older(now, record.stamp, kRecordTtl)) {
 			continue;
 		}
-		if (Overlap(m.keys, record.keySet)) {
+		if (OverlapExact(m.keys, record.keySet)) {
 			result.state = State::NotAd;
 			return result;
+		} else if (OverlapTolerant(m.keys, record.keySet)) {
+			auto links = record.links;
+			sortedUnique(links);
+			if (Subset(m.links, links)) {
+				result.state = State::NotAd;
+				return result;
+			}
 		}
 	}
 
+	// In privileged mode a strong feature of the author's own view counts
+	// too (SPEC 6.12).
+	const auto hasStrong = (m.flags & Flag::kStrongMask)
+		|| (privMode && (m.flags & Flag::kPrivStrong));
 	auto gc = std::vector<std::size_t>();
 	auto cls = DecisionClass::Plain;
 	if (impersonating) {
@@ -703,12 +930,22 @@ Decision Store::decide(
 		}
 		cls = DecisionClass::Strong;
 	} else {
-		gc = members;
-		if (m.flags & Flag::kStrongMask) {
+		if (privMode) {
+			// Only the author's own live units: members' copies and
+			// anonymous units do not count.
+			for (const auto u : members) {
+				if (list[u].live && list[u].sender == m.sender) {
+					gc.push_back(u);
+				}
+			}
+		} else {
+			gc = members;
+		}
+		if (hasStrong) {
 			cls = DecisionClass::Strong;
 		} else {
 			auto sharesMediaOrFwd = false;
-			for (const auto u : members) {
+			for (const auto u : gc) {
 				if (u == mi) {
 					continue;
 				}
@@ -924,7 +1161,7 @@ Decision Store::decide(
 	}
 	if ((f & (Flag::kReplyMe | Flag::kMentionMe))
 		&& settings.exemptReplies
-		&& !(f & Flag::kStrongMask)
+		&& !hasStrong
 		&& !impersonating
 		&& !(f & Flag::kMassMention)) {
 		result.state = State::Exempt;
@@ -989,7 +1226,8 @@ ObserveResult Store::observe(
 			now,
 			Hash(_key, "msg", std::string_view(std::to_string(msgId))),
 			keys,
-			links);
+			links,
+			fp.privileged ? fp.senderKey : 0);
 	}
 	if (fp.store) {
 		const auto rid = allocateRid();
@@ -1070,7 +1308,7 @@ MarkResult Store::markNotAd(
 			unit.links.end());
 	};
 	append(mi);
-	for (const auto u : group(all, mi)) {
+	for (const auto u : group(all, mi).members) {
 		if (u != mi) {
 			append(u);
 		}
@@ -1088,7 +1326,8 @@ void Store::upsertEndorse(
 		std::int64_t stamp,
 		std::uint64_t msgKey,
 		const std::vector<KeyRef> &keys,
-		const std::vector<std::uint64_t> &links) {
+		const std::vector<std::uint64_t> &links,
+		std::uint64_t author) {
 	auto ordered = OrderedRecordKeys(keys);
 	auto capped = std::vector<std::uint64_t>(
 		links.begin(),
@@ -1098,6 +1337,7 @@ void Store::upsertEndorse(
 			record.keySet = SortedUnique(ordered);
 			record.keys = std::move(ordered);
 			record.links = std::move(capped);
+			record.author = author;
 			record.stamp = std::max(record.stamp, stamp);
 			return;
 		}
@@ -1106,6 +1346,7 @@ void Store::upsertEndorse(
 	record.kind = kRecordEndorse;
 	record.stamp = stamp;
 	record.msgKey = msgKey;
+	record.author = author;
 	record.keySet = SortedUnique(ordered);
 	record.keys = std::move(ordered);
 	record.links = std::move(capped);
@@ -1250,6 +1491,7 @@ std::vector<unsigned char> Store::serialize() const {
 		writer.u8(record.kind);
 		writer.i64(record.stamp);
 		writer.u64(record.msgKey);
+		writer.u64(record.author);
 		WriteKeys(writer, record.keys);
 		WriteHashes(writer, record.links);
 	}
@@ -1359,6 +1601,11 @@ std::unique_ptr<Store> Store::Deserialize(
 			|| (anonymous && row.sender != 0)) {
 			return nullptr;
 		}
+		if (((row.flags & Flag::kPriv) && !(row.flags & Flag::kEndorsing))
+			|| ((row.flags & Flag::kPrivStrong)
+				&& !(row.flags & Flag::kPriv))) {
+			return nullptr;
+		}
 		if (!ReadKeys(reader, kMaxRowKeys, row.keys)
 			|| !ReadHashes(reader, kMaxLinksPerRow, row.links)
 			|| !ReadHashes(reader, kMaxPendingPerRow, row.pending)) {
@@ -1379,10 +1626,13 @@ std::unique_ptr<Store> Store::Deserialize(
 		auto record = StoredRecord();
 		const auto read = reader.u8(record.kind)
 			&& reader.i64(record.stamp)
-			&& reader.u64(record.msgKey);
+			&& reader.u64(record.msgKey)
+			&& reader.u64(record.author);
 		if (!read
 			|| (record.kind != kRecordEndorse && record.kind != kRecordNotAd)
-			|| !InDateRange(record.stamp)) {
+			|| !InDateRange(record.stamp)
+			|| (record.kind == kRecordNotAd
+				&& (record.author != 0 || record.msgKey != 0))) {
 			return nullptr;
 		}
 		++((record.kind == kRecordEndorse) ? endorse : notAd);

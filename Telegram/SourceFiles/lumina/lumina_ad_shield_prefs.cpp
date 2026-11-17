@@ -52,6 +52,10 @@ using PrefsFile = Lumina::Store;
 	return u"adShieldChatModes"_q;
 }
 
+[[nodiscard]] QString ChatFoldPrivilegedKey() {
+	return u"adShieldChatFoldPrivileged"_q;
+}
+
 [[nodiscard]] QString ModeOn() {
 	return u"on"_q;
 }
@@ -68,6 +72,28 @@ using PrefsFile = Lumina::Store;
 
 [[nodiscard]] QString SessionPrefix(quint64 sessionUniqueId) {
 	return QString::number(sessionUniqueId) + QChar('_');
+}
+
+// Removes the entries of one account (all of them for an empty prefix) from
+// a per-group object preference.
+void RemoveChatEntries(const QString &key, const QString &prefix) {
+	auto object = Prefs::Instance().getObject(key);
+	auto changed = false;
+	for (auto i = object.begin(); i != object.end();) {
+		if (i.key().startsWith(prefix)) {
+			i = object.erase(i);
+			changed = true;
+		} else {
+			++i;
+		}
+	}
+	if (!changed) {
+		return;
+	} else if (object.isEmpty()) {
+		Prefs::Instance().remove(key);
+	} else {
+		Prefs::Instance().set(key, object, PrefsFile::Private);
+	}
 }
 
 [[nodiscard]] rpl::producer<> KeysChanges(std::vector<QString> keys) {
@@ -213,8 +239,39 @@ bool AnyChatOnAnywhere() {
 	return false;
 }
 
+bool ChatFoldPrivileged(quint64 sessionUniqueId, quint64 peerId) {
+	if (!sessionUniqueId || !peerId) {
+		return false;
+	}
+	return Prefs::Instance().getObject(
+		ChatFoldPrivilegedKey()
+	).value(ChatKey(sessionUniqueId, peerId)).toBool(false);
+}
+
+void SetChatFoldPrivileged(quint64 sessionUniqueId, quint64 peerId, bool on) {
+	if (!sessionUniqueId || !peerId) {
+		return;
+	}
+	const auto key = ChatKey(sessionUniqueId, peerId);
+	auto object = Prefs::Instance().getObject(ChatFoldPrivilegedKey());
+	if (on) {
+		object.insert(key, true);
+	} else {
+		object.remove(key);
+	}
+	if (object.isEmpty()) {
+		Prefs::Instance().remove(ChatFoldPrivilegedKey());
+	} else {
+		Prefs::Instance().set(
+			ChatFoldPrivilegedKey(),
+			object,
+			PrefsFile::Private);
+	}
+}
+
 void ClearChatModes() {
 	Prefs::Instance().remove(ChatModesKey());
+	Prefs::Instance().remove(ChatFoldPrivilegedKey());
 }
 
 void ClearChatModesFor(quint64 sessionUniqueId) {
@@ -222,23 +279,8 @@ void ClearChatModesFor(quint64 sessionUniqueId) {
 		return;
 	}
 	const auto prefix = SessionPrefix(sessionUniqueId);
-	auto object = Prefs::Instance().getObject(ChatModesKey());
-	auto changed = false;
-	for (auto i = object.begin(); i != object.end();) {
-		if (i.key().startsWith(prefix)) {
-			i = object.erase(i);
-			changed = true;
-		} else {
-			++i;
-		}
-	}
-	if (!changed) {
-		return;
-	} else if (object.isEmpty()) {
-		Prefs::Instance().remove(ChatModesKey());
-	} else {
-		Prefs::Instance().set(ChatModesKey(), object, PrefsFile::Private);
-	}
+	RemoveChatEntries(ChatModesKey(), prefix);
+	RemoveChatEntries(ChatFoldPrivilegedKey(), prefix);
 }
 
 rpl::producer<> ActivationChanges() {
@@ -258,6 +300,10 @@ rpl::producer<> TrialChanges() {
 	return KeysChanges({ TrialKey() });
 }
 
+rpl::producer<> ChatFoldPrivilegedChanges() {
+	return KeysChanges({ ChatFoldPrivilegedKey() });
+}
+
 rpl::producer<> PrefsChanges() {
 	return KeysChanges({
 		EnabledKey(),
@@ -268,6 +314,7 @@ rpl::producer<> PrefsChanges() {
 		ExemptRepliesKey(),
 		TrialKey(),
 		ChatModesKey(),
+		ChatFoldPrivilegedKey(),
 	});
 }
 

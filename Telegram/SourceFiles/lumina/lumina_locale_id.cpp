@@ -1243,6 +1243,8 @@ namespace {
 		{ u"LuminaAdShieldChatOn"_q, u"Aktif di grup ini"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"Nonaktif di grup ini"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"Dilipat dalam 7 hari terakhir: {1}"_q },
+		{ u"LuminaAdShieldChatFoldPrivileged"_q, u"Lipat juga admin dan kanal grup"_q },
+		{ u"LuminaAdShieldChatFoldPrivilegedInfo"_q, u"Pesan berulang yang dikirim sendiri oleh pemilik, admin, atau kanal grup juga dilipat; pengumuman yang dibagikan ulang oleh anggota tetap tidak dilipat."_q },
 		{ u"LuminaAdShieldFoldMany"_q, u"{1} pesan berulang dilipat (diduga iklan) · Klik untuk menampilkan"_q },
 		{ u"LuminaAdShieldFoldOne"_q, u"1 pesan berulang dilipat (diduga iklan, kemunculan ke-{1} dalam 7 hari) · Klik untuk menampilkan"_q },
 		{ u"LuminaAdShieldFoldReply"_q, u"{1} balasan berulang untuk Anda dilipat (diduga iklan) · Klik untuk menampilkan"_q },

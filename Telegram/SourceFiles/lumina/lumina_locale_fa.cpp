@@ -857,6 +857,8 @@ namespace {
 		{ u"LuminaAdShieldChatOn"_q, u"در این گروه روشن"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"در این گروه خاموش"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"جمع‌شده در ۷ روز اخیر: {1}"_q },
+		{ u"LuminaAdShieldChatFoldPrivileged"_q, u"مدیران و کانال گروه را هم جمع کن"_q },
+		{ u"LuminaAdShieldChatFoldPrivilegedInfo"_q, u"پیام‌های تکراری که مالک، مدیران یا کانال گروه خودشان می‌فرستند هم جمع می‌شوند؛ اطلاعیه‌هایی که اعضا دوباره می‌فرستند همچنان جمع نمی‌شوند."_q },
 		{ u"LuminaAdShieldFoldMany"_q, u"پیام‌های تکراری جمع‌شده: {1} (احتمالاً تبلیغ) · برای نمایش کلیک کنید"_q },
 		{ u"LuminaAdShieldFoldOne"_q, u"۱ پیام تکراری جمع شد (احتمالاً تبلیغ، دفعهٔ {1} در ۷ روز اخیر) · برای نمایش کلیک کنید"_q },
 		{ u"LuminaAdShieldFoldReply"_q, u"پاسخ‌های تکراری جمع‌شده به شما: {1} (احتمالاً تبلیغ) · برای نمایش کلیک کنید"_q },

@@ -1247,6 +1247,8 @@ namespace {
 		{ u"LuminaAdShieldChatOn"_q, u"Ativado neste grupo"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"Desativado neste grupo"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"Recolhidas nos últimos 7 dias: {1}"_q },
+		{ u"LuminaAdShieldChatFoldPrivileged"_q, u"Recolher também administradores e o canal do grupo"_q },
+		{ u"LuminaAdShieldChatFoldPrivilegedInfo"_q, u"Repetições publicadas pelo próprio dono, pelos administradores ou pelo canal do grupo também são recolhidas; anúncios repostados por membros continuam sem ser recolhidos."_q },
 		{ u"LuminaAdShieldFoldMany"_q, u"{1} mensagens repetidas recolhidas (possíveis anúncios) · Clique para mostrar"_q },
 		{ u"LuminaAdShieldFoldOne"_q, u"1 mensagem repetida recolhida (possível anúncio, aparição nº {1} em 7 dias) · Clique para mostrar"_q },
 		{ u"LuminaAdShieldFoldReply"_q, u"{1} respostas repetidas para você recolhidas (possíveis anúncios) · Clique para mostrar"_q },

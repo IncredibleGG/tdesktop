@@ -232,6 +232,8 @@ public:
 	[[nodiscard]] ChatMode chatMode(not_null<PeerData*> peer) const;
 	void setChatMode(not_null<PeerData*> peer, ChatMode mode);
 	[[nodiscard]] bool chatEnabled(not_null<PeerData*> peer) const;
+	[[nodiscard]] bool chatFoldPrivileged(not_null<PeerData*> peer) const;
+	void setChatFoldPrivileged(not_null<PeerData*> peer, bool on);
 
 	[[nodiscard]] const Decision *cached(
 		not_null<const HistoryItem*> item) const;
@@ -285,6 +287,9 @@ private:
 		// exemptions): nothing is "triggering under the reader's eyes".
 		bool noDeferOnce = false;
 		int adminsPolls = 0;
+		// "Also fold admins and the group's channel" as the decisions in
+		// the cache were made with (Settings::foldPrivilegedRepeats).
+		bool foldPrivileged = false;
 	};
 	struct Cached {
 		Decision decision;
@@ -327,6 +332,7 @@ private:
 
 	void refreshFlags();
 	void refreshActivation();
+	void refreshFoldPrivileged();
 	void scanLoaded(SessionState &state, PeerData *only);
 	void noteLoaded(
 		SessionState &state,
@@ -478,6 +484,13 @@ void Manager::start() {
 		scheduleDecide();
 	}, _lifetime);
 
+	// A group's "Also fold admins and the group's channel": only that
+	// group's decisions change.
+	ChatFoldPrivilegedChanges(
+	) | rpl::on_next([=] {
+		refreshFoldPrivileged();
+	}, _lifetime);
+
 	TrialChanges(
 	) | rpl::on_next([=] {
 		_trial = TrialMode();
@@ -578,6 +591,29 @@ void Manager::refreshActivation() {
 	destroyWorkerIfIdle();
 }
 
+void Manager::refreshFoldPrivileged() {
+	auto any = false;
+	for (const auto &[uniqueId, state] : _sessions) {
+		for (const auto &[peerId, chat] : state->chats) {
+			const auto now = chatFoldPrivileged(chat->peer);
+			if (chat->foldPrivileged == now) {
+				continue;
+			}
+			// SPEC 9.2: a setting change invalidates the whole group's
+			// decisions. The user asked for it: what folds now folds at
+			// once, nothing waits for the chat to be shown again.
+			chat->foldPrivileged = now;
+			chat->decideDirty = true;
+			chat->decideAll = true;
+			chat->noDeferOnce = true;
+			any = true;
+		}
+	}
+	if (any) {
+		scheduleDecide();
+	}
+}
+
 Manager::SessionState *Manager::sessionState(
 		not_null<Main::Session*> session,
 		bool create) {
@@ -621,6 +657,7 @@ Manager::ChatState *Manager::chatState(
 	}
 	auto chat = std::make_unique<ChatState>(peer);
 	chat->chatId = BotApiId(peer);
+	chat->foldPrivileged = chatFoldPrivileged(peer);
 	const auto result = chat.get();
 	state.chats.emplace(peer->id, std::move(chat));
 	return result;
@@ -1124,6 +1161,12 @@ Sender Manager::buildSender(
 	if (!user) {
 		return result;
 	}
+	// SPEC 9.1: a bot is a bot, also when it is an admin (it is exempt, not
+	// a privileged author).
+	if (user->isBot()) {
+		result.role = Role::Bot;
+		return result;
+	}
 	const auto userId = peerToUser(user->id);
 	if (const auto channel = peer->asChannel()) {
 		const auto info = channel->mgInfo.get();
@@ -1139,12 +1182,8 @@ Sender Manager::buildSender(
 			result.role = Role::Admin;
 		}
 	}
-	if (result.role == Role::Member) {
-		if (user->isBot()) {
-			result.role = Role::Bot;
-		} else if (user->isContact()) {
-			result.role = Role::Contact;
-		}
+	if (result.role == Role::Member && user->isContact()) {
+		result.role = Role::Contact;
 	}
 	return result;
 }
@@ -1370,6 +1409,7 @@ void Manager::runDecides() {
 			request.chatId = chat->chatId;
 			request.context = chat->context;
 			request.settings = settings;
+			request.settings.foldPrivilegedRepeats = chat->foldPrivileged;
 			request.now = now;
 			const auto partial = base::take(chat->toDecide);
 			if (base::take(chat->decideAll)) {
@@ -1878,6 +1918,23 @@ void Manager::setChatMode(not_null<PeerData*> peer, ChatMode mode) {
 	}
 }
 
+bool Manager::chatFoldPrivileged(not_null<PeerData*> peer) const {
+	return AdShield::ChatFoldPrivileged(
+		peer->session().uniqueId(),
+		quint64(peer->id.value));
+}
+
+void Manager::setChatFoldPrivileged(not_null<PeerData*> peer, bool on) {
+	if (!ChatEligible(peer)) {
+		return;
+	}
+	// ChatFoldPrivilegedChanges() decides the group again.
+	AdShield::SetChatFoldPrivileged(
+		peer->session().uniqueId(),
+		quint64(peer->id.value),
+		on);
+}
+
 bool Manager::chatEnabled(not_null<PeerData*> peer) const {
 	if (!ChatEligible(peer)) {
 		return false;
@@ -2042,7 +2099,9 @@ void Manager::requestFoldedCount(
 	const auto userId = userIdFor(*state);
 	const auto chatId = chat->chatId;
 	const auto context = chat->context;
-	const auto settings = CurrentSettings();
+	auto settings = CurrentSettings();
+	// The preference itself: the box asks again right after it changed.
+	settings.foldPrivilegedRepeats = chatFoldPrivileged(peer);
 	const auto now = std::int64_t(base::unixtime::now());
 	const auto generation = _generation;
 	_worker->with([=](Worker &worker) {
@@ -2124,6 +2183,16 @@ void SetChatMode(not_null<PeerData*> peer, ChatMode mode) {
 
 bool ChatEnabled(not_null<PeerData*> peer) {
 	return Manager::Instance().chatEnabled(peer);
+}
+
+bool ChatFoldPrivileged(not_null<PeerData*> peer) {
+	return Manager::Instance().chatFoldPrivileged(peer);
+}
+
+void SetChatFoldPrivileged(not_null<PeerData*> peer, bool on) {
+	auto &manager = Manager::Instance();
+	manager.start();
+	manager.setChatFoldPrivileged(peer, on);
 }
 
 const Decision *CachedDecision(not_null<const HistoryItem*> item) {

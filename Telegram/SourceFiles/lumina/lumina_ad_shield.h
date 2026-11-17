@@ -19,7 +19,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <vector>
 
 // AdShield ("hide repeated ads") core, ported from the shared reference
-// engine (adshield/ref/adshield.py, algoVersion 2, formatVersion 2). The
+// engine (adshield/ref/adshield.py, algoVersion 3, formatVersion 3). The
 // normative rules live in adshield/SPEC.md; function names follow SPEC 9.2.
 //
 // Pure logic: std only, no Qt, no platform message types. Strings are
@@ -31,8 +31,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 // dedicated AdShield queue, SPEC 8.4). The free functions are reentrant.
 namespace Lumina::AdShield {
 
-inline constexpr int kAlgoVersion = 2;
-inline constexpr int kFormatVersion = 2;
+inline constexpr int kAlgoVersion = 3;
+inline constexpr int kFormatVersion = 3;
 
 inline constexpr std::int64_t kHour = 3600;
 inline constexpr std::int64_t kDay = 86400;
@@ -42,6 +42,19 @@ inline constexpr int kMinTmplWlen = 4;
 inline constexpr int kMinCjkCount = 8;
 inline constexpr int kParaMinWlen = 32;
 inline constexpr std::size_t kMaxPara = 16;
+
+// v3 edit-tolerant keys (SPEC 2.7): the VAR family and BLOCK.
+inline constexpr int kVarMinWlen = 24;
+inline constexpr int kVarDropRatio = 2;
+inline constexpr int kVarStrictRatio = 4;
+inline constexpr std::size_t kVarEdge = 16;
+inline constexpr std::size_t kMaxVar = 1 + 2 * kVarEdge + 1;
+inline constexpr int kBlockMinWlen = 16;
+inline constexpr std::size_t kMaxBlock = 16;
+inline constexpr std::size_t kBlockMinShared = 2;
+inline constexpr std::size_t kBlockContainNum = 4;
+inline constexpr std::size_t kBlockContainDen = 5;
+
 inline constexpr int kPureTextMinCjk = 12;
 inline constexpr int kPureTextMinLetters = 24;
 inline constexpr int kAckRemainderMax = 2;
@@ -60,8 +73,11 @@ inline constexpr std::size_t kMaxNotAdRecords = 200;
 inline constexpr std::size_t kMaxHandles = 2000;
 inline constexpr std::size_t kMaxLinksPerRow = 16;
 inline constexpr std::size_t kMaxPendingPerRow = 16;
-inline constexpr std::size_t kMaxRowKeys = 22;
-inline constexpr std::size_t kMaxRecordKeys = 64;
+inline constexpr std::size_t kMaxRowKeys = 6 + kMaxPara + kMaxVar + kMaxBlock;
+inline constexpr std::size_t kMaxRecordKeys = 128;
+// A record starts with what a v2 record held (exact keys, then paragraph
+// keys, at most this many), then the v3 keys (SPEC 6.4).
+inline constexpr std::size_t kRecordV2Keys = 64;
 inline constexpr std::size_t kMaxRecordLinks = 64;
 inline constexpr std::int64_t kTotalCapBytes = 10 * 1024 * 1024;
 inline constexpr std::int64_t kMaxDate = std::int64_t(1) << 40;
@@ -77,6 +93,12 @@ enum class KeyKind : std::uint8_t {
 	Tmpl = 5,
 	Para = 6,
 	Contact = 7,
+	// v3: the VAR family (all three hash with the tag "var", so the same
+	// payload has the same hash whatever its kind) and BLOCK.
+	Var = 8,
+	VarL = 9,
+	VarS = 10,
+	Block = 11,
 };
 
 namespace Flag {
@@ -90,11 +112,17 @@ inline constexpr std::uint32_t kContactCard = 1U << 5;
 inline constexpr std::uint32_t kPhone = 1U << 6;
 inline constexpr std::uint32_t kAccount = 1U << 7;
 inline constexpr std::uint32_t kPointer = 1U << 8;
+// v3: a privileged author's own strong feature that only counts as trusted
+// because it is pinned, or was demoted because the post is the linked
+// channel's own (SPEC 6.12). Always together with kPriv.
+inline constexpr std::uint32_t kPrivStrong = 1U << 9;
 inline constexpr std::uint32_t kUrl = 1U << 10;
 inline constexpr std::uint32_t kMemberMention = 1U << 11;
 inline constexpr std::uint32_t kLongNumber = 1U << 12;
 inline constexpr std::uint32_t kMassMention = 1U << 13;
 inline constexpr std::uint32_t kEmail = 1U << 14;
+// v3: a privileged author (SPEC 6.12). Always together with kEndorsing.
+inline constexpr std::uint32_t kPriv = 1U << 15;
 inline constexpr std::uint32_t kHasText = 1U << 16;
 inline constexpr std::uint32_t kMediaOnly = 1U << 17;
 inline constexpr std::uint32_t kPureText = 1U << 18;
@@ -133,7 +161,9 @@ inline constexpr std::uint32_t kStoredMask = kStrongMask
 	| kHasMediaKey
 	| kHasFwdKey
 	| kAnon
-	| kTmplCond;
+	| kTmplCond
+	| kPriv
+	| kPrivStrong;
 
 } // namespace Flag
 
@@ -260,6 +290,10 @@ struct ChatContextData {
 // Immutable once built: usernames are folded and the trusted tokens and
 // domains (SPEC 5.1) are extracted from the description and pinned texts in
 // the constructor. Build a new one whenever the chat information changes.
+//
+// pinnedOnlyTokens() (v3, SPEC 6.12) are the trusted tokens that are trusted
+// only because a pinned message has them: not the group's or the linked
+// channel's username and nothing from the description.
 class ChatContext {
 public:
 	explicit ChatContext(ChatContextData data);
@@ -295,6 +329,9 @@ public:
 	[[nodiscard]] const std::set<std::u32string> &trustedDomains() const {
 		return _trustedDomains;
 	}
+	[[nodiscard]] const std::set<std::u32string> &pinnedOnlyTokens() const {
+		return _pinnedOnlyTokens;
+	}
 
 private:
 	std::int64_t _chatId = 0;
@@ -307,6 +344,7 @@ private:
 	std::vector<std::u32string> _memberHandles;
 	std::set<std::u32string> _trustedTokens;
 	std::set<std::u32string> _trustedDomains;
+	std::set<std::u32string> _pinnedOnlyTokens;
 
 };
 
@@ -381,6 +419,9 @@ struct FingerprintResult {
 	int cjkCount = 0;
 	int otherLetterCount = 0;
 	std::vector<std::u32string> paragraphs;
+	// v3: the intermediate values of the VAR and BLOCK keys (vectors).
+	std::vector<std::u32string> contentLines;
+	std::vector<std::u32string> blocks;
 	std::vector<Link> links;
 	std::vector<LinkFeature> linkFeatures;
 	std::vector<FingerprintKey> keys;
@@ -390,6 +431,7 @@ struct FingerprintResult {
 	std::uint64_t senderKey = 0;
 	bool store = false;
 	bool endorsing = false;
+	bool privileged = false;
 	int mentionCount = 0;
 	std::uint32_t resolvedFlags = 0;
 };
@@ -426,6 +468,23 @@ using IsKnownHandle = std::function<bool(std::uint64_t handleHash)>;
 [[nodiscard]] std::pair<int, int> LetterCounts(std::u32string_view text);
 [[nodiscard]] std::vector<std::u32string> Paragraphs(
 	std::u32string_view foldNoLinks);
+
+// v3 (SPEC 2.1): every U+000D right before a U+000A is dropped (one pass, per
+// scalar). Applied to the message text before Fold.
+[[nodiscard]] std::u32string CollapseCrlf(std::u32string_view text);
+
+// v3 (SPEC 2.7). ContentLines: the non-empty text forms of the lines of F'.
+// VarKeys: (kind, payload) of the VAR family, kind being KeyKind::Var,
+// VarL or VarS as an int. Blocks: every block (unfiltered). BlockPayloads:
+// the BLOCK key payloads (none when fewer than 2 qualify).
+[[nodiscard]] std::vector<std::u32string> ContentLines(
+	std::u32string_view foldNoLinks);
+[[nodiscard]] std::vector<std::pair<int, std::u32string>> VarKeys(
+	const std::vector<std::u32string> &lines);
+[[nodiscard]] std::vector<std::u32string> Blocks(
+	std::u32string_view foldNoLinks);
+[[nodiscard]] std::vector<std::u32string> BlockPayloads(
+	const std::vector<std::u32string> &blocks);
 [[nodiscard]] std::u32string RegisteredDomain(std::u32string_view host);
 [[nodiscard]] std::optional<Link> CanonicalizeUrl(
 	std::u32string_view raw,

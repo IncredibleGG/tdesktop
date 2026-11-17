@@ -8,8 +8,11 @@ Writes (all synthetic, deterministic seeds):
   golden/extraction.json      fold + extract_links + canonicalize_url + leading handles + paragraphs
                               on targeted inputs (full expected text) and randomly composed ones (digest)
   golden/fuzz_fingerprint.json random messages -> SipHash digest of every fingerprint field
+                              (v3: content lines, blocks, privileged; multi-line, CR LF and
+                              privileged-author messages included)
   golden/fuzz_store.json      random observe/edit/delete/notAd/context/expect sequences ->
-                              SipHash digest of every Decision field at every expect + final blob
+                              SipHash digest of every Decision field at every expect (3
+                              sensitivities x foldPrivilegedRepeats off/on) + final blob
 The canonical text formats are mirrored in check.cpp; change both together.
 """
 import json
@@ -196,11 +199,31 @@ FORWARDS = [None] * 6 + [
 ]
 
 
+# v3: lines for multi-line messages (VAR family, blocks): short and long lines, separators that are not
+# content lines (blank, spaces, emoji, a lone link), and the same lines again.
+LINES = [
+    "丝滑提交：", "限时特价云端会员年卡全网最低价格", "季卡月卡全部现货下单后五分钟内开通", "企业采购量大可议欢迎私聊客服询价",
+    "售后保固一年有任何问题随时找我们", "#件起", "今日特价", "明日特价", "价目表如下请参考", "详情请私聊客服人员",
+    "Fresh signals every morning", "check bio for the full list", "VIP room open now", "收到", "ok",
+    "第一区块的内容长度足够", "第二行", "第二区块的内容长度也足够", "短", "@deal_88", "t.me/+abc", "https://example.com/p",
+    "", "", "", " ", "\t", "🔥🔥🔥", "➕➕", "\u2028",
+]
+
+
+def random_lines(rnd):
+    count = rnd.choice([2, 3, 4, 6, 10, 20, 40])
+    sep = rnd.choice(["\n", "\n", "\r\n", "\n\n", "\r\r\n"])
+    lines = [rnd.choice(LINES) for _ in range(count)]
+    if rnd.random() < 0.3:
+        lines[rnd.randrange(count)] = random_text(rnd, 4)
+    return sep.join(lines)
+
+
 def random_message(rnd, mid):
     sender_id = rnd.choice([7001, 7002, 7003, 555, -1009876543210])
     m = {"id": mid, "date": 1795000000 + rnd.randint(0, 100000),
          "sender": {"id": sender_id, "role": rnd.choice(ROLES)},
-         "text": random_text(rnd, rnd.choice([3, 6, 12]))}
+         "text": random_text(rnd, rnd.choice([3, 6, 12])) if rnd.random() < 0.6 else random_lines(rnd)}
     u = rnd.choice(USERNAMES)
     if u is not None:
         m["sender"]["username"] = u
@@ -243,7 +266,8 @@ def fingerprint_canon(fp):
              "\x1e".join("\x1d".join([A.KIND_NAME[k], p, A.hex64(h)]) for k, p, h in fp.keys),
              str(fp.flags), ",".join(A.hex64(h) for h in fp.link_hashes), ",".join(A.hex64(h) for h in fp.pending),
              str(fp.resolved_flags), A.hex64(fp.sender_key), "1" if fp.store else "0", "1" if fp.endorsing else "0",
-             str(fp.mention_count)]
+             str(fp.mention_count), "\x1e".join(fp.content_lines), "\x1e".join(fp.blocks),
+             "1" if fp.privileged else "0"]
     return "\x1f".join(parts)
 
 
@@ -284,7 +308,20 @@ TEMPLATES = [
     {"text": "hello everyone, check bio for the best crypto signals today guaranteed profit", "viaBot": True},
     {"text": "聯繫 +86 138 1234 5678 有優惠"},
     {"text": "ok"},
+    # v3: a multi-line price list and its edits (VAR family, BLOCK), pinned, auto-forwarded and forwarded
+    # from the linked channel (privileged authors, PRIV_STRONG, author = linked channel).
+    {"text": "云端会员价目表\n\n年卡 特价 三百元\n季卡 特价 一百元\n\n下单私聊 @shop_demo_a\n售后群 t.me/+ShopDemoInv"},
+    {"text": "丝滑提交：\n\n云端会员价目表\n\n年卡 特价 三百元\n季卡 特价 一百元\n\n下单私聊 @shop_demo_a\n售后群 t.me/+ShopDemoInv"},
+    {"text": "云端会员价目表\r\n\r\n年卡 特价 三百元\r\n季卡 特价 九十元\r\n\r\n下单私聊 @shop_demo_a\r\n售后群 t.me/+ShopDemoInv"},
+    {"text": "云端会员价目表\n\n年卡 特价 三百元\n季卡 特价 一百元\n\n下单私聊 @shop_demo_a\n售后群 t.me/+ShopDemoInv",
+     "pinned": True},
+    {"text": "云端会员价目表\n\n年卡 特价 三百元\n季卡 特价 一百元\n\n下单私聊 @shop_demo_a\n售后群 t.me/+ShopDemoInv",
+     "autoForward": True, "forward": {"fromKind": "channel", "fromId": -1002000000002, "postId": 77,
+                                      "username": "lumina_demo_ch", "date": 1794260000}},
+    {"text": "本週六下午兩點社區讀書會\n地點在市立圖書館三樓會議室\n歡迎大家帶朋友一起參加\n我整理的書單 https://notes-alpha.example/l"},
 ]
+V3_TEMPLATES = 20     # TEMPLATES[20:] are the v3 ones; every other sequence uses some of them
+
 SENDERS = [
     {"id": 101, "role": "member", "username": "alice"},
     {"id": 102, "role": "member"},
@@ -294,6 +331,9 @@ SENDERS = [
     {"id": 106, "role": "contact"},
     {"id": 107, "role": "self", "username": "lumina_me"},
     {"id": 108, "role": "member"},
+    {"id": -1002000000002, "role": "channel", "username": "lumina_demo_ch"},
+    {"id": -1001000000001, "role": "anon_admin"},
+    {"id": 109, "role": "creator", "username": "group_owner_demo"},
 ]
 CONTEXTS = [
     {"chatId": -1001000000001, "type": "supergroup", "username": "lumina_demo_grp",
@@ -306,6 +346,11 @@ CONTEXTS = [
      "memberHandles": ["me_demo_user", "alice", "boss_admin"], "selfUsername": "lumina_me"},
     {"chatId": -1001000000001, "type": "supergroup", "adminsKnown": False, "memberHandles": []},
     {"chatId": -1001000000001, "type": "private"},
+    {"chatId": -1001000000001, "type": "supergroup", "username": "lumina_demo_grp",
+     "linkedChannel": {"id": -1002000000002, "username": "lumina_demo_ch"},
+     "description": "合成測試群 https://lumina-demo.example.org",
+     "pinnedTexts": ["云端会员价目表 下单私聊 @shop_demo_a 售后群 t.me/+ShopDemoInv"], "adminsKnown": True,
+     "memberHandles": ["me_demo_user"], "selfUsername": "lumina_me"},
 ]
 
 
@@ -350,9 +395,12 @@ def run_store_sequence(events):
             ctx = A.ChatContext.from_json(CONTEXTS[ev[1]])
         elif op == "e":
             now = ev[1] if ev[1] is not None else now
-            for sens in A.SENSITIVITIES:
-                for i in seen:
-                    lines.append(sens + " " + decision_line(i, chat.decide(i, ctx, {"sensitivity": sens}, now)))
+            for fpr in (False, True):
+                for sens in A.SENSITIVITIES:
+                    settings = {"sensitivity": sens, "foldPrivilegedRepeats": fpr}
+                    for i in seen:
+                        lines.append("%s%s %s" % (sens, "+priv" if fpr else "",
+                                                  decision_line(i, chat.decide(i, ctx, settings, now))))
     lines.append("blob " + A.hex64(A.siphash24(A.TEST_KEY, chat.serialize())))
     return "\n".join(lines)
 
@@ -361,12 +409,14 @@ def store_cases():
     rnd = random.Random(424242)
     out = []
     base = 1794268800
-    for _ in range(400):
+    for n in range(400):
         events = []
         date = base
         next_id = 1
         ids = []
         hot = rnd.sample(range(len(TEMPLATES)), rnd.randint(2, 5))
+        if n % 2:
+            hot += rnd.sample(range(V3_TEMPLATES, len(TEMPLATES)), rnd.randint(2, 4))
         for _ in range(rnd.randint(4, 30)):
             r = rnd.random()
             if r < 0.66 or not ids:
@@ -387,7 +437,7 @@ def store_cases():
             elif r < 0.79:
                 events.append(["n", rnd.choice(ids + [999]), None if rnd.random() < 0.7 else date + 60])
             elif r < 0.83:
-                events.append(["c", rnd.choice([0, 0, 1, 1, 2, 3])])
+                events.append(["c", rnd.choice([0, 0, 1, 1, 4, 4, 2, 3])])
             else:
                 events.append(["e", None if rnd.random() < 0.85 else date + rnd.choice([3600, 9 * 86400, 40 * 86400])])
         events.append(["e", None])

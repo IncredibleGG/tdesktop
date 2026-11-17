@@ -38,10 +38,18 @@ namespace Lumina::AdShield {
 //                            group that follows the global switch has no
 //                            entry. Written only by SetChatMode(),
 //                            ClearChatModesFor() and ClearChatModes().
+//   adShieldChatFoldPrivileged
+//                            object { "<sessionUniqueId>_<peerId>": true },
+//                            Store::Private, next to the modes - the
+//                            groups with "Also fold admins and the group's
+//                            channel" on (SPEC 6.12, default off: no
+//                            entry). Written only by SetChatFoldPrivileged(),
+//                            ClearChatModesFor() and ClearChatModes().
 //
 // The panic wipe empties all of them with every other Lumina preference;
-// "Clear local data" removes adShieldChatModes (ClearChatModes()), and
-// logging out removes the account's entries (ClearChatModesFor()).
+// "Clear local data" removes adShieldChatModes and
+// adShieldChatFoldPrivileged (ClearChatModes()), and logging out removes the
+// account's entries of both (ClearChatModesFor()).
 //
 // Main thread only, like Lumina::Settings.
 
@@ -83,7 +91,13 @@ void SetChatMode(quint64 sessionUniqueId, quint64 peerId, ChatMode mode);
 // Whether any group of any account is set to "on in this group".
 [[nodiscard]] bool AnyChatOnAnywhere();
 
-// Every per-group mode of every account goes back to "follow the default".
+// "Also fold admins and the group's channel" (foldPrivilegedRepeats) of one
+// group; off unless set. It only matters while the group is effectively on.
+[[nodiscard]] bool ChatFoldPrivileged(quint64 sessionUniqueId, quint64 peerId);
+void SetChatFoldPrivileged(quint64 sessionUniqueId, quint64 peerId, bool on);
+
+// Every per-group mode of every account goes back to "follow the default",
+// and every group's "Also fold admins and the group's channel" goes off.
 void ClearChatModes();
 
 // The same for one account only (its logout).
@@ -98,6 +112,10 @@ void ClearChatModesFor(quint64 sessionUniqueId);
 
 // The trial switch changed: only the display changes.
 [[nodiscard]] rpl::producer<> TrialChanges();
+
+// Some group's "Also fold admins and the group's channel" changed: that
+// group's decisions have to be recomputed.
+[[nodiscard]] rpl::producer<> ChatFoldPrivilegedChanges();
 
 // Any of the above, for settings rows.
 [[nodiscard]] rpl::producer<> PrefsChanges();

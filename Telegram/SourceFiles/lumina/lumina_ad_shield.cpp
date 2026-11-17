@@ -24,6 +24,9 @@ using View = std::u32string_view;
 
 constexpr auto kNpos = View::npos;
 
+// "No line" for VarKeys().
+constexpr auto kNoLine = std::size_t(-1);
+
 // The text rounds of SPEC 4.2. Every pattern there uses ASCII classes only,
 // so each one is matched by a small hand-written scanner that reproduces the
 // backtracking regex semantics (leftmost match, greedy, lookarounds looking
@@ -1293,6 +1296,85 @@ void ContactAccounts(
 	return result;
 }
 
+// The link feature table of SPEC 5.1, in its order. A token is trusted when
+// it is in trustedTokens and not in `untrusted` (v3: the author's own view of
+// SPEC 6.12 leaves out the tokens that are trusted only because they are
+// pinned).
+struct FeatureInputs {
+	const std::set<String> *trustedTokens = nullptr;
+	const std::set<String> *untrusted = nullptr;
+	const std::set<String> *trustedDomains = nullptr;
+	bool channelForward = false;
+	const String *forwardUsername = nullptr;
+	const String *selfUsername = nullptr;
+	const String *senderUsername = nullptr;
+	const std::vector<String> *addressed = nullptr;
+};
+
+[[nodiscard]] LinkFeature FeatureOf(
+		const Link &link,
+		const FeatureInputs &in) {
+	const auto trusted = in.trustedTokens->count(link.token)
+		&& !(in.untrusted && in.untrusted->count(link.token));
+	if (trusted) {
+		return LinkFeature::NotCounted;
+	} else if (link.kind == LinkKind::Invite) {
+		return in.channelForward ? LinkFeature::Weak : LinkFeature::Strong;
+	} else if (link.kind == LinkKind::Handle) {
+		const auto h = StartsWith(link.token, U"@")
+			? link.token.substr(1)
+			: String();
+		if (!h.empty() && h == *in.forwardUsername) {
+			return LinkFeature::NotCounted;
+		} else if (!h.empty() && h == *in.selfUsername) {
+			return LinkFeature::NotCounted;
+		} else if (in.channelForward) {
+			return LinkFeature::Weak;
+		} else if (!h.empty() && h == *in.senderUsername) {
+			return LinkFeature::Strong;
+		} else if (h.empty()) {
+			return LinkFeature::Strong;
+		} else if (std::binary_search(
+				in.addressed->begin(),
+				in.addressed->end(),
+				h)) {
+			return LinkFeature::Member;
+		}
+		return LinkFeature::Pending;
+	} else if (link.kind == LinkKind::Url) {
+		if (link.shortener) {
+			return in.channelForward
+				? LinkFeature::Weak
+				: LinkFeature::Strong;
+		} else if (in.trustedDomains->count(link.domain)) {
+			return LinkFeature::NotCounted;
+		}
+		return LinkFeature::Weak;
+	} else if (link.kind == LinkKind::Phone || link.kind == LinkKind::Acct) {
+		return LinkFeature::Strong;
+	} else if (link.kind == LinkKind::Mail) {
+		return in.trustedDomains->count(link.domain)
+			? LinkFeature::NotCounted
+			: LinkFeature::Weak;
+	}
+	return LinkFeature::NotCounted;
+}
+
+[[nodiscard]] std::vector<View> SplitLines(View s) {
+	// Keeps the empty pieces: "A\n\nB" is A, "", B (SPEC 2.7).
+	auto result = std::vector<View>();
+	auto from = std::size_t(0);
+	while (true) {
+		const auto till = s.find(U'\n', from);
+		if (till == kNpos) {
+			result.push_back(s.substr(from));
+			return result;
+		}
+		result.push_back(s.substr(from, till - from));
+		from = till + 1;
+	}
+}
+
 } // namespace
 
 ChatContext::ChatContext(ChatContextData data)
@@ -1307,16 +1389,22 @@ ChatContext::ChatContext(ChatContextData data)
 	for (const auto &handle : data.memberHandles) {
 		_memberHandles.push_back(FoldUsername(handle));
 	}
+	// `own`: the group's and the linked channel's usernames and what the
+	// description has; `pinned`: what the pinned messages have (SPEC 6.12).
+	auto own = std::set<String>();
+	auto pinned = std::set<String>();
 	for (const auto *handle : { &_username, &_linkedChannelUsername }) {
 		if (!handle->empty()) {
 			_trustedTokens.insert(U"@" + *handle);
+			own.insert(U"@" + *handle);
 		}
 	}
-	const auto add = [&](View text) {
+	const auto add = [&](View text, std::set<String> &into) {
 		auto extraction = ExtractLinks(Tables::Fold(text));
 		for (auto &link : extraction.links) {
 			NormalizePhoneToken(link);
 			_trustedTokens.insert(link.token);
+			into.insert(link.token);
 			const auto urlOrMail = (link.kind == LinkKind::Url)
 				|| (link.kind == LinkKind::Mail);
 			if (urlOrMail && !link.shortener && !link.domain.empty()) {
@@ -1324,9 +1412,14 @@ ChatContext::ChatContext(ChatContextData data)
 			}
 		}
 	};
-	add(data.description);
+	add(data.description, own);
 	for (const auto &text : data.pinnedTexts) {
-		add(text);
+		add(text, pinned);
+	}
+	for (const auto &token : pinned) {
+		if (!own.count(token)) {
+			_pinnedOnlyTokens.insert(token);
+		}
 	}
 }
 
@@ -1446,6 +1539,127 @@ std::vector<std::u32string> Paragraphs(std::u32string_view foldNoLinks) {
 			}
 		}
 		from = till + 1;
+	}
+	return result;
+}
+
+std::u32string CollapseCrlf(std::u32string_view text) {
+	auto result = String();
+	result.reserve(text.size());
+	for (std::size_t i = 0; i != text.size(); ++i) {
+		if (text[i] == U'\r'
+			&& i + 1 < text.size()
+			&& text[i + 1] == U'\n') {
+			continue;
+		}
+		result.push_back(text[i]);
+	}
+	return result;
+}
+
+std::vector<std::u32string> ContentLines(std::u32string_view foldNoLinks) {
+	auto result = std::vector<String>();
+	for (const auto line : SplitLines(foldNoLinks)) {
+		auto t = Tables::TextForm(line);
+		if (!t.empty()) {
+			result.push_back(std::move(t));
+		}
+	}
+	return result;
+}
+
+std::vector<std::pair<int, std::u32string>> VarKeys(
+		const std::vector<std::u32string> &lines) {
+	const auto n = lines.size();
+	auto weights = std::vector<std::int64_t>();
+	weights.reserve(n);
+	auto total = std::int64_t(0);
+	for (const auto &line : lines) {
+		weights.push_back(Tables::Wlen(line));
+		total += weights.back();
+	}
+	auto result = std::vector<std::pair<int, String>>();
+	auto seen = std::set<String>();
+	// Drops lines `first` and `second` (kNoLine for none).
+	const auto emit = [&](std::size_t first, std::size_t second) {
+		auto dropped = std::int64_t(0);
+		for (const auto i : { first, second }) {
+			if (i != kNoLine) {
+				dropped += weights[i];
+			}
+		}
+		const auto kept = total - dropped;
+		if (kept < kVarMinWlen) {
+			return;
+		}
+		auto kind = KeyKind::Var;
+		if (dropped == 0) {
+			kind = KeyKind::Var;
+		} else if (kVarStrictRatio * dropped <= kept) {
+			kind = KeyKind::VarS;
+		} else if (kVarDropRatio * dropped <= kept) {
+			kind = KeyKind::VarL;
+		} else {
+			return;
+		}
+		auto payload = String();
+		for (std::size_t i = 0; i != n; ++i) {
+			if (i != first && i != second) {
+				payload += lines[i];
+			}
+		}
+		if (seen.insert(payload).second) {
+			result.emplace_back(int(kind), std::move(payload));
+		}
+	};
+	emit(kNoLine, kNoLine);
+	if (n >= 2) {
+		for (std::size_t i = 0; i != n; ++i) {
+			if (i < kVarEdge || i + kVarEdge >= n) {
+				emit(i, kNoLine);
+			}
+		}
+	}
+	if (n >= 3) {
+		emit(0, n - 1);
+	}
+	return result;
+}
+
+std::vector<std::u32string> Blocks(std::u32string_view foldNoLinks) {
+	auto result = std::vector<String>();
+	auto current = String();
+	auto any = false;
+	for (const auto line : SplitLines(foldNoLinks)) {
+		auto t = Tables::TextForm(line);
+		if (!t.empty()) {
+			current += t;
+			any = true;
+		} else if (any) {
+			result.push_back(std::exchange(current, String()));
+			any = false;
+		}
+	}
+	if (any) {
+		result.push_back(std::move(current));
+	}
+	return result;
+}
+
+std::vector<std::u32string> BlockPayloads(
+		const std::vector<std::u32string> &blocks) {
+	auto result = std::vector<String>();
+	for (const auto &block : blocks) {
+		if (Tables::Wlen(block) >= kBlockMinWlen
+			&& std::find(result.begin(), result.end(), block) == result.end()) {
+			result.push_back(block);
+			if (result.size() == kMaxBlock) {
+				break;
+			}
+		}
+	}
+	if (result.size() < 2) {
+		result.clear();
 	}
 	return result;
 }
@@ -1778,7 +1992,7 @@ FingerprintResult Fingerprint(
 		&& (forward->fromKind == ForwardKind::Channel);
 	const auto mediaKind = msg.media.kind;
 
-	r.fold = Tables::Fold(msg.text);
+	r.fold = Tables::Fold(CollapseCrlf(msg.text));
 	auto extraction = ExtractLinks(r.fold);
 	auto links = std::move(extraction.links);
 	for (const auto &entity : msg.entities) {
@@ -1830,6 +2044,8 @@ FingerprintResult Fingerprint(
 	r.cjkCount = cjkCount;
 	r.otherLetterCount = otherLetterCount;
 	r.paragraphs = Paragraphs(r.foldNoLinks);
+	r.contentLines = ContentLines(r.foldNoLinks);
+	r.blocks = Blocks(r.foldNoLinks);
 
 	const auto &trustedTokens = context.trustedTokens();
 	const auto &trustedDomains = context.trustedDomains();
@@ -1837,55 +2053,19 @@ FingerprintResult Fingerprint(
 		? FoldUsername(forward->username)
 		: String();
 	const auto addressed = LeadingHandles(r.fold);
+	auto features = FeatureInputs();
+	features.trustedTokens = &trustedTokens;
+	features.trustedDomains = &trustedDomains;
+	features.channelForward = channelForward;
+	features.forwardUsername = &forwardUsername;
+	features.selfUsername = &context.selfUsername();
+	features.senderUsername = &senderUsername;
+	features.addressed = &addressed;
 	auto strong = std::uint32_t(0);
 	auto weak = std::uint32_t(0);
 	r.linkFeatures.reserve(links.size());
 	for (const auto &link : links) {
-		auto feature = LinkFeature::NotCounted;
-		if (trustedTokens.count(link.token)) {
-			feature = LinkFeature::NotCounted;
-		} else if (link.kind == LinkKind::Invite) {
-			feature = channelForward ? LinkFeature::Weak : LinkFeature::Strong;
-		} else if (link.kind == LinkKind::Handle) {
-			const auto h = StartsWith(link.token, U"@")
-				? link.token.substr(1)
-				: String();
-			if (!h.empty() && h == forwardUsername) {
-				feature = LinkFeature::NotCounted;
-			} else if (!h.empty() && h == context.selfUsername()) {
-				feature = LinkFeature::NotCounted;
-			} else if (channelForward) {
-				feature = LinkFeature::Weak;
-			} else if (!h.empty() && h == senderUsername) {
-				feature = LinkFeature::Strong;
-			} else if (h.empty()) {
-				feature = LinkFeature::Strong;
-			} else if (std::binary_search(
-					addressed.begin(),
-					addressed.end(),
-					h)) {
-				feature = LinkFeature::Member;
-			} else {
-				feature = LinkFeature::Pending;
-			}
-		} else if (link.kind == LinkKind::Url) {
-			if (link.shortener) {
-				feature = channelForward
-					? LinkFeature::Weak
-					: LinkFeature::Strong;
-			} else if (trustedDomains.count(link.domain)) {
-				feature = LinkFeature::NotCounted;
-			} else {
-				feature = LinkFeature::Weak;
-			}
-		} else if (link.kind == LinkKind::Phone
-			|| link.kind == LinkKind::Acct) {
-			feature = LinkFeature::Strong;
-		} else if (link.kind == LinkKind::Mail) {
-			feature = trustedDomains.count(link.domain)
-				? LinkFeature::NotCounted
-				: LinkFeature::Weak;
-		}
+		const auto feature = FeatureOf(link, features);
 		r.linkFeatures.push_back(feature);
 		if (feature == LinkFeature::Strong) {
 			strong |= StrongBit(link.kind);
@@ -2019,6 +2199,14 @@ FingerprintResult Fingerprint(
 	for (const auto &paragraph : r.paragraphs) {
 		keys.emplace_back(KeyKind::Para, paragraph);
 	}
+	// v3: the edit-tolerant keys come last; the v2 keys and their order do
+	// not change.
+	for (auto &[kind, payload] : VarKeys(r.contentLines)) {
+		keys.emplace_back(KeyKind(kind), std::move(payload));
+	}
+	for (auto &payload : BlockPayloads(r.blocks)) {
+		keys.emplace_back(KeyKind::Block, std::move(payload));
+	}
 	r.keys.reserve(keys.size());
 	for (auto &[kind, payload] : keys) {
 		const auto hash = Hash(key, KeyKindTag(kind), View(payload));
@@ -2051,11 +2239,55 @@ FingerprintResult Fingerprint(
 		|| (role == Role::AnonAdmin)
 		|| (role == Role::Self);
 	const auto linked = context.linkedChannelId();
-	r.endorsing = (endorsingRole && !(forward && !channelForward))
+	// Forwarding a user's or a hidden sender's message endorses nothing.
+	const auto forwardOther = forward && !channelForward;
+	const auto sentAsLinked = (role == Role::Channel)
+		&& (linked != 0)
+		&& (msg.sender.id == linked);
+	r.endorsing = (endorsingRole && !forwardOther)
 		|| msg.pinned
 		|| msg.autoForward
 		|| (forward && linked != 0 && forward->fromId == linked)
-		|| (role == Role::Channel && linked != 0 && msg.sender.id == linked);
+		|| sentAsLinked;
+
+	// v3 (SPEC 6.12): a privileged author - an admin, the creator or an
+	// anonymous admin (not forwarding someone else's message), the linked
+	// channel itself, or its automatic forward. Never self; a pinned member
+	// message and a member forwarding a channel post are not privileged.
+	const auto privilegedRole = (role == Role::Admin)
+		|| (role == Role::Creator)
+		|| (role == Role::AnonAdmin);
+	r.privileged = (role != Role::Self)
+		&& ((privilegedRole && !forwardOther)
+			|| msg.autoForward
+			|| sentAsLinked);
+	// A forward of the linked channel's post: its author is the channel.
+	const auto ownForward = channelForward
+		&& (linked != 0)
+		&& (forward->fromId == linked);
+	// The author's own strong features: links that are trusted only because
+	// they are pinned, or demoted only because the post is the linked
+	// channel's own, are strong again from the author's point of view.
+	auto privStrong = false;
+	if (r.privileged) {
+		auto own = features;
+		own.untrusted = &context.pinnedOnlyTokens();
+		own.channelForward = channelForward && !ownForward;
+		for (std::size_t i = 0; i != links.size(); ++i) {
+			const auto feature = r.linkFeatures[i];
+			if (feature == LinkFeature::Strong
+				|| feature == LinkFeature::Pending) {
+				continue;
+			}
+			const auto mine = FeatureOf(links[i], own);
+			if (mine == LinkFeature::Strong || mine == LinkFeature::Pending) {
+				privStrong = true;
+			}
+		}
+		if (ownForward && (hasButtons || msg.viaBot)) {
+			privStrong = true;
+		}
+	}
 	auto flags = strong | weak;
 	if (r.wlen >= kMinTextWlen) {
 		flags |= Flag::kHasText;
@@ -2090,6 +2322,12 @@ FingerprintResult Fingerprint(
 	if (r.endorsing) {
 		flags |= Flag::kEndorsing;
 	}
+	if (r.privileged) {
+		flags |= Flag::kPriv;
+	}
+	if (privStrong) {
+		flags |= Flag::kPrivStrong;
+	}
 	if (role == Role::Bot) {
 		flags |= Flag::kBot;
 	}
@@ -2108,7 +2346,12 @@ FingerprintResult Fingerprint(
 			|| !r.pending.empty()
 			|| (flags & storedMarks) != 0
 			|| r.endorsing);
-	r.senderKey = Hash(key, "sender", View(Dec(msg.sender.id)));
+	// The author: the linked channel when a privileged author forwards its
+	// post (an admin forwarding it once more is the channel's own repeat).
+	const auto authorId = (r.privileged && ownForward)
+		? linked
+		: msg.sender.id;
+	r.senderKey = Hash(key, "sender", View(Dec(authorId)));
 	r.links = std::move(links);
 
 	auto known = std::vector<std::uint64_t>();
@@ -2213,6 +2456,10 @@ std::string_view KeyKindName(KeyKind kind) {
 	case KeyKind::Tmpl: return "TMPL";
 	case KeyKind::Para: return "PARA";
 	case KeyKind::Contact: return "CONTACT";
+	case KeyKind::Var: return "VAR";
+	case KeyKind::VarL: return "VARL";
+	case KeyKind::VarS: return "VARS";
+	case KeyKind::Block: return "BLOCK";
 	}
 	return "";
 }
@@ -2226,6 +2473,10 @@ std::string_view KeyKindTag(KeyKind kind) {
 	case KeyKind::Tmpl: return "tmpl";
 	case KeyKind::Para: return "para";
 	case KeyKind::Contact: return "contact";
+	case KeyKind::Var:
+	case KeyKind::VarL:
+	case KeyKind::VarS: return "var";
+	case KeyKind::Block: return "block";
 	}
 	return "";
 }

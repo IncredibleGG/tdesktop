@@ -27,6 +27,10 @@ struct Settings {
 	bool exemptBots = true;
 	bool exemptReplies = true;
 	bool dryRun = false;
+	// v3, per group, "Also fold admins and the group's channel" (SPEC 6.12):
+	// a privileged author's own repeats are counted and folded like anyone
+	// else's. Off: exactly the v2 decisions.
+	bool foldPrivilegedRepeats = false;
 };
 
 enum class State : std::uint8_t {
@@ -113,6 +117,10 @@ struct StoredRecord {
 	std::uint8_t kind = kRecordEndorse;
 	std::int64_t stamp = 0;
 	std::uint64_t msgKey = 0;
+	// v3: the senderKey of the privileged author of an endorsement, else 0
+	// (self, a pinned member message, a member forwarding the channel, every
+	// "not an ad" record).
+	std::uint64_t author = 0;
 	std::vector<KeyRef> keys;
 	std::vector<std::uint64_t> links;
 	std::vector<KeyRef> keySet;
@@ -198,6 +206,8 @@ private:
 		std::uint32_t flags = 0;
 		std::vector<KeyRef> keys;
 		std::vector<std::uint64_t> links;
+		// How many of `keys` are BLOCK keys (v3 block containment).
+		std::size_t blockKeys = 0;
 		bool live = false;
 		Order order;
 	};
@@ -228,14 +238,20 @@ private:
 	[[nodiscard]] std::optional<std::size_t> unitOf(
 		const Units &all,
 		std::int64_t msgId) const;
-	[[nodiscard]] std::vector<std::size_t> group(
-		const Units &all,
-		std::size_t m) const;
+	// G(m) by order, and how each unit joined it (SPEC 1, 6.3).
+	struct Group {
+		std::vector<std::size_t> members;
+		// Per unit of Units::list: 0 not in G(m), 1 only through the v3
+		// same-sender VAR / BLOCK rules, 2 through the v2 rules (G2(m)).
+		std::vector<std::uint8_t> how;
+	};
+	[[nodiscard]] Group group(const Units &all, std::size_t m) const;
 	void upsertEndorse(
 		std::int64_t stamp,
 		std::uint64_t msgKey,
 		const std::vector<KeyRef> &keys,
-		const std::vector<std::uint64_t> &links);
+		const std::vector<std::uint64_t> &links,
+		std::uint64_t author);
 	void addNotAd(
 		std::int64_t stamp,
 		std::vector<KeyRef> keys,

@@ -68,8 +68,13 @@ namespace Lumina::AdShield {
 // after its last change, writes everything when the app is deactivated or
 // quits (FlushNow()), keeps at most 8 groups in memory and 10 MiB on disk.
 // Logout -> SessionLoggingOut() forgets that account and its per-group
-// modes; the panic wipe -> PanicWipe() removes the whole directory and the
-// key.
+// modes (with each group's "Also fold admins and the group's channel"); the
+// panic wipe -> PanicWipe() removes the whole directory and the key.
+//
+// ROLES (SPEC 9.1), first match wins: self (an outgoing message, also one I
+// sent as a channel or as an anonymous admin) > bot (also a bot that is an
+// admin) > creator / admin / anonymous admin / the linked channel > contact >
+// member.
 
 // Called once from Core::Application::run(). Only subscribes to the
 // preferences (and the fold UI to DecisionsChanges()); creates nothing.
@@ -108,6 +113,13 @@ void ClearLocalData();
 [[nodiscard]] ChatMode ChatModeFor(not_null<PeerData*> peer);
 void SetChatMode(not_null<PeerData*> peer, ChatMode mode);
 [[nodiscard]] bool ChatEnabled(not_null<PeerData*> peer);
+
+// The group's "Also fold admins and the group's channel" (the group menu,
+// SPEC 6.12): the creator's, admins' and the linked channel's own repeats
+// fold too. Off by default; only matters while the group is effectively on.
+// Changing it decides that group's messages again.
+[[nodiscard]] bool ChatFoldPrivileged(not_null<PeerData*> peer);
+void SetChatFoldPrivileged(not_null<PeerData*> peer, bool on);
 
 // ---------------------------------------------------------------------------
 // The API the chat list (the fold UI) calls. All O(1) and cheap enough for

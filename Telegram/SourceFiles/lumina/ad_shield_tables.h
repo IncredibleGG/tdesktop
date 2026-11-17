@@ -1,4 +1,4 @@
-// 自動產生，請勿手改。產生器：adshield/gen/gen_tables.py  tablesVersion=f40fc4cc  algoVersion=2  unicode=13.0.0
+// 自動產生，請勿手改。產生器：adshield/gen/gen_tables.py  tablesVersion=25528dcc  algoVersion=3  unicode=13.0.0
 // 授權：見 adshield/data/tables.json 的 "licenses"（UCD=Unicode License v3；其餘 GPL-3.0-or-later）
 #pragma once
 
@@ -9,9 +9,9 @@
 
 namespace Lumina::AdShieldTables {
 
-inline constexpr std::string_view kTablesVersion = "f40fc4cc";
-inline constexpr std::uint32_t kTablesVersionU32 = 0xf40fc4ccU;
-inline constexpr int kAlgoVersion = 2;
+inline constexpr std::string_view kTablesVersion = "25528dcc";
+inline constexpr std::uint32_t kTablesVersionU32 = 0x25528dccU;
+inline constexpr int kAlgoVersion = 3;
 
 struct Range { char32_t from; char32_t till; };  // 閉區間
 struct FoldEntry { char32_t key; std::uint32_t offset; std::uint8_t length; };

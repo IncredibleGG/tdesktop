@@ -1290,6 +1290,8 @@ namespace {
 		{ u"LuminaAdShieldChatOn"_q, u"Activado en este grupo"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"Desactivado en este grupo"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"Plegados en los últimos 7 días: {1}"_q },
+		{ u"LuminaAdShieldChatFoldPrivileged"_q, u"Plegar también a los administradores y al canal del grupo"_q },
+		{ u"LuminaAdShieldChatFoldPrivilegedInfo"_q, u"También se pliegan las repeticiones que publican el propietario, los administradores o el canal del grupo; los anuncios que reenvían los miembros siguen sin plegarse."_q },
 		{ u"LuminaAdShieldFoldMany"_q, u"{1} mensajes repetidos plegados (posibles anuncios) · Haz clic para mostrar"_q },
 		{ u"LuminaAdShieldFoldOne"_q, u"1 mensaje repetido plegado (posible anuncio, aparición n.º {1} en 7 días) · Haz clic para mostrar"_q },
 		{ u"LuminaAdShieldFoldReply"_q, u"{1} respuestas repetidas dirigidas a ti plegadas (posibles anuncios) · Haz clic para mostrar"_q },
