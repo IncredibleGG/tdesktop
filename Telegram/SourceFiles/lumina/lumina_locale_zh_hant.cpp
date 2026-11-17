@@ -452,11 +452,14 @@ namespace {
 		{ u"LuminaRememberFolderAbout"_q, u"重新開啟聊天列表時,回到你上次開啟的資料夾,而不是每次都停在帳號的預設資料夾。資料夾分頁隱藏時此設定不起作用。"_q },
 		{ u"LuminaRememberFolderTitle"_q, u"資料夾"_q },
 		{ u"LuminaLinkSafetyDestination"_q, u"真實目標位址"_q },
-		{ u"LuminaLinkSafetyInfo"_q, u"在開啟以下連結之前先詢問：把真實目標"
-			u"位址藏在「@」符號前的文字後面、網域以 punycode 拼寫，或是透過"
-			u"已知的短連結服務轉址。確認視窗會顯示真實的目標主機與完整網址。"
-			u"以其他字母系統寫成的仿冒網域，Telegram Desktop 本身就會詢問。"
-			u"所有檢查都不會連線——你開啟的任何網址都不會離開這台裝置。"_q },
+		{ u"LuminaLinkSafetyInfo"_q, u"在開啟以下連結之前先詢問：把真實目標位址藏在"
+			u"「@」符號前的文字後面、網域以 punycode 拼寫，或是"
+			u"透過已知的短連結服務轉址。確認視窗會顯示真實的目標主機與完整"
+			u"網址；短連結還可以在開啟前修改網址。以其他字母系統寫成的仿冒"
+			u"網域，Telegram Desktop 本身就會詢問。其餘檢"
+			u"查都只在這台裝置上進行。\n為了顯示短連結實際通往哪裡，確認"
+			u"視窗會向該短連結服務查詢一次——在你開啟之前，不會連線到目標"
+			u"網站本身。"_q },
 		{ u"LuminaLinkSafetyRow"_q, u"連結安全檢查"_q },
 		{ u"LuminaMessageWidgetsRow"_q, u"訊息中的機器人小工具"_q },
 		{ u"LuminaMessageWidgetsInfo"_q, u"部分機器人傳送的訊息附有互動小工具：由機器人製作、在聊天中於沙盒內執行的小網頁。關閉後會在原位置顯示一則簡短提示，小工具的任何內容都不會執行或載入，訊息的其餘部分照常顯示。"_q },
@@ -478,6 +481,23 @@ namespace {
 			u"字元，可能在仿冒知名網站。"_q },
 		{ u"LuminaLinkSafetyWarnShortener"_q, u"這是一個短連結——真實目標"
 			u"位址在你開啟前始終隱藏。"_q },
+		{ u"LuminaShortLinkIntro"_q, u"這是一個短連結："_q },
+		{ u"LuminaShortLinkResolving"_q, u"正在取得真實地址…"_q },
+		{ u"LuminaShortLinkResolved"_q, u"真實地址（經過 {1} 次轉址）"_q },
+		{ u"LuminaShortLinkUnresolved"_q, u"打開前無法得知真實地址"_q },
+		{ u"LuminaShortLinkFailTimeout"_q, u"短連結服務沒有及時回應。"_q },
+		{ u"LuminaShortLinkFailNetwork"_q, u"無法連線到短連結服務。"_q },
+		{ u"LuminaShortLinkFailStatus"_q, u"短連結服務回應了錯誤 {1}。"_q },
+		{ u"LuminaShortLinkFailNoTarget"_q, u"短連結服務沒有給出連結通往的地址。"_q },
+		{ u"LuminaShortLinkFailNotWeb"_q, u"此連結通往的不是網頁地址。"_q },
+		{ u"LuminaShortLinkFailInvalid"_q, u"短連結服務給出的地址無效。"_q },
+		{ u"LuminaShortLinkFailTooMany"_q, u"此連結經過太多層短連結。"_q },
+		{ u"LuminaShortLinkEdit"_q, u"要打開的地址（可以修改）："_q },
+		{ u"LuminaShortLinkOnlyWeb"_q, u"這裡只能打開以 http:// 或 "
+			u"https:// 開頭的地址。"_q },
+		{ u"LuminaShortLinkWarnMixed"_q, u"此網址混用了與其餘部分不同字母系統的字元，可"
+			u"能在仿冒知名網站。"_q },
+		{ u"LuminaShortLinkOpenAgain"_q, u"再按一次「{1}」即可照樣打開這個地址。"_q },
 		{ u"LuminaMediaAutoPauseBgVideo"_q, u"應用程式退到背景時暫停影片"_q },
 		{ u"LuminaMediaAutoPauseBgVideoInfo"_q, u"當你離開 LuminaGram 時，"
 			u"自動暫停正在播放的影片。把檢視器縮到最小也會暫停。你刻意放到"

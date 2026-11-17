@@ -559,13 +559,17 @@ namespace {
 		{ u"LuminaRememberFolderTitle"_q, u"Carpetas"_q },
 		{ u"LuminaLinkSafetyDestination"_q, u"Destino real"_q },
 		{ u"LuminaLinkSafetyInfo"_q, u"Pregunta antes de abrir un enlace que "
-			u"oculte su destino real tras el texto que precede a un signo @, "
-			u"que escriba su dominio en punycode o que pase por un acortador "
-			u"de enlaces conocido. La confirmación muestra el host de destino "
-			u"real y la dirección completa. Telegram Desktop ya avisa por su "
-			u"cuenta de los dominios parecidos escritos en otros alfabetos. "
-			u"No se comprueba nada en línea: ninguna dirección que abras sale "
-			u"de este dispositivo."_q },
+			u"oculte su destino real tras el texto que precede a un signo "
+			u"@, que escriba su dominio en punycode o que pase por un "
+			u"acortador de enlaces conocido. La confirmación muestra el "
+			u"host de destino real y la dirección completa; en un enlace "
+			u"corto también puedes editar la dirección antes de abrirla. "
+			u"Telegram Desktop ya avisa por su cuenta de los dominios "
+			u"parecidos escritos en otros alfabetos. Todas las demás "
+			u"comprobaciones se hacen solo en este dispositivo.\nPara "
+			u"mostrar adónde lleva un enlace corto, la confirmación "
+			u"consulta una vez a ese servicio de enlaces cortos; el sitio "
+			u"de destino no se contacta hasta que lo abras."_q },
 		{ u"LuminaLinkSafetyRow"_q, u"Inspector de seguridad de enlaces"_q },
 		{ u"LuminaMessageWidgetsRow"_q, u"Widgets de bots en los mensajes"_q },
 		{ u"LuminaMessageWidgetsInfo"_q, u"Algunos bots envían mensajes con un widget interactivo: una pequeña página creada por el bot que se ejecuta dentro del chat, en un entorno aislado. Desactívalo para mostrar un breve aviso en su lugar, de modo que nada del widget se ejecute ni se cargue. El resto del mensaje se sigue mostrando."_q },
@@ -602,6 +606,23 @@ namespace {
 			u"codificados (punycode) que pueden imitar un sitio conocido."_q },
 		{ u"LuminaLinkSafetyWarnShortener"_q, u"Es un acortador de enlaces: "
 			u"el destino real permanece oculto hasta que lo abras."_q },
+		{ u"LuminaShortLinkIntro"_q, u"Este es un enlace corto:"_q },
+		{ u"LuminaShortLinkResolving"_q, u"Obteniendo la dirección real…"_q },
+		{ u"LuminaShortLinkResolved"_q, u"Dirección real (redirecciones: {1})"_q },
+		{ u"LuminaShortLinkUnresolved"_q, u"No se puede saber la dirección real antes de abrirlo"_q },
+		{ u"LuminaShortLinkFailTimeout"_q, u"El servicio de enlaces cortos no respondió a tiempo."_q },
+		{ u"LuminaShortLinkFailNetwork"_q, u"No se pudo contactar con el servicio de enlaces cortos."_q },
+		{ u"LuminaShortLinkFailStatus"_q, u"El servicio de enlaces cortos respondió con el error {1}."_q },
+		{ u"LuminaShortLinkFailNoTarget"_q, u"El servicio de enlaces cortos no indicó adónde lleva el enlace."_q },
+		{ u"LuminaShortLinkFailNotWeb"_q, u"El enlace lleva a una dirección que no es una página web."_q },
+		{ u"LuminaShortLinkFailInvalid"_q, u"El servicio de enlaces cortos dio una dirección no válida."_q },
+		{ u"LuminaShortLinkFailTooMany"_q, u"El enlace pasa por demasiados enlaces cortos."_q },
+		{ u"LuminaShortLinkEdit"_q, u"Dirección que se abrirá (puedes editarla):"_q },
+		{ u"LuminaShortLinkOnlyWeb"_q, u"Aquí solo se pueden abrir direcciones http:// y https://."_q },
+		{ u"LuminaShortLinkWarnMixed"_q, u"Esta dirección contiene caracteres de "
+			u"un alfabeto distinto al del resto, lo que puede imitar un "
+			u"sitio conocido."_q },
+		{ u"LuminaShortLinkOpenAgain"_q, u"Pulsa «{1}» otra vez para abrir esta dirección de todos modos."_q },
 		{ u"LuminaMediaAutoPauseBgVideo"_q, u"Pausar el video cuando la app "
 			u"pasa a segundo plano"_q },
 		{ u"LuminaMediaAutoPauseBgVideoInfo"_q, u"Pausa automáticamente el "

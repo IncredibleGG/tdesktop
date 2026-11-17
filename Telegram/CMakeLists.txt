@@ -2201,6 +2201,9 @@ PRIVATE
     lumina/lumina_session_guard.h
     lumina/lumina_settings.cpp
     lumina/lumina_settings.h
+    lumina/lumina_short_link.cpp
+    lumina/lumina_short_link.h
+    lumina/lumina_short_link_parse.h
     lumina/lumina_sticker_save.cpp
     lumina/lumina_sticker_save.h
     lumina/lumina_sticker_save_settings.cpp

@@ -13,20 +13,25 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_keys.h"
 #include "lumina/lumina_locale.h"
 #include "lumina/lumina_settings.h"
+#include "lumina/lumina_short_link.h"
+#include "lumina/lumina_short_link_parse.h"
 #include "ui/boxes/confirm_box.h"
 #include "ui/layers/generic_box.h"
 #include "ui/layers/show.h"
 #include "ui/text/text_entity.h"
+#include "ui/widgets/fields/input_field.h"
 #include "ui/widgets/labels.h"
 #include "ui/basic_click_handlers.h"
 #include "window/window_controller.h"
 #include "window/window_session_controller.h"
 
-#include "styles/style_calls.h" // groupCallBoxLabel
+#include "styles/style_calls.h" // groupCallBoxLabel, groupCallField
 #include "styles/style_layers.h"
+#include "styles/style_widgets.h" // defaultInputField
 
 #include <QtCore/QStringList>
 #include <QtCore/QUrl>
+#include <QtGui/QKeyEvent>
 
 namespace Lumina {
 namespace {
@@ -117,6 +122,26 @@ const auto kKeyEnabled = u"linkSafetyCheck"_q;
 		}
 	}
 	return false;
+}
+
+// The warning lines for an address that ParseExternalUrl() accepted. The
+// short-link box leaves the shortener line out: it says itself what it does
+// about the hidden destination.
+[[nodiscard]] std::vector<QString> Warnings(
+		const QUrl &parsed,
+		const QString &url,
+		bool withShortener) {
+	auto result = std::vector<QString>();
+	if (!parsed.userInfo().isEmpty()) {
+		result.push_back(Tr(u"LuminaLinkSafetyWarnMismatch"_q));
+	}
+	if (HasWrittenPunycodeLabel(parsed, url)) {
+		result.push_back(Tr(u"LuminaLinkSafetyWarnPunycode"_q));
+	}
+	if (withShortener && IsKnownUrlShortener(parsed.host())) {
+		result.push_back(Tr(u"LuminaLinkSafetyWarnShortener"_q));
+	}
+	return result;
 }
 
 // The address as it is safe to print.
@@ -238,6 +263,324 @@ void FillBox(
 	label->setClickHandlerFilter(Inert());
 }
 
+// The short-link box (requested on 2026-11-01): a link whose host is a known
+// shortener names no destination at all, so "Real destination: t.co" would
+// be a lie. Instead the box asks the shortener where it leads - one lookup,
+// redirects not followed, nothing past the last shortener contacted (see
+// lumina_short_link.h) - and shows the answer, or why there is none. The
+// address that "Open" opens is in an editable field.
+//
+//   * The field starts with the clicked address, and is replaced by the
+//     answer when one arrives - unless the user has typed into it by then.
+//   * "Open" on the clicked address, untouched, opens exactly what the box
+//     without this feature would have opened (`openUrl`).
+//   * Anything else in the field - the looked-up address or an edited one -
+//     must be an absolute http(s) address, goes through the same checks as
+//     a clicked link, and opens only once those checks' warnings have been
+//     on screen: if there are any, the first "Open" only shows them.
+//     t.me and the other Telegram addresses typed here still go to the app's
+//     own handler - the open is an ordinary UrlClickHandler::Open().
+//   * Cancel, Escape, or closing the box in any other way stops the lookup
+//     and leaves everything as it was.
+
+// The address as the box prints it and as the field holds it: DisplayUrl(),
+// but encoded as soon as the readable form would carry a character that does
+// not print - a direction override in a decoded path reorders what is seen.
+[[nodiscard]] QString FieldUrl(const QUrl &url) {
+	const auto shown = DisplayUrl(url);
+	for (const auto ch : shown.toUcs4()) {
+		if (!QChar::isPrint(ch)) {
+			auto encoded = url;
+			encoded.setPassword(QString());
+			return QString::fromUtf8(encoded.toEncoded());
+		}
+	}
+	return shown;
+}
+
+// The registrable domain of the looked-up address, for the bold line. Its
+// ASCII (punycode) form, like DestinationLine(), so a homograph stays
+// visible as one.
+[[nodiscard]] QString RegistrableDomain(const QUrl &url) {
+	auto host = url.host(QUrl::FullyEncoded).toLower();
+	while (host.endsWith(u"."_q)) {
+		host.chop(1);
+	}
+	for (const auto ch : host) {
+		if (ch.unicode() > 0x7F) {
+			return host;
+		}
+	}
+	const auto offset = ShortLinkParse::RegistrableDomainOffset(
+		host.toStdString());
+	return host.mid(int(offset));
+}
+
+// Only letters, digits, dots and hyphens - nothing the marked-text parser of
+// a FlatLabel could read as markdown.
+[[nodiscard]] bool IsPlainHost(const QString &host) {
+	if (host.isEmpty()) {
+		return false;
+	}
+	for (const auto ch : host) {
+		const auto c = ch.unicode();
+		const auto plain = (c >= 'a' && c <= 'z')
+			|| (c >= 'A' && c <= 'Z')
+			|| (c >= '0' && c <= '9')
+			|| (c == '.')
+			|| (c == '-');
+		if (!plain) {
+			return false;
+		}
+	}
+	return true;
+}
+
+[[nodiscard]] QString FailureReason(const ShortLinkResult &result) {
+	switch (result.failure) {
+	case ShortLinkFailure::Timeout:
+		return Tr(u"LuminaShortLinkFailTimeout"_q);
+	case ShortLinkFailure::Status:
+		return Tr(
+			u"LuminaShortLinkFailStatus"_q,
+			QString::number(result.status));
+	case ShortLinkFailure::NoTarget:
+		return Tr(u"LuminaShortLinkFailNoTarget"_q);
+	case ShortLinkFailure::NotWeb:
+		return Tr(u"LuminaShortLinkFailNotWeb"_q);
+	case ShortLinkFailure::Invalid:
+		return Tr(u"LuminaShortLinkFailInvalid"_q);
+	case ShortLinkFailure::TooManyHops:
+		return Tr(u"LuminaShortLinkFailTooMany"_q);
+	case ShortLinkFailure::None:
+	case ShortLinkFailure::Network:
+		break;
+	}
+	return Tr(u"LuminaShortLinkFailNetwork"_q);
+}
+
+struct CheckedAddress {
+	QUrl url; // Invalid unless an absolute http(s) address with a host.
+	std::vector<QString> warnings;
+};
+
+// The checks a typed or looked-up address goes through before it may be
+// opened: the inspector's own, plus the mixed-alphabet test stock applies to
+// a clicked link with a Unicode host (UrlClickHandler::IsSuspicious()), here
+// on the host alone so that userinfo does not trip it.
+[[nodiscard]] CheckedAddress CheckAddress(const QString &text) {
+	auto result = CheckedAddress();
+	if (text.isEmpty()) {
+		return result;
+	}
+	const auto parsed = QUrl(text, QUrl::TolerantMode);
+	const auto scheme = parsed.scheme().toLower();
+	if (!parsed.isValid()
+		|| parsed.host().isEmpty()
+		|| (scheme != u"http"_q && scheme != u"https"_q)) {
+		return result;
+	}
+	result.url = parsed;
+	result.warnings = Warnings(parsed, text, true);
+	const auto unicodeHost = QUrl::fromAce(
+		parsed.host(QUrl::FullyEncoded).toLatin1());
+	if (UrlClickHandler::IsSuspicious(unicodeHost)) {
+		result.warnings.push_back(Tr(u"LuminaShortLinkWarnMixed"_q));
+	}
+	return result;
+}
+
+struct ShortLinkBoxState {
+	QString original; // What the field starts with.
+	QString acknowledged; // Whose warnings one "Open" has already shown.
+	bool done = false;
+};
+
+void FillShortLinkBox(
+		not_null<Ui::GenericBox*> box,
+		const QUrl &original,
+		const QString &openUrl,
+		const std::vector<QString> &warnings,
+		bool dark,
+		Fn<void(QString, bool)> open) {
+	const auto &st = dark ? st::groupCallBoxLabel : st::boxLabel;
+	const auto skip = st.style.lineHeight - st::boxPadding.bottom();
+	const auto state = box->lifetime().make_state<ShortLinkBoxState>();
+	state->original = FieldUrl(original).trimmed();
+
+	box->setTitle(TrValue(u"LuminaLinkSafetyTitle"_q));
+	box->setWidth(st::boxWideWidth);
+
+	// What is wrong with the address as written, if anything, then the
+	// short link itself.
+	auto intro = JoinWarnings(warnings);
+	if (!intro.isEmpty()) {
+		intro += u"\n\n"_q;
+	}
+	intro += Tr(u"LuminaShortLinkIntro"_q);
+	const auto padding = st::boxPadding;
+	box->addRow(
+		object_ptr<Ui::FlatLabel>(box, intro, st),
+		QMargins(padding.left(), 0, padding.right(), padding.bottom()));
+	const auto shortUrl = box->addRow(object_ptr<Ui::FlatLabel>(
+		box,
+		state->original,
+		st));
+	shortUrl->setSelectable(true);
+	shortUrl->setBreakEverywhere(true);
+	shortUrl->setContextCopyText(tr::lng_context_copy_link(tr::now));
+	shortUrl->setClickHandlerFilter(Inert());
+
+	// Where it leads: the lookup's progress, then its answer. The full
+	// address goes into a plain label of its own - never into marked text,
+	// whose markdown parsing could change what an address reads as.
+	box->addSkip(skip);
+	const auto resolving = Tr(u"LuminaShortLinkResolving"_q);
+	const auto status = box->addRow(object_ptr<Ui::FlatLabel>(
+		box,
+		resolving,
+		st));
+	status->setClickHandlerFilter(Inert());
+	const auto target = box->addRow(object_ptr<Ui::FlatLabel>(box, st));
+	target->setSelectable(true);
+	target->setBreakEverywhere(true);
+	target->setContextCopyText(tr::lng_context_copy_link(tr::now));
+	target->setClickHandlerFilter(Inert());
+
+	// The address that "Open" opens.
+	box->addSkip(skip);
+	const auto editCaption = Tr(u"LuminaShortLinkEdit"_q);
+	box->addRow(object_ptr<Ui::FlatLabel>(box, editCaption, st));
+	const auto field = box->addRow(object_ptr<Ui::InputField>(
+		box,
+		dark ? st::groupCallField : st::defaultInputField,
+		tr::lng_formatting_link_url(),
+		state->original));
+	field->setInputMethodHints(Qt::ImhUrlCharactersOnly
+		| Qt::ImhNoAutoUppercase
+		| Qt::ImhNoPredictiveText);
+	const auto notes = box->addRow(object_ptr<Ui::FlatLabel>(box, st));
+	notes->setTextColorOverride(st::attentionButtonFg->c);
+
+	const auto refreshNotes = [=] {
+		const auto text = field->getLastText().trimmed();
+		if (text.isEmpty() || text == state->original) {
+			notes->setText(QString());
+			return;
+		}
+		const auto checked = CheckAddress(text);
+		if (!checked.url.isValid()) {
+			notes->setText(Tr(u"LuminaShortLinkOnlyWeb"_q));
+			return;
+		}
+		auto lines = checked.warnings;
+		if (!lines.empty() && state->acknowledged == text) {
+			lines.push_back(Tr(
+				u"LuminaShortLinkOpenAgain"_q,
+				tr::lng_open_link(tr::now)));
+		}
+		notes->setText(JoinWarnings(lines));
+	};
+	field->changes() | rpl::on_next(refreshNotes, field->lifetime());
+
+	const auto attempt = [=] {
+		if (state->done) {
+			return;
+		}
+		const auto text = field->getLastText().trimmed();
+		if (text.isEmpty()) {
+			field->showError();
+			return;
+		}
+		// Copied out first: closing the box may destroy this very lambda.
+		const auto go = open;
+		if (text == state->original) {
+			state->done = true;
+			const auto url = openUrl;
+			box->closeBox();
+			go(url, false);
+			return;
+		}
+		const auto checked = CheckAddress(text);
+		if (!checked.url.isValid()) {
+			refreshNotes();
+			field->showError();
+			return;
+		} else if (!checked.warnings.empty()
+			&& state->acknowledged != text) {
+			state->acknowledged = text;
+			refreshNotes();
+			return;
+		}
+		state->done = true;
+		const auto url = QString::fromUtf8(checked.url.toEncoded());
+		box->closeBox();
+		go(url, true);
+	};
+	field->submits() | rpl::on_next([=] {
+		attempt();
+	}, field->lifetime());
+
+	// Enter opens from anywhere in the box. While the field has the focus
+	// its own submits() above has already taken the key.
+	box->events(
+	) | rpl::on_next([=](not_null<QEvent*> e) {
+		if (e->type() != QEvent::KeyPress || field->hasFocus()) {
+			return;
+		}
+		const auto k = static_cast<QKeyEvent*>(e.get());
+		if (!k->isAutoRepeat()
+			&& (k->key() == Qt::Key_Enter || k->key() == Qt::Key_Return)) {
+			attempt();
+		}
+	}, box->lifetime());
+
+	box->addButton(tr::lng_open_link(), attempt);
+	box->addButton(tr::lng_cancel(), [=] {
+		box->closeBox();
+	});
+	box->setFocusCallback([=] {
+		field->setFocusFast();
+	});
+
+	// Last, so that every widget the answer goes into exists. Owned by the
+	// box: closing it cancels the lookup, and `done` never runs after that.
+	const auto showResult = [=](const ShortLinkResult &result) {
+		if (result.resolved()) {
+			const auto caption = Tr(
+				u"LuminaShortLinkResolved"_q,
+				QString::number(result.redirects));
+			const auto domain = RegistrableDomain(result.target);
+			const auto text = caption + u"\n"_q + domain;
+			if (IsPlainHost(domain)) {
+				auto marked = TextWithEntities{ .text = text };
+				marked.entities.push_back(EntityInText(
+					EntityType::Bold,
+					int(caption.size()) + 1,
+					int(domain.size())));
+				status->setMarkedText(marked);
+			} else {
+				status->setText(text);
+			}
+			const auto resolved = FieldUrl(result.target).trimmed();
+			target->setText(resolved);
+			if (field->getLastText().trimmed() == state->original) {
+				field->setText(resolved);
+				field->setCursorPosition(int(resolved.size()));
+			}
+		} else {
+			status->setTextColorOverride(st::attentionButtonFg->c);
+			status->setText(Tr(u"LuminaShortLinkUnresolved"_q)
+				+ u"\n"_q
+				+ FailureReason(result));
+		}
+		refreshNotes();
+	};
+	box->lifetime().make_state<ShortLinkResolver>(
+		original,
+		[=](ShortLinkResult result) { showResult(result); });
+}
+
 } // namespace
 
 bool LinkSafetyEnabled() {
@@ -262,21 +605,10 @@ bool IsKnownUrlShortener(const QString &host) {
 }
 
 std::vector<QString> LinkSafetyWarnings(const QString &url) {
-	auto result = std::vector<QString>();
 	const auto parsed = ParseExternalUrl(url);
-	if (!parsed.isValid()) {
-		return result;
-	}
-	if (!parsed.userInfo().isEmpty()) {
-		result.push_back(Tr(u"LuminaLinkSafetyWarnMismatch"_q));
-	}
-	if (HasWrittenPunycodeLabel(parsed, url)) {
-		result.push_back(Tr(u"LuminaLinkSafetyWarnPunycode"_q));
-	}
-	if (IsKnownUrlShortener(parsed.host())) {
-		result.push_back(Tr(u"LuminaLinkSafetyWarnShortener"_q));
-	}
-	return result;
+	return parsed.isValid()
+		? Warnings(parsed, url, true)
+		: std::vector<QString>();
 }
 
 bool InterceptExternalUrl(const QString &url, const QVariant &context) {
@@ -327,13 +659,33 @@ bool InterceptExternalUrl(
 		approved.luminaLinkSafetyApproved = true;
 		UrlClickHandler::Open(openUrl, QVariant::fromValue(approved));
 	};
-	auto box = Box(
-		FillBox,
-		DisplayUrl(parsed),
-		DestinationLine(parsed),
-		JoinWarnings(warnings),
-		my.dark,
-		Fn<void()>(open));
+	// A known shortener gets the short-link box, which looks the
+	// destination up; every other warned address gets the box as before.
+	const auto openShort = [=](QString target, bool changed) {
+		auto approved = my;
+		approved.luminaLinkSafetyApproved = true;
+		if (changed) {
+			// Only for the address the server handed out; this one was
+			// looked up or typed in the box.
+			approved.keepWebAuthTokens = false;
+		}
+		UrlClickHandler::Open(target, QVariant::fromValue(approved));
+	};
+	auto box = IsKnownUrlShortener(parsed.host())
+		? Box(
+			FillShortLinkBox,
+			parsed,
+			openUrl,
+			Warnings(parsed, url, false),
+			my.dark,
+			Fn<void(QString, bool)>(openShort))
+		: Box(
+			FillBox,
+			DisplayUrl(parsed),
+			DestinationLine(parsed),
+			JoinWarnings(warnings),
+			my.dark,
+			Fn<void()>(open));
 	if (show) {
 		show->showBox(std::move(box));
 	} else {

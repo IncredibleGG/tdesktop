@@ -49,7 +49,7 @@ namespace Lumina {
 //   * userinfo - https://real-looking.example@evil.example, where everything
 //     before the "@" is decoration and the real host is what follows it;
 //   * known URL shorteners, where the destination is not in the address at
-//     all;
+//     all - for these the box is the short-link box described below;
 //   * a punycode label ("xn--") in the host, but ONLY when the address was
 //     written in that ASCII form. See below.
 //   * mixed-script look-alikes are NOT checked here.
@@ -78,8 +78,24 @@ namespace Lumina {
 // is not silent even then - the box's destination line prints the host in
 // punycode whenever any other warning has opened the box.
 //
-// Both checks are pure string work on the parsed URL. Nothing is fetched, no
-// list is downloaded, and no URL leaves the device.
+// The checks are pure string work on the parsed URL. No list is downloaded,
+// and apart from the one lookup below no URL leaves the device.
+//
+// Short links (owner bug report of 2026-11-01). The box used to print the
+// shortener's own host on its "Real destination" line, which is exactly
+// what a short link is not. For an address whose host is a known shortener
+// - clicked, or behind a hidden text_url link - the box now asks that
+// shortener where it leads, in the background, while the box is open:
+// ShortLinkResolver (lumina_short_link.h) reads the redirect answers itself
+// and stops at the first host that is not a shortener, so the destination
+// site is never contacted. The box shows "Getting the real address...",
+// then the final address with its registrable domain in bold and the number
+// of redirects, or why it could not be found. The address to open is in an
+// editable field, filled with the looked-up address when there is one.
+// Opening the clicked address untouched behaves exactly as before; any
+// other address must be http(s), is checked like a clicked link, and opens
+// only after its warnings have been shown in the box. The settings row says
+// that a short link is looked up once.
 //
 // Where this diverges from Android, deliberately. Android shows its sheet for
 // EVERY external http(s) link once the preference is on, with the warnings as
@@ -118,7 +134,9 @@ void SetLinkSafetyEnabled(bool value);
 // The gate. Returns true when it has taken the click over - a confirmation
 // box is up and the caller must stop; the link is opened later, from the box,
 // by re-dispatching through UrlClickHandler::Open() with
-// ClickHandlerContext::luminaLinkSafetyApproved set.
+// ClickHandlerContext::luminaLinkSafetyApproved set. From the short-link box
+// that is the clicked address, or the looked-up or edited one the user chose
+// to open instead.
 //
 // Returns false in every other case, including every failure path.
 //

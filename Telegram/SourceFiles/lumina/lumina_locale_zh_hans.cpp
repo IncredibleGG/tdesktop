@@ -456,12 +456,14 @@ namespace {
 		{ u"LuminaRememberFolderAbout"_q, u"重新打开聊天列表时回到你上次打开的文件夹,而不是每次都停在账号的默认文件夹。文件夹标签隐藏时此设置不起作用。"_q },
 		{ u"LuminaRememberFolderTitle"_q, u"文件夹"_q },
 		{ u"LuminaLinkSafetyDestination"_q, u"真实目标地址"_q },
-		{ u"LuminaLinkSafetyInfo"_q, u"在打开这几类链接前先询问：用“@”符号"
-			u"前的文字隐藏真实目标地址的链接、域名用 punycode 拼写的链接，"
-			u"以及通过已知短链接服务跳转的链接。确认框会显示真实的目标主机"
-			u"和完整网址。对于用其他字母系统书写的仿冒域名，Telegram Desktop "
-			u"本身已经会询问。所有检查都在本机进行——你打开的网址不会离开"
-			u"这台设备。"_q },
+		{ u"LuminaLinkSafetyInfo"_q, u"在打开这几类链接前先询问：用“@”符号前的文"
+			u"字隐藏真实目标地址的链接、域名用 punycode 拼写的链"
+			u"接，以及通过已知短链接服务跳转的链接。确认框会显示真实的目标"
+			u"主机和完整网址；短链接还可以在打开前修改网址。对于用其他字母"
+			u"系统书写的仿冒域名，Telegram Desktop 本身已"
+			u"经会询问。其余检查都只在本机进行。\n为了显示短链接实际指向"
+			u"哪里，确认框会向该短链接服务查询一次——在你打开之前，不会连"
+			u"接目标网站本身。"_q },
 		{ u"LuminaLinkSafetyRow"_q, u"链接安全检查"_q },
 		{ u"LuminaMessageWidgetsRow"_q, u"消息中的机器人小组件"_q },
 		{ u"LuminaMessageWidgetsInfo"_q, u"部分机器人发送的消息带有互动小组件：由机器人制作、在聊天中于沙盒内运行的小网页。关闭后会在原位置显示一则简短提示，小组件的任何内容都不会运行或加载，消息的其余部分照常显示。"_q },
@@ -483,6 +485,23 @@ namespace {
 			u"字符，可能在仿冒知名网站。"_q },
 		{ u"LuminaLinkSafetyWarnShortener"_q, u"这是一个短链接——真实目标"
 			u"地址在你打开前始终隐藏。"_q },
+		{ u"LuminaShortLinkIntro"_q, u"这是一个短链接："_q },
+		{ u"LuminaShortLinkResolving"_q, u"正在获取真实地址…"_q },
+		{ u"LuminaShortLinkResolved"_q, u"真实地址（经过 {1} 次跳转）"_q },
+		{ u"LuminaShortLinkUnresolved"_q, u"打开前无法得知真实地址"_q },
+		{ u"LuminaShortLinkFailTimeout"_q, u"短链接服务没有及时响应。"_q },
+		{ u"LuminaShortLinkFailNetwork"_q, u"无法连接到短链接服务。"_q },
+		{ u"LuminaShortLinkFailStatus"_q, u"短链接服务返回了错误 {1}。"_q },
+		{ u"LuminaShortLinkFailNoTarget"_q, u"短链接服务没有给出链接指向的地址。"_q },
+		{ u"LuminaShortLinkFailNotWeb"_q, u"该链接指向的不是网页地址。"_q },
+		{ u"LuminaShortLinkFailInvalid"_q, u"短链接服务给出的地址无效。"_q },
+		{ u"LuminaShortLinkFailTooMany"_q, u"该链接经过了太多层短链接。"_q },
+		{ u"LuminaShortLinkEdit"_q, u"要打开的地址（可以修改）："_q },
+		{ u"LuminaShortLinkOnlyWeb"_q, u"这里只能打开以 http:// 或 "
+			u"https:// 开头的地址。"_q },
+		{ u"LuminaShortLinkWarnMixed"_q, u"此网址混用了与其余部分不同字母系统的字符，可"
+			u"能在仿冒知名网站。"_q },
+		{ u"LuminaShortLinkOpenAgain"_q, u"再按一次“{1}”即可照样打开这个地址。"_q },
 		{ u"LuminaMediaAutoPauseBgVideo"_q, u"应用退到后台时暂停视频"_q },
 		{ u"LuminaMediaAutoPauseBgVideoInfo"_q, u"当你离开 LuminaGram 时，"
 			u"自动暂停正在播放的视频。最小化播放器同样会暂停。你特意放到"
