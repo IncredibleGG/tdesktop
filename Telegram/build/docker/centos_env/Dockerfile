@@ -24,11 +24,23 @@ dnf -y install cmake autoconf automake libtool pkgconfig make patch git \
 	libdrm-devel vulkan-devel libva-devel libvdpau-devel libselinux-devel \
 	libmount-devel systemd-devel glib2-devel gobject-introspection-devel \
 	at-spi2-core-devel gtk3-devel
+dnf -y upgrade expat
 EOF
 
 RUN <<EOF
 alternatives --set python3 /usr/bin/python3.11
 python3 -m pip install meson ninja
+EOF
+
+# LuminaGram: fail the image build in minutes, not after the 2-hour library build, when the
+# mirror hands out a python3.x whose pyexpat needs a newer expat than the one installed
+# (2026-11-17: python3.12-3.12.14 with expat 2.2.5 broke changelog2appstream.py at the very
+# end of the app build).
+RUN <<EOF
+for py in python3.11 python3.12 python3.13; do
+	command -v $py >/dev/null || continue
+	$py -c 'import xml.parsers.expat' || { echo "$py cannot load pyexpat: the expat and python packages on the mirror are out of sync"; exit 1; }
+done
 EOF
 
 RUN <<EOF
