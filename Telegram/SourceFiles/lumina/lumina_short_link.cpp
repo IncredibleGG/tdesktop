@@ -45,6 +45,27 @@ constexpr auto kUserAgent = "LinkResolver/1.0";
 	return url;
 }
 
+// A host that is still the short-link service: a known shortener, or a
+// subdomain of one ("maps.app.goo.gl" is goo.gl's). Stopping at such a host
+// would print the shortener's own domain as the real address - the very
+// thing the box must never do - so the lookup asks it as well. A look-alike
+// that merely begins with a shortener's name ("bit.ly.evil.example") is a
+// different domain: it ends the lookup and is not contacted.
+[[nodiscard]] bool IsShortenerService(const QString &host) {
+	auto rest = host;
+	while (!rest.isEmpty()) {
+		if (IsKnownUrlShortener(rest)) {
+			return true;
+		}
+		const auto dot = rest.indexOf(QChar('.'));
+		if (dot < 0) {
+			break;
+		}
+		rest = rest.mid(dot + 1);
+	}
+	return false;
+}
+
 } // namespace
 
 ShortLinkResolver::ShortLinkResolver(
@@ -236,7 +257,7 @@ void ShortLinkResolver::hop(const QUrl &relative) {
 	} else if (next.host().isEmpty()) {
 		fail(ShortLinkFailure::Invalid);
 		return;
-	} else if (!IsKnownUrlShortener(next.host())) {
+	} else if (!IsShortenerService(next.host())) {
 		// The first address that is not a short link is the answer, and it
 		// is not contacted.
 		finish({ .target = next, .redirects = _redirects });

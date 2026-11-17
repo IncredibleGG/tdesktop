@@ -16,8 +16,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 namespace Lumina {
 
-// The link safety inspector: one confirmation, shown offline, before an
-// external web link whose address is trying to look like something it is not.
+// The link safety inspector: one confirmation, shown offline (short links
+// aside, see below), before an external web link whose address is trying to
+// look like something it is not.
 //
 // Hook. The gate sits inside Core::UiIntegration::handleUrlClick, after the
 // branches that peel off e-mail, tg://, tonsite:// and internal: links - so

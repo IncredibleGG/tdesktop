@@ -393,6 +393,7 @@ struct CheckedAddress {
 struct ShortLinkBoxState {
 	QString original; // What the field starts with.
 	QString acknowledged; // Whose warnings one "Open" has already shown.
+	std::unique_ptr<ShortLinkResolver> resolver;
 	bool done = false;
 };
 
@@ -543,8 +544,10 @@ void FillShortLinkBox(
 		field->setFocusFast();
 	});
 
-	// Last, so that every widget the answer goes into exists. Owned by the
-	// box: closing it cancels the lookup, and `done` never runs after that.
+	// Last, so that every widget the answer goes into exists. Dropped the
+	// moment the box starts closing - Cancel, Escape, "Open" or any other
+	// way - and not only once its hide animation is over and it is
+	// destroyed: no request goes out after that, and `done` never runs.
 	const auto showResult = [=](const ShortLinkResult &result) {
 		if (result.resolved()) {
 			const auto caption = Tr(
@@ -576,9 +579,12 @@ void FillShortLinkBox(
 		}
 		refreshNotes();
 	};
-	box->lifetime().make_state<ShortLinkResolver>(
+	state->resolver = std::make_unique<ShortLinkResolver>(
 		original,
 		[=](ShortLinkResult result) { showResult(result); });
+	box->boxClosing() | rpl::on_next([=] {
+		state->resolver = nullptr;
+	}, box->lifetime());
 }
 
 } // namespace

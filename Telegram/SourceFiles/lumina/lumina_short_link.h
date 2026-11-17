@@ -31,8 +31,9 @@ namespace Lumina {
 // that is not http(s) is reported, never followed.
 //
 //   * At most kMaxHops requests to different addresses, ~5 s each and
-//     ~12 s in all; it stops at the first address whose host is not a known
-//     shortener (IsKnownUrlShortener()) - that address is the answer.
+//     ~12 s in all; it stops at the first address whose host is neither a
+//     known shortener (IsKnownUrlShortener()) nor a subdomain of one - that
+//     address is the answer, so it is never the shortener's own domain.
 //   * HEAD first; GET when HEAD names no target (405 / 400 / 200 ...). From
 //     a GET only the first 64 KB are read, for a
 //     <meta http-equiv="refresh"> fallback.
