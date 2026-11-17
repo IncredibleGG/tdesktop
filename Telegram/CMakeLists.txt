@@ -2011,8 +2011,20 @@ PRIVATE
     lumina/lumina_ad_shield.h
     lumina/lumina_ad_shield_account.cpp
     lumina/lumina_ad_shield_account.h
+    lumina/lumina_ad_shield_fs.cpp
+    lumina/lumina_ad_shield_fs.h
+    lumina/lumina_ad_shield_images.cpp
+    lumina/lumina_ad_shield_images.h
+    lumina/lumina_ad_shield_manager.cpp
+    lumina/lumina_ad_shield_manager.h
+    lumina/lumina_ad_shield_prefs.cpp
+    lumina/lumina_ad_shield_prefs.h
+    lumina/lumina_ad_shield_settings.cpp
+    lumina/lumina_ad_shield_settings.h
     lumina/lumina_ad_shield_store.cpp
     lumina/lumina_ad_shield_store.h
+    lumina/lumina_ad_shield_worker.cpp
+    lumina/lumina_ad_shield_worker.h
     lumina/lumina_ai_editor.cpp
     lumina/lumina_ai_editor.h
     # LuminaGram: shared 16k mono PCM decoder used by the on-device STT engine.

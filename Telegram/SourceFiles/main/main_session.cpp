@@ -60,6 +60,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "calls/calls_instance.h"
 #include "support/support_helper.h"
 #include "lang/lang_keys.h"
+#include "lumina/lumina_ad_shield_manager.h"
 #include "core/application.h"
 #include "tgw/tgw_storage.h"
 #include "ui/text/text_utilities.h"
@@ -324,6 +325,9 @@ QByteArray Session::validTmpPassword() const {
 
 // Can be called only right before ~Session.
 void Session::finishLogout() {
+	// LuminaGram: hide repeated ads - forget this account's local data
+	// (SPEC 8.4 ForgetAll) before its messages are torn down.
+	Lumina::AdShield::SessionLoggingOut(this);
 	Wallet::CloseWallet(this);
 	unlockTerms();
 	data().clear();

@@ -54,6 +54,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_cloud_manager.h"
 #include "lang/lang_hardcoded.h"
 #include "lang/lang_instance.h"
+#include "lumina/lumina_ad_shield_manager.h"
 #include "lumina/lumina_settings.h"
 #include "lumina/lumina_translate_send.h"
 #include "lumina/lumina_undo_send.h"
@@ -401,6 +402,10 @@ void Application::run() {
 	// interceptor is left to hold the message for something the quit will not
 	// wait for. Dynamic initialization has all run by now, so this is last.
 	Lumina::SetupUndoSendPipeline();
+
+	// LuminaGram: hide repeated ads. Only subscribes to its preferences;
+	// with the feature off (the default) it creates nothing at all.
+	Lumina::AdShield::Start();
 
 	DEBUG_LOG(("Application Info: inited..."));
 	LOG(("Qt version: %1 (compiled with %2)").arg(
@@ -2115,6 +2120,9 @@ bool Application::readyToQuit() {
 	// The pref store batches writes for ~500ms; without this a setting
 	// changed in the last moment before quitting never reaches disk.
 	Lumina::Settings::Instance().saveNow();
+	// Same for hide-repeated-ads: its queue writes a group 5 s after the
+	// last change. A no-op when the feature never ran.
+	Lumina::AdShield::FlushNow();
 
 	auto prevented = false;
 	if (_calls->isQuitPrevent()) {

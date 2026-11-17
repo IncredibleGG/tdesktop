@@ -28,7 +28,10 @@ namespace Lumina {
 // And once, globally: every LuminaGram preference, which is where the fork
 // keeps translation API keys, saved originals of outgoing messages, bookmarks
 // and the decoy/duress configuration, plus any `*.corrupt` copy of a
-// preference file that Lumina::Settings quarantined at some earlier startup.
+// preference file that Lumina::Settings quarantined at some earlier startup;
+// and the hide-repeated-ads data of every account - its whole directory
+// (tdata/lumina_adshield/, orphans and temporary files included), its key
+// file and its in-memory tables (Lumina::AdShield::PanicWipe()).
 //
 // The local authorization keys are NOT in that list, and the distinction is
 // worth spelling out because it is what makes the fallback below necessary.

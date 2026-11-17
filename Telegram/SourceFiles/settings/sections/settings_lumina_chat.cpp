@@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "settings/sections/settings_lumina_chat.h"
 
+#include "lumina/lumina_ad_shield_settings.h"
 #include "lumina/lumina_quick_replies_settings.h"
 #include "lumina/lumina_undo_send_settings.h"
 #include "lumina/lumina_select_author.h"
@@ -131,6 +132,7 @@ void LuminaChat::setupContent(not_null<Ui::VerticalLayout*> container) {
 	Lumina::AddUndoSendRows(container, controller());
 	Lumina::AddReplyTemplatesRows(container, controller());
 	Lumina::AddPhotoQualityRows(container);
+	Lumina::AddAdShieldRows(container, controller());
 	AddInputRowToggles(container);
 	AddTransferBoostToggle(container);
 }

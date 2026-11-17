@@ -64,6 +64,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/vertical_list.h"
 #include "ui/controls/feature_list.h"
 #include "ui/ui_utility.h"
+#include "lumina/lumina_ad_shield_settings.h"
 #include "lumina/lumina_chat_lock.h"
 #include "lumina/lumina_locale.h"
 #include "lumina/lumina_stories_off.h"
@@ -2033,6 +2034,11 @@ void Filler::fillHistoryActions() {
 	addDirectMessages();
 	addExportChat();
 	addTranslate();
+	// LuminaGram: hide repeated ads, this group's mode. Adds nothing for
+	// chats it does not apply to.
+	if (_peer) {
+		Lumina::AddAdShieldPeerMenuAction(_controller, _peer, _addAction);
+	}
 	addReport();
 	addClearHistory();
 	addDeleteChat();
@@ -2078,6 +2084,11 @@ void Filler::fillRepliesActions() {
 	addCreatePoll();
 	addCreateTodoList();
 	addToggleTopicClosed();
+	// LuminaGram: hide repeated ads - the mode is per group, the same item
+	// as in the group's own history menu.
+	if (_peer) {
+		Lumina::AddAdShieldPeerMenuAction(_controller, _peer, _addAction);
+	}
 	addDeleteTopic();
 }
 

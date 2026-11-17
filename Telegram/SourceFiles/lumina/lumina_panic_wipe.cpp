@@ -11,6 +11,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/weak_ptr.h"
 #include "core/application.h"
 #include "data/data_session.h"
+#include "lumina/lumina_ad_shield_manager.h"
 #include "lumina/lumina_settings.h"
 #include "main/main_account.h"
 #include "main/main_domain.h"
@@ -107,6 +108,10 @@ void RemoveQuarantinedPreferenceFiles() {
 void ClearLuminaLocalData() {
 	ClearLuminaPreferences();
 	RemoveQuarantinedPreferenceFiles();
+	// Hide repeated ads: its directory (every account, orphans, temporary
+	// files) and its key file. After the preferences, so that nothing turns
+	// it back on in between; synchronous, so it is gone when this returns.
+	Lumina::AdShield::PanicWipe();
 }
 
 } // namespace
