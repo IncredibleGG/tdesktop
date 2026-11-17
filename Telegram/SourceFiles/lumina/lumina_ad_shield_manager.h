@@ -48,9 +48,12 @@ namespace Lumina::AdShield {
 // broadcast channels) whose view is created for the main message list - the
 // chat history and forum topics - and that the keyword filter does not
 // already hide. Service, sponsored, scheduled and local messages never are.
-// Edits are observed again, real deletions are anonymised (SPEC 6.11),
-// freeing a message object (leaving a chat, reloading) only drops it from
-// the cache. Logs carry counts and timings only.
+// Edits (also of link addresses and buttons) and pins are observed again,
+// real deletions are anonymised (SPEC 6.11), freeing a message object
+// (leaving a chat, reloading) only drops it from the cache. A decide pass
+// after new messages covers only them; the whole chat is decided again at
+// most every 2 s (and when the chat is opened), never on every message of a
+// flood. Logs carry counts and timings only.
 //
 // STORAGE. One directory, tdata/lumina_adshield/, with one sub-directory per
 // account (hex(H("acct", userId))) and one file per group (SPEC 8.1). The
@@ -64,8 +67,9 @@ namespace Lumina::AdShield {
 // LIFECYCLE. The queue purges orphans when it starts, writes a group 5 s
 // after its last change, writes everything when the app is deactivated or
 // quits (FlushNow()), keeps at most 8 groups in memory and 10 MiB on disk.
-// Logout -> SessionLoggingOut() forgets that account; the panic wipe ->
-// PanicWipe() removes the whole directory and the key.
+// Logout -> SessionLoggingOut() forgets that account and its per-group
+// modes; the panic wipe -> PanicWipe() removes the whole directory and the
+// key.
 
 // Called once from Core::Application::run(). Only subscribes to the
 // preferences (and the fold UI to DecisionsChanges()); creates nothing.

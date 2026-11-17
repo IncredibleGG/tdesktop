@@ -36,10 +36,12 @@ namespace Lumina::AdShield {
 //                            "off" }, Store::Private - a list of groups
 //                            is more personal than an on/off switch. A
 //                            group that follows the global switch has no
-//                            entry. SetChatMode() is its ONLY writer.
+//                            entry. Written only by SetChatMode(),
+//                            ClearChatModesFor() and ClearChatModes().
 //
 // The panic wipe empties all of them with every other Lumina preference;
-// "Clear local data" removes adShieldChatModes (ClearChatModes()).
+// "Clear local data" removes adShieldChatModes (ClearChatModes()), and
+// logging out removes the account's entries (ClearChatModesFor()).
 //
 // Main thread only, like Lumina::Settings.
 
@@ -83,6 +85,9 @@ void SetChatMode(quint64 sessionUniqueId, quint64 peerId, ChatMode mode);
 
 // Every per-group mode of every account goes back to "follow the default".
 void ClearChatModes();
+
+// The same for one account only (its logout).
+void ClearChatModesFor(quint64 sessionUniqueId);
 
 // The global switch or a per-group mode changed: what is observed may have
 // changed.

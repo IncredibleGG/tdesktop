@@ -55,8 +55,20 @@ constexpr auto kBatchLimit = 300;
 // slice arriving in several pieces costs one decide pass, not several.
 constexpr auto kDecideDelay = crl::time(60);
 
-// Pinned messages whose links count as trusted (SPEC 5.1), per group.
+// Pinned messages whose links count as trusted (SPEC 5.1), per group: the
+// newest ones by message id, whatever order they are observed in.
 constexpr auto kMaxPinnedTexts = 16;
+
+// Observe passes posted to the queue and not yet handled there. While the
+// queue is this far behind, no new MessageInputs are built: it catches up
+// first, so a long history (or a burst of re-observing) never piles up.
+constexpr auto kMaxQueuedPasses = 2;
+
+// A decide pass after new messages decides only those messages; the rest of
+// the chat (older members of a cluster that just grew, time windows that
+// moved) is decided again at most this often, not on every new message
+// during a flood.
+constexpr auto kFullDecideDelay = crl::time(2000);
 
 // While a group's admin list is not loaded, it is looked at again this
 // often, at most this many times (then only peer updates bring it back).
@@ -135,22 +147,54 @@ bool Constructed = false;
 	return result;
 }
 
-// What makes an already observed message worth observing again.
+// What makes an already observed message worth observing again when its
+// view is made again. Edits are observed again in any case (onEdited()).
 struct Stamp {
 	std::size_t text = 0;
+	std::size_t links = 0;
 	std::uint64_t media = 0;
 	bool pinned = false;
 
 	friend inline bool operator==(const Stamp &a, const Stamp &b) {
 		return (a.text == b.text)
+			&& (a.links == b.links)
 			&& (a.media == b.media)
 			&& (a.pinned == b.pinned);
 	}
 };
 
+// The parts of a message the visible text does not show: text-link
+// addresses, mention targets and URL buttons (MessageInput takes them all).
+[[nodiscard]] std::size_t LinksHash(not_null<HistoryItem*> item) {
+	auto result = std::size_t(0);
+	const auto add = [&](const auto &value) {
+		result = (result * 31) ^ std::size_t(qHash(value));
+	};
+	for (const auto &entity : item->originalText().entities) {
+		const auto type = entity.type();
+		if (type == ::EntityType::CustomUrl
+			|| type == ::EntityType::MentionName) {
+			add(int(type));
+			add(entity.data());
+		}
+	}
+	if (const auto markup = item->inlineReplyMarkup()) {
+		using ButtonType = HistoryMessageMarkupButton::Type;
+		for (const auto &row : markup->data.rows) {
+			for (const auto &button : row) {
+				if (button.type == ButtonType::Url) {
+					add(button.data);
+				}
+			}
+		}
+	}
+	return result;
+}
+
 [[nodiscard]] Stamp ComputeStamp(not_null<HistoryItem*> item) {
 	auto result = Stamp();
 	result.text = std::size_t(qHash(item->originalText().text));
+	result.links = LinksHash(item);
 	if (const auto media = item->media()) {
 		if (const auto photo = media->photo()) {
 			result.media = std::uint64_t(photo->id);
@@ -224,12 +268,19 @@ private:
 		ContextSnapshot context;
 		bool contextDirty = true;
 		bool adminsRequested = false;
-		std::vector<QString> pinnedTexts;
+		// Texts of the newest pinned messages seen, by message id.
+		base::flat_map<MsgId, QString> pinned;
 		base::flat_map<MsgId, Observed> observed;
 		base::flat_set<MsgId> pending;
 		std::vector<std::int64_t> removed;
 		bool decideDirty = false;
 		bool decideInFlight = false;
+		// What the next decide pass covers: every observed message, or only
+		// the ones observed since the last pass (toDecide). A partial pass
+		// asks for a full one kFullDecideDelay later (fullLater).
+		bool decideAll = true;
+		bool fullLater = false;
+		base::flat_set<MsgId> toDecide;
 		// The next decisions follow a change the user made (sensitivity,
 		// exemptions): nothing is "triggering under the reader's eyes".
 		bool noDeferOnce = false;
@@ -298,11 +349,17 @@ private:
 		ChatState &chat,
 		not_null<HistoryItem*> item,
 		std::vector<PhotoProbe> &photos);
-	void rememberPinned(ChatState &chat, const QString &text);
+	void rememberPinned(
+		ChatState &chat,
+		MsgId id,
+		bool pinned,
+		const QString &text);
 
 	void scheduleDecide();
 	void runDecides();
+	void fullDecideTimerDone();
 	void pollAdmins();
+	void observePassDone(std::uint64_t generation);
 	void applyDecisions(
 		std::uint64_t generation,
 		quint64 uniqueId,
@@ -311,6 +368,7 @@ private:
 		DecisionList &&list);
 
 	void onEdited(SessionState &state, not_null<HistoryItem*> item);
+	void onDataChanged(SessionState &state, not_null<HistoryItem*> item);
 	void onDestroying(
 		SessionState &state,
 		const std::vector<not_null<HistoryItem*>> &items);
@@ -337,6 +395,13 @@ private:
 	bool _anyActive = false;
 	bool _trial = false;
 	bool _processScheduled = false;
+	// Observe passes the queue has not handled yet (kMaxQueuedPasses), and
+	// whether a pass waits for one of them.
+	int _observePassesQueued = 0;
+	bool _processAfterPass = false;
+	// One counter for every chat's context: a chat made again (a group
+	// turned off and on) never reuses a version the queue still holds.
+	std::uint64_t _contextVersion = 0;
 	QString _root;
 	QString _keyPath;
 
@@ -352,9 +417,13 @@ private:
 	base::flat_set<quint64> _inactiveSessions;
 	base::flat_map<quint64, bool> _wasActive;
 	base::flat_set<not_null<Main::Session*>> _teardownHooked;
+	// Sessions between SessionLoggingOut() and their destruction: nothing
+	// of theirs is observed again.
+	base::flat_set<not_null<Main::Session*>> _loggingOut;
 
 	base::Timer _flushTimer;
 	base::Timer _decideTimer;
+	base::Timer _fullDecideTimer;
 	base::Timer _adminsTimer;
 
 	rpl::event_stream<DecisionsChange> _decisionsChanges;
@@ -375,6 +444,7 @@ Manager &Manager::Instance() {
 Manager::Manager()
 : _flushTimer([=] { flushTimerDone(); })
 , _decideTimer([=] { runDecides(); })
+, _fullDecideTimer([=] { fullDecideTimerDone(); })
 , _adminsTimer([=] { pollAdmins(); }) {
 }
 
@@ -401,6 +471,7 @@ void Manager::start() {
 		for (const auto &[uniqueId, state] : _sessions) {
 			for (const auto &[peerId, chat] : state->chats) {
 				chat->decideDirty = true;
+				chat->decideAll = true;
 				chat->noDeferOnce = true;
 			}
 		}
@@ -484,7 +555,7 @@ void Manager::refreshActivation() {
 	if (Core::IsAppLaunched() && Core::App().domain().started()) {
 		for (const auto &[index, account] : Core::App().domain().accounts()) {
 			const auto session = account->maybeSession();
-			if (!session) {
+			if (!session || _loggingOut.contains(session)) {
 				continue;
 			}
 			const auto uniqueId = session->uniqueId();
@@ -514,7 +585,10 @@ Manager::SessionState *Manager::sessionState(
 	const auto i = _sessions.find(uniqueId);
 	if (i != _sessions.end()) {
 		return i->second.get();
-	} else if (!create || !_anyActive || _inactiveSessions.contains(uniqueId)) {
+	} else if (!create
+		|| !_anyActive
+		|| _inactiveSessions.contains(uniqueId)
+		|| _loggingOut.contains(session)) {
 		return nullptr;
 	} else if (!SessionActive(uniqueId)) {
 		_inactiveSessions.emplace(uniqueId);
@@ -573,6 +647,15 @@ void Manager::subscribe(SessionState &state) {
 	) | rpl::on_next([=](const Data::MessageUpdate &update) {
 		if (const auto state = find()) {
 			onEdited(*state, update.item);
+		}
+	}, state.lifetime);
+
+	// HistoryItem::setIsPinned() only reports a data change: a message
+	// pinned or unpinned in a group that already has pinned messages.
+	session->data().itemDataChanges(
+	) | rpl::on_next([=](not_null<HistoryItem*> item) {
+		if (const auto state = find()) {
+			onDataChanged(*state, item);
 		}
 	}, state.lifetime);
 
@@ -796,6 +879,10 @@ void Manager::processPending() {
 	_processScheduled = false;
 	if (!_worker) {
 		return;
+	} else if (_observePassesQueued >= kMaxQueuedPasses) {
+		// The queue is behind: observePassDone() comes back here.
+		_processAfterPass = true;
+		return;
 	}
 	const auto now = std::int64_t(base::unixtime::now());
 	auto budget = kBatchLimit;
@@ -810,7 +897,9 @@ void Manager::processPending() {
 				_worker->with([=, ids = std::move(ids)](Worker &worker) {
 					worker.remove(userId, chatId, ids, now);
 				});
+				// A deleted message can take a cluster below its threshold.
 				chat->decideDirty = true;
+				chat->decideAll = true;
 				posted = true;
 			}
 			refreshContext(*state, *chat);
@@ -838,6 +927,7 @@ void Manager::processPending() {
 				batch.messages.push_back(
 					buildInput(*state, *chat, item, batch.photos));
 				chat->observed[id] = { .stamp = stamp, .filtered = false };
+				chat->toDecide.emplace(id);
 			}
 			// A newly found pinned message may have changed the trusted
 			// links; refreshContext() then queues everything again.
@@ -854,6 +944,14 @@ void Manager::processPending() {
 		}
 	}
 	if (posted) {
+		// Comes back once the queue has handled everything posted above.
+		++_observePassesQueued;
+		const auto generation = _generation;
+		_worker->with([=](Worker &) {
+			crl::on_main([=] {
+				Instance().observePassDone(generation);
+			});
+		});
 		scheduleFlush();
 	}
 	scheduleDecide();
@@ -867,6 +965,17 @@ void Manager::processPending() {
 	}
 }
 
+void Manager::observePassDone(std::uint64_t generation) {
+	if (generation != _generation) {
+		return;
+	} else if (_observePassesQueued > 0) {
+		--_observePassesQueued;
+	}
+	if (base::take(_processAfterPass)) {
+		scheduleProcess();
+	}
+}
+
 ChatContextData Manager::buildContext(
 		const SessionState &state,
 		const ChatState &chat) const {
@@ -877,8 +986,11 @@ ChatContextData Manager::buildContext(
 	result.type = ChatTypeFor(peer);
 	result.username = U32(peer->username());
 	result.description = U32(peer->about());
-	for (const auto &text : chat.pinnedTexts) {
-		result.pinnedTexts.push_back(U32(text));
+	for (const auto &[id, text] : chat.pinned) {
+		auto converted = U32(text);
+		if (!ranges::contains(result.pinnedTexts, converted)) {
+			result.pinnedTexts.push_back(std::move(converted));
+		}
 	}
 	result.selfUsername = U32(state.session->user()->username());
 
@@ -971,7 +1083,7 @@ void Manager::refreshContext(SessionState &state, ChatState &chat) {
 	}
 	chat.context.data = std::make_shared<const ChatContextData>(
 		std::move(data));
-	++chat.context.version;
+	chat.context.version = ++_contextVersion;
 	if (had) {
 		// Roles, trusted links and known members are part of every stored
 		// row: observe the on-screen messages again (endorsements upsert,
@@ -1037,13 +1149,35 @@ Sender Manager::buildSender(
 	return result;
 }
 
-void Manager::rememberPinned(ChatState &chat, const QString &text) {
-	if (text.trimmed().isEmpty() || ranges::contains(chat.pinnedTexts, text)) {
+void Manager::rememberPinned(
+		ChatState &chat,
+		MsgId id,
+		bool pinned,
+		const QString &text) {
+	// The trusted set is the kMaxPinnedTexts newest pinned messages seen (by
+	// id), whatever order they are observed in. Apart from pins, unpins and
+	// edits (events from outside), it only ever moves to newer messages, so
+	// observing everything again after a change always settles.
+	const auto i = chat.pinned.find(id);
+	if (!pinned || text.trimmed().isEmpty()) {
+		if (i != chat.pinned.end()) {
+			chat.pinned.erase(i);
+			chat.contextDirty = true;
+		}
+		return;
+	} else if (i != chat.pinned.end()) {
+		if (i->second != text) {
+			i->second = text;
+			chat.contextDirty = true;
+		}
+		return;
+	} else if (int(chat.pinned.size()) >= kMaxPinnedTexts
+		&& id < chat.pinned.begin()->first) {
 		return;
 	}
-	chat.pinnedTexts.push_back(text);
-	if (chat.pinnedTexts.size() > kMaxPinnedTexts) {
-		chat.pinnedTexts.erase(chat.pinnedTexts.begin());
+	chat.pinned.emplace(id, text);
+	while (int(chat.pinned.size()) > kMaxPinnedTexts) {
+		chat.pinned.erase(chat.pinned.begin());
 	}
 	chat.contextDirty = true;
 }
@@ -1184,9 +1318,7 @@ MessageInput Manager::buildInput(
 	result.sponsored = item->isSponsored();
 	result.scheduled = item->isScheduled();
 
-	if (result.pinned) {
-		rememberPinned(chat, text.text);
-	}
+	rememberPinned(chat, item->id, result.pinned, text.text);
 	return result;
 }
 
@@ -1201,6 +1333,7 @@ void Manager::pollAdmins() {
 				++chat->adminsPolls;
 				chat->contextDirty = true;
 				chat->decideDirty = true;
+				chat->decideAll = true;
 				any = true;
 			}
 		}
@@ -1224,6 +1357,7 @@ void Manager::runDecides() {
 	const auto now = std::int64_t(base::unixtime::now());
 	const auto settings = CurrentSettings();
 	const auto generation = _generation;
+	auto fullLater = false;
 	for (const auto &[uniqueId, state] : _sessions) {
 		for (const auto &[peerId, chat] : state->chats) {
 			if (!chat->decideDirty || chat->decideInFlight) {
@@ -1237,10 +1371,28 @@ void Manager::runDecides() {
 			request.context = chat->context;
 			request.settings = settings;
 			request.now = now;
-			request.ids.reserve(chat->observed.size());
-			for (const auto &[id, observed] : chat->observed) {
-				if (!observed.filtered) {
-					request.ids.push_back(std::int64_t(id.bare));
+			const auto partial = base::take(chat->toDecide);
+			if (base::take(chat->decideAll)) {
+				chat->fullLater = false;
+				request.ids.reserve(chat->observed.size());
+				for (const auto &[id, observed] : chat->observed) {
+					if (!observed.filtered) {
+						request.ids.push_back(std::int64_t(id.bare));
+					}
+				}
+			} else {
+				// Only what was observed since the last pass; the rest of
+				// the chat follows in a full pass a little later.
+				request.ids.reserve(partial.size());
+				for (const auto id : partial) {
+					const auto i = chat->observed.find(id);
+					if (i != chat->observed.end() && !i->second.filtered) {
+						request.ids.push_back(std::int64_t(id.bare));
+					}
+				}
+				if (!request.ids.empty()) {
+					chat->fullLater = true;
+					fullLater = true;
 				}
 			}
 			if (request.ids.empty()) {
@@ -1263,6 +1415,25 @@ void Manager::runDecides() {
 				});
 			});
 		}
+	}
+	if (fullLater && !_fullDecideTimer.isActive()) {
+		_fullDecideTimer.callOnce(kFullDecideDelay);
+	}
+}
+
+void Manager::fullDecideTimerDone() {
+	auto any = false;
+	for (const auto &[uniqueId, state] : _sessions) {
+		for (const auto &[peerId, chat] : state->chats) {
+			if (base::take(chat->fullLater)) {
+				chat->decideAll = true;
+				chat->decideDirty = true;
+				any = true;
+			}
+		}
+	}
+	if (any) {
+		scheduleDecide();
 	}
 }
 
@@ -1344,8 +1515,28 @@ void Manager::onEdited(SessionState &state, not_null<HistoryItem*> item) {
 		return;
 	}
 	const auto chat = i->second.get();
+	// Every edit, also one that only changes a text link's address, a
+	// mention or a button (SPEC 6.11); a resolved reply (replyToMe) comes
+	// the same way.
+	if (chat->observed.contains(item->id)) {
+		chat->pending.emplace(item->id);
+		scheduleProcess();
+	}
+}
+
+void Manager::onDataChanged(
+		SessionState &state,
+		not_null<HistoryItem*> item) {
+	const auto i = state.chats.find(item->history()->peer->id);
+	if (i == state.chats.end()) {
+		return;
+	}
+	const auto chat = i->second.get();
 	const auto j = chat->observed.find(item->id);
-	if (j != chat->observed.end() && !(j->second.stamp == ComputeStamp(item))) {
+	if (j != chat->observed.end()
+		&& j->second.stamp.pinned != item->isPinned()) {
+		// Pinned or unpinned: an endorsement record and the trusted links
+		// (SPEC 6.3, 5.1).
 		chat->pending.emplace(item->id);
 		scheduleProcess();
 	}
@@ -1517,8 +1708,14 @@ void Manager::resetInFlight() {
 			if (chat->decideInFlight) {
 				chat->decideInFlight = false;
 				chat->decideDirty = true;
+				chat->decideAll = true;
 			}
 		}
+	}
+	// The passes posted to the queue that went away never come back.
+	_observePassesQueued = 0;
+	if (base::take(_processAfterPass)) {
+		scheduleProcess();
 	}
 }
 
@@ -1561,12 +1758,22 @@ void Manager::flushTimerDone() {
 void Manager::sessionLoggingOut(not_null<Main::Session*> session) {
 	const auto uniqueId = session->uniqueId();
 	// The session's messages and views are destroyed right after this; a
-	// view made again now would observe its message for a forgotten
-	// account.
+	// view made again now (or refreshActivation() below) would observe its
+	// messages for a forgotten account.
+	if (_loggingOut.emplace(session).second) {
+		session->lifetime().add([=] {
+			_loggingOut.remove(session);
+		});
+	}
 	dropSession(uniqueId, false);
 	_wasActive.remove(uniqueId);
 	_inactiveSessions.remove(uniqueId);
+	// Its per-group modes go with its data: no list of groups is left for
+	// an account that is gone, and logging in again starts from the
+	// defaults. Fires ActivationChanges() for the other accounts.
+	ClearChatModesFor(uniqueId);
 	forgetData(uniqueId);
+	refreshFlags();
 	destroyWorkerIfIdle();
 }
 
@@ -1593,6 +1800,7 @@ void Manager::panicWipe() {
 	_inactiveSessions.clear();
 	_flushTimer.cancel();
 	_decideTimer.cancel();
+	_fullDecideTimer.cancel();
 	if (_worker) {
 		_worker->with_sync([](Worker &worker) {
 			worker.wipe();
@@ -1600,6 +1808,8 @@ void Manager::panicWipe() {
 		_worker = nullptr;
 		++_generation;
 	}
+	_observePassesQueued = 0;
+	_processAfterPass = false;
 	if (!_root.isEmpty()) {
 		QDir(_root).removeRecursively();
 	}
@@ -1620,7 +1830,10 @@ void Manager::clearLocalData() {
 			chat->observed.clear();
 			chat->pending.clear();
 			chat->removed.clear();
+			chat->toDecide.clear();
 			chat->decideDirty = false;
+			chat->decideAll = true;
+			chat->fullLater = false;
 			chats.emplace_back(state.get(), peerId);
 		}
 		state->decisions.clear();
@@ -1725,11 +1938,14 @@ void Manager::setExpanded(
 		not_null<History*> history,
 		const std::vector<MsgId> &ids,
 		bool expanded) {
-	const auto i = _sessions.find(history->session().uniqueId());
-	if (i == _sessions.end() || ids.empty()) {
+	// Expanding may come first, before any view of the account was made
+	// (a jump to a message that is not decided yet, lumina_ad_fold.cpp).
+	const auto state = ids.empty()
+		? nullptr
+		: sessionState(&history->session(), expanded);
+	if (!state) {
 		return;
 	}
-	const auto state = i->second.get();
 	auto changed = std::vector<MsgId>();
 	for (const auto &id : ids) {
 		const auto key = FullMsgId(history->peer->id, id);
@@ -1755,6 +1971,17 @@ void Manager::chatShown(not_null<History*> history) {
 	}
 	const auto state = i->second.get();
 	const auto peerId = history->peer->id;
+	const auto j = state->chats.find(peerId);
+	if (j != state->chats.end() && base::take(j->second->fullLater)) {
+		// The full pass after the last new messages has not run yet: it
+		// runs now, and what it folds folds at once - the chat is being
+		// opened, nothing vanishes under a reader (D).
+		const auto chat = j->second.get();
+		chat->decideAll = true;
+		chat->noDeferOnce = true;
+		chat->decideDirty = true;
+		scheduleDecide();
+	}
 	auto changed = std::vector<MsgId>();
 	for (auto &[key, entry] : state->decisions) {
 		if (key.peer == peerId && entry.deferred) {
@@ -1797,6 +2024,7 @@ void Manager::markNotAd(not_null<HistoryItem*> item) {
 			).arg(result == MarkResult::Recorded ? "recorded" : "skipped"));
 	});
 	chat->decideDirty = true;
+	chat->decideAll = true;
 	scheduleDecide();
 	scheduleFlush();
 }

@@ -94,11 +94,17 @@ void NoteChatShown(
 
 // Jumping or replying to a folded message shows its segment. `view` is the
 // message's view in the list that jumps; with only an item, its view in the
-// chat history is used, or the message alone is shown. Returns whether
-// something was expanded (the views are recreated synchronously; the list
-// still has to lay them out).
+// chat history is used, or the message alone is shown. A target that is not
+// decided yet (just loaded by the jump) is expanded in advance, so it never
+// folds away under the highlight when its first decision arrives. Returns
+// whether something was expanded now (the views are recreated
+// synchronously; the list still has to lay them out).
 bool RevealForJump(HistoryView::Element *view);
 bool RevealForJump(not_null<HistoryItem*> item);
+
+// A ListWidget jump: its view of the message when it has one, else the
+// message itself (not in the list yet), else nothing.
+bool RevealForJump(HistoryView::Element *view, HistoryItem *item);
 
 // Replying to a folded message (the reply may start inside the list's own
 // mouse handling): RevealForJump(item) right after the current event.

@@ -8,6 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_ad_shield_worker.h"
 
 #include <algorithm>
+#include <set>
 #include <tuple>
 
 namespace Lumina::AdShield {
@@ -49,8 +50,12 @@ Worker::ChatSlot &Worker::slot(std::int64_t userId, std::int64_t chatId) {
 const ChatContext &Worker::context(
 		ChatSlot &slot,
 		const ContextSnapshot &snapshot) {
+	// The slot keeps its context data alive, so a different pointer is
+	// always a different context; the version is unique per run as well.
 	const auto stale = !slot.context
-		|| (snapshot.data && slot.snapshot.version != snapshot.version);
+		|| (snapshot.data
+			&& (slot.snapshot.data != snapshot.data
+				|| slot.snapshot.version != snapshot.version));
 	if (stale) {
 		slot.snapshot = snapshot;
 		slot.context = std::make_unique<ChatContext>(snapshot.data
@@ -249,11 +254,17 @@ int Worker::countFolded(
 	if (!chatStore) {
 		return 0;
 	}
+	// Counted as the chat shows them: an album is one fold, and all of its
+	// parts share one decision, so one part of each is enough.
 	auto ids = std::vector<std::int64_t>();
+	auto albums = std::set<std::int64_t>();
 	for (const auto &[rid, row] : chatStore->rows()) {
-		if (row.msgId != 0 && row.date >= now - kWeek && row.date <= now) {
-			ids.push_back(std::int64_t(row.msgId));
+		if (row.msgId == 0 || row.date < now - kWeek || row.date > now) {
+			continue;
+		} else if (row.album != 0 && !albums.emplace(row.album).second) {
+			continue;
 		}
+		ids.push_back(std::int64_t(row.msgId));
 	}
 	auto result = 0;
 	for (const auto id : ids) {

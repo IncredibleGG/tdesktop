@@ -32,8 +32,9 @@ struct PhotoProbe {
 };
 
 // The chat information a ChatContext is built from, with the version the
-// main thread gave it. The queue keeps one ChatContext per chat and rebuilds
-// it only when the version changes.
+// main thread gave it (one counter for all chats, so versions never repeat
+// within a run). The queue keeps one ChatContext per chat and rebuilds it
+// only when the data or the version changes.
 struct ContextSnapshot {
 	std::shared_ptr<const ChatContextData> data;
 	std::uint64_t version = 0;
@@ -94,7 +95,8 @@ public:
 		std::int64_t now);
 
 	// Messages of the last 7 days (by message date) that decide() folds now,
-	// for the "folded in the last 7 days" line of the group menu.
+	// for the "folded in the last 7 days" line of the group menu. An album
+	// counts once, like its fold row.
 	[[nodiscard]] int countFolded(
 		std::int64_t userId,
 		std::int64_t chatId,

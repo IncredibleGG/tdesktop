@@ -1495,7 +1495,9 @@ bool ListWidget::showAtPositionNow(
 	// (lumina/lumina_ad_fold.h); the rows are made again and laid out
 	// synchronously, so the position below is the expanded one.
 	if (position.fullId.peer && IsServerMsgId(position.fullId.msg)) {
-		Lumina::AdShield::RevealForJump(viewByPosition(position));
+		Lumina::AdShield::RevealForJump(
+			viewByPosition(position),
+			session().data().message(position.fullId));
 	}
 	auto scrollTop = scrollTopForPosition(position);
 	if (!scrollTop.has_value()) {
@@ -2216,7 +2218,18 @@ Element *ListWidget::luminaAdFoldRow(
 	if (!view) {
 		return nullptr;
 	}
-	const auto i = ranges::find(_items, not_null<Element*>(view));
+	// _items is ordered by position (newest first when inverted): a binary
+	// search, with a plain one only if the row is not where it should be.
+	const auto position = item->position();
+	const auto byPosition = [](not_null<Element*> row) {
+		return row->data()->position();
+	};
+	auto i = _inverted
+		? ranges::lower_bound(_items, position, std::greater<>(), byPosition)
+		: ranges::lower_bound(_items, position, std::less<>(), byPosition);
+	if (i == end(_items) || i->get() != view) {
+		i = ranges::find(_items, not_null<Element*>(view));
+	}
 	const auto index = int(i - begin(_items)) + delta;
 	return (i != end(_items) && index >= 0 && index < int(_items.size()))
 		? _items[index].get()

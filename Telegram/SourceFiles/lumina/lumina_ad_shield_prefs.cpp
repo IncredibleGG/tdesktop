@@ -217,6 +217,30 @@ void ClearChatModes() {
 	Prefs::Instance().remove(ChatModesKey());
 }
 
+void ClearChatModesFor(quint64 sessionUniqueId) {
+	if (!sessionUniqueId) {
+		return;
+	}
+	const auto prefix = SessionPrefix(sessionUniqueId);
+	auto object = Prefs::Instance().getObject(ChatModesKey());
+	auto changed = false;
+	for (auto i = object.begin(); i != object.end();) {
+		if (i.key().startsWith(prefix)) {
+			i = object.erase(i);
+			changed = true;
+		} else {
+			++i;
+		}
+	}
+	if (!changed) {
+		return;
+	} else if (object.isEmpty()) {
+		Prefs::Instance().remove(ChatModesKey());
+	} else {
+		Prefs::Instance().set(ChatModesKey(), object, PrefsFile::Private);
+	}
+}
+
 rpl::producer<> ActivationChanges() {
 	return KeysChanges({ EnabledKey(), ChatModesKey() });
 }

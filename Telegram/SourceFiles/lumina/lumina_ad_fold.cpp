@@ -37,6 +37,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QtCore/QPointer>
 
+#include <unordered_set>
+
 #include "styles/style_chat.h"
 #include "styles/style_menu_icons.h"
 #include "styles/style_widgets.h"
@@ -199,6 +201,30 @@ const FoldRow *AsFold(const Element *view) {
 	return result;
 }
 
+// Fold rows already walked in one layout batch.
+using Visited = std::unordered_set<const Element*>;
+
+// The head of `row`'s segment, or nullptr when a row on the way was walked
+// in this batch already (so the head is in it too). Every row is walked at
+// most once per batch, so a batch touching k rows of one segment costs O(k),
+// not O(k^2).
+[[nodiscard]] const FoldRow *HeadOnce(
+		not_null<const FoldRow*> row,
+		Visited &visited) {
+	auto result = row.get();
+	for (auto i = 0; i != kSegmentLimit; ++i) {
+		if (!visited.emplace(result).second) {
+			return nullptr;
+		}
+		const auto previous = result->previousInSegment();
+		if (!previous) {
+			break;
+		}
+		result = previous;
+	}
+	return result;
+}
+
 // What a message of the main list is shown as.
 enum class Kind : uchar {
 	Stock,
@@ -219,6 +245,8 @@ public:
 	[[nodiscard]] bool special(not_null<const HistoryItem*> item) const;
 	void rememberList(not_null<HistoryView::ListWidget*> list);
 	[[nodiscard]] bool hasHeader(not_null<const HistoryItem*> item) const;
+	// Whether the message's chat has (or had) fold rows in this run.
+	[[nodiscard]] bool hasFolds(not_null<const HistoryItem*> item) const;
 
 	void expand(
 		not_null<History*> history,
@@ -229,6 +257,14 @@ public:
 	void chatShown(
 		not_null<History*> history,
 		Window::SessionController *window);
+
+	// Views made outside apply() (a slice loaded, a chat opened, a list
+	// rebuilt): their neighbours' layout may depend on them. Laid out again
+	// on the next main-loop turn.
+	[[nodiscard]] bool applying() const {
+		return _applying > 0;
+	}
+	void settleLater(not_null<HistoryItem*> item);
 
 private:
 	struct NotAd {
@@ -273,8 +309,24 @@ private:
 		FullMsgId itemId;
 	};
 
+	// Lays out again the rows that depend on these messages' views, once
+	// every view of the batch exists.
+	void settleAll(
+		not_null<Main::Session*> session,
+		const std::vector<not_null<HistoryItem*>> &items,
+		bool structural);
 	// Returns whether rows of the history blocks were marked for layout.
-	bool settle(not_null<HistoryItem*> item, std::vector<ListRow> &listRows);
+	// A structural change (a view made outside apply()) touches nothing
+	// when no fold row is next to it.
+	bool settle(
+		not_null<HistoryItem*> item,
+		std::vector<ListRow> &listRows,
+		Visited &visited,
+		bool structural);
+	void settleNow(not_null<Main::Session*> session);
+	// Deleted messages: the fold rows around them may join one segment or
+	// lose their head.
+	void aboutToDestroy(const std::vector<not_null<HistoryItem*>> &items);
 	void scheduleFlush(not_null<Main::Session*> session);
 	void checkNotAd(not_null<History*> history);
 	void checkToast(not_null<History*> history);
@@ -287,7 +339,11 @@ private:
 	base::flat_map<not_null<History*>, Main::Session*> _toasted;
 	base::flat_set<not_null<Main::Session*>> _sessions;
 	base::flat_set<not_null<Main::Session*>> _flushes;
+	base::flat_map<
+		not_null<Main::Session*>,
+		std::vector<FullMsgId>> _settleLater;
 	std::vector<QPointer<HistoryView::ListWidget>> _lists;
+	int _applying = 0;
 	rpl::lifetime _lifetime;
 
 };
@@ -670,6 +726,10 @@ void FoldUi::hookSession(not_null<Main::Session*> session) {
 	) | rpl::on_next([=] {
 		forgetSession(session);
 	}, session->lifetime());
+	session->data().itemsAboutToBeDestroyed(
+	) | rpl::on_next([=](const std::vector<not_null<HistoryItem*>> &items) {
+		aboutToDestroy(items);
+	}, session->lifetime());
 	session->lifetime().add([=] {
 		forgetSession(session);
 		_sessions.remove(session);
@@ -689,6 +749,7 @@ void FoldUi::forgetSession(not_null<Main::Session*> session) {
 	for (auto i = _toasted.begin(); i != _toasted.end();) {
 		i = (i->second == session.get()) ? _toasted.erase(i) : (i + 1);
 	}
+	_settleLater.remove(session);
 }
 
 Kind FoldUi::desiredKind(not_null<HistoryItem*> item) const {
@@ -741,6 +802,11 @@ bool FoldUi::special(not_null<const HistoryItem*> item) const {
 bool FoldUi::hasHeader(not_null<const HistoryItem*> item) const {
 	const auto i = _chats.find(item->history());
 	return (i != _chats.end()) && i->second.heads.contains(item->id);
+}
+
+bool FoldUi::hasFolds(not_null<const HistoryItem*> item) const {
+	const auto i = _chats.find(item->history());
+	return (i != _chats.end()) && !i->second.special.empty();
 }
 
 void FoldUi::expand(
@@ -860,8 +926,11 @@ void FoldUi::apply(const DecisionsChange &change) {
 		}
 	}
 
-	auto listRows = std::vector<ListRow>();
-	auto blocks = false;
+	// First every view whose kind changed is made again; then, once all of
+	// them exist, what depends on them is laid out again (each segment head
+	// once per batch).
+	auto touched = std::vector<not_null<HistoryItem*>>();
+	++_applying;
 	for (const auto id : ids) {
 		const auto item = owner->message(peerId, id);
 		if (!item) {
@@ -875,7 +944,7 @@ void FoldUi::apply(const DecisionsChange &change) {
 			// Made again: a fold row, the stock view, the expanded header
 			// or the trial mark (CreateView() remembers which).
 			owner->requestItemViewRefresh(item);
-			blocks = settle(item, listRows) || blocks;
+			touched.push_back(item);
 			continue;
 		} else if (now == Kind::Stock) {
 			continue;
@@ -889,7 +958,29 @@ void FoldUi::apply(const DecisionsChange &change) {
 		const auto replyToMe = decision && decision->replyToMe;
 		if (now == Kind::Fold
 			&& (occurrence != was.occurrence || replyToMe != was.replyToMe)) {
-			blocks = settle(item, listRows) || blocks;
+			touched.push_back(item);
+		}
+	}
+	--_applying;
+	settleAll(&history->session(), touched, false);
+	checkNotAd(history);
+	checkToast(history);
+}
+
+void FoldUi::settleAll(
+		not_null<Main::Session*> session,
+		const std::vector<not_null<HistoryItem*>> &items,
+		bool structural) {
+	if (items.empty()) {
+		return;
+	}
+	const auto owner = &session->data();
+	auto listRows = std::vector<ListRow>();
+	auto visited = Visited();
+	auto histories = base::flat_set<not_null<History*>>();
+	for (const auto &item : items) {
+		if (settle(item, listRows, visited, structural)) {
+			histories.emplace(item->history());
 		}
 	}
 
@@ -905,17 +996,86 @@ void FoldUi::apply(const DecisionsChange &change) {
 			}
 		}
 	}
-	if (blocks) {
-		owner->notifyHistoryChangeDelayed(history);
-		scheduleFlush(&history->session());
+	if (!histories.empty()) {
+		for (const auto &history : histories) {
+			owner->notifyHistoryChangeDelayed(history);
+		}
+		scheduleFlush(session);
 	}
-	checkNotAd(history);
-	checkToast(history);
+}
+
+void FoldUi::settleLater(not_null<HistoryItem*> item) {
+	const auto session = &item->history()->session();
+	auto &ids = _settleLater[session];
+	const auto first = ids.empty();
+	ids.push_back(item->fullId());
+	if (first) {
+		crl::on_main(session, [=] {
+			settleNow(session);
+		});
+	}
+}
+
+void FoldUi::settleNow(not_null<Main::Session*> session) {
+	const auto i = _settleLater.find(session);
+	if (i == _settleLater.end()) {
+		return;
+	}
+	auto ids = std::move(i->second);
+	_settleLater.erase(i);
+	if (!Observing()) {
+		return;
+	}
+	ranges::sort(ids);
+	ids.erase(ranges::unique(ids), end(ids));
+	auto items = std::vector<not_null<HistoryItem*>>();
+	items.reserve(ids.size());
+	for (const auto &id : ids) {
+		if (const auto item = session->data().message(id)) {
+			items.push_back(item);
+		}
+	}
+	settleAll(session, items, true);
+}
+
+void FoldUi::aboutToDestroy(
+		const std::vector<not_null<HistoryItem*>> &items) {
+	// The fold rows right before and after a deleted row: the views are
+	// still there now, their neighbours are laid out on the next turn.
+	auto neighbours = std::vector<not_null<HistoryItem*>>();
+	const auto collect = [&](not_null<const Element*> view) {
+		for (const auto delta : { -1, 1 }) {
+			if (const auto fold = AsFold(Solid(view, delta))) {
+				neighbours.push_back(fold->data());
+			}
+		}
+	};
+	for (const auto &item : items) {
+		if (!_chats.contains(item->history())) {
+			continue;
+		} else if (const auto view = item->mainView()) {
+			collect(view);
+		}
+		for (const auto &list : _lists) {
+			if (const auto view = list
+					? list->luminaAdFoldRow(item, 0)
+					: nullptr) {
+				collect(view);
+			}
+		}
+	}
+	for (const auto &item : neighbours) {
+		if (!ranges::contains(items, item)) {
+			settleLater(item);
+		}
+	}
 }
 
 bool FoldUi::settle(
 		not_null<HistoryItem*> item,
-		std::vector<ListRow> &listRows) {
+		std::vector<ListRow> &listRows,
+		Visited &visited,
+		bool structural) {
 	// After a row changed what it shows, the rows whose layout depends on
 	// it are laid out again: its own segment head and the head of the
 	// segment before it (they count their segment), and the next row that
@@ -923,6 +1083,13 @@ bool FoldUi::settle(
 	const auto around = [&](
 			not_null<Element*> view,
 			HistoryView::ListWidget *list) {
+		if (structural
+			&& !AsFold(view)
+			&& !AsFold(Solid(view, -1))
+			&& !AsFold(Solid(view, 1))) {
+			// A new ordinary row between ordinary rows: nothing to do.
+			return false;
+		}
 		auto rows = std::vector<not_null<Element*>>{ view };
 		const auto add = [&](const Element *row) {
 			if (row) {
@@ -933,10 +1100,10 @@ bool FoldUi::settle(
 			}
 		};
 		if (const auto fold = AsFold(view)) {
-			add(fold->segmentHead());
+			add(HeadOnce(fold, visited));
 		}
 		if (const auto previous = AsFold(Solid(view, -1))) {
-			add(previous->segmentHead());
+			add(HeadOnce(previous, visited));
 		}
 		add(Solid(view, 1));
 		for (const auto &row : rows) {
@@ -946,7 +1113,7 @@ bool FoldUi::settle(
 			for (const auto &row : rows) {
 				listRows.push_back({ list, row->data()->fullId() });
 			}
-			return;
+			return false;
 		}
 		// History blocks re-count dates, forum thread bars and bubble
 		// attachments only when their neighbours change; a row that became
@@ -962,11 +1129,10 @@ bool FoldUi::settle(
 				next = next->nextInBlocks();
 			}
 		}
+		return true;
 	};
 	const auto main = item->mainView();
-	if (main) {
-		around(main, nullptr);
-	}
+	const auto blocks = main && around(main, nullptr);
 	for (const auto &list : _lists) {
 		if (list) {
 			if (const auto view = list->luminaAdFoldRow(item, 0)) {
@@ -974,7 +1140,7 @@ bool FoldUi::settle(
 			}
 		}
 	}
-	return (main != nullptr);
+	return blocks;
 }
 
 void FoldUi::scheduleFlush(not_null<Main::Session*> session) {
@@ -1128,6 +1294,12 @@ std::unique_ptr<Element> CreateView(
 	const auto keepBar = barToKeep()
 		&& ((kind != Kind::Stock) || ui.special(item));
 	ui.remember(item, kind);
+	if (!ui.applying() && (kind == Kind::Fold || ui.hasFolds(item))) {
+		// Made outside a decisions change (a slice loaded, the list made
+		// again): a head next to it may have to count it, or a member may
+		// have become a head.
+		ui.settleLater(item);
+	}
 	if (kind == Kind::Stock) {
 		return keepBar ? withBar(stock()) : nullptr;
 	}
@@ -1160,6 +1332,32 @@ void NoteChatShown(
 	}
 }
 
+namespace {
+
+// The jump target has no real decision yet (just loaded by the jump, or the
+// admin list is still loading): it is expanded in advance, so if its first
+// decision folds it, it stays on screen as an expanded segment with its
+// header instead of folding away under the highlight a moment later.
+void ExpandUndecided(not_null<HistoryItem*> item) {
+	if (!item->isRegular()
+		|| item->isService()
+		|| !IsServerMsgId(item->id)
+		|| Expanded(item)
+		|| !ChatEnabled(item->history()->peer)) {
+		return;
+	} else if (const auto decision = CachedDecision(item)) {
+		if (decision->state != State::Pending
+			&& decision->state != State::Untracked) {
+			return;
+		}
+	}
+	const auto group = item->history()->owner().groups().find(item);
+	const auto first = group ? group->items.front().get() : item.get();
+	FoldUi::Instance().expand(item->history(), first->id, WithAlbum(item));
+}
+
+} // namespace
+
 bool RevealForJump(Element *view) {
 	if (!view || !Observing()) {
 		return false;
@@ -1172,15 +1370,28 @@ bool RevealForJump(Element *view) {
 		}
 	}
 	const auto row = AsFold(view);
-	if (!row || row->hiddenAnyway()) {
+	if (!row) {
+		ExpandUndecided(view->data());
+		return false;
+	} else if (row->hiddenAnyway()) {
 		return false;
 	}
 	ExpandSegmentOf(row);
 	return true;
 }
 
+bool RevealForJump(Element *view, HistoryItem *item) {
+	if (view) {
+		return RevealForJump(view);
+	}
+	return item ? RevealForJump(not_null<HistoryItem*>(item)) : false;
+}
+
 bool RevealForJump(not_null<HistoryItem*> item) {
-	if (!Observing() || !ShouldFold(item)) {
+	if (!Observing()) {
+		return false;
+	} else if (!ShouldFold(item)) {
+		ExpandUndecided(item);
 		return false;
 	} else if (RevealForJump(item->mainView())) {
 		return true;
