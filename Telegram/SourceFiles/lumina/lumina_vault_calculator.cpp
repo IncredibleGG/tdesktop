@@ -7,6 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "lumina/lumina_vault_calculator.h"
 
+#include "lumina/lumina_fake_crash.h"
+
 #include <QtCore/QEventLoop>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
@@ -352,6 +354,13 @@ void CalculatorWindow::equals() {
 	if (!_showingResult && VaultCodeMatches(_expression)) {
 		finish(VaultOutcome::Unlock);
 		return;
+	}
+	// The duress passcode, in a logout mode, typed the same way: recorded,
+	// and the calculator then just calculates, so nothing on screen differs
+	// from any other sum. See Lumina::DuressCodeEnteredAtVault().
+	if (!_showingResult) {
+		[[maybe_unused]] const auto duress = DuressCodeEnteredAtVault(
+			_expression);
 	}
 	const auto result = Evaluate(_expression);
 	if (!result) {

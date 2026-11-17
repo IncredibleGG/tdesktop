@@ -959,20 +959,18 @@ namespace {
 			u"tdata/luminagram.json dan tdata/luminagram_private.json "
 			u"dari folder data LuminaGram: brankas lalu mematikan "
 			u"dirinya sendiri dan LuminaGram berjalan normal."_q },
-		{ u"LuminaSecurityFakeCrashHeader"_q, u"Buka kunci crash palsu"_q },
-		{ u"LuminaSecurityFakeCrashEnable"_q, u"Aktifkan buka kunci crash palsu"_q },
-		{ u"LuminaSecurityFakeCrashCode"_q, u"Kode crash palsu"_q },
-		{ u"LuminaSecurityFakeCrashCodeDialogTitle"_q, u"Kode crash palsu"_q },
+		{ u"LuminaSecurityFakeCrashHeader"_q, u"Kode paksaan"_q },
+		{ u"LuminaSecurityFakeCrashEnable"_q, u"Aktifkan kode paksaan"_q },
+		{ u"LuminaSecurityFakeCrashCode"_q, u"Kode paksaan"_q },
+		{ u"LuminaSecurityFakeCrashCodeDialogTitle"_q, u"Kode paksaan"_q },
 		{ u"LuminaSecurityFakeCrashCodeHint"_q, u"Kode"_q },
 		{ u"LuminaSecurityFakeCrashCodeSet"_q, u"Diatur"_q },
 		{ u"LuminaSecurityFakeCrashCodeNotSet"_q, u"Belum diatur"_q },
 		{ u"LuminaSecurityFakeCrashCodeSameAsPasscode"_q, u"Kode ini tidak boleh sama "
 			u"dengan kode sandi kunci Anda."_q },
-		{ u"LuminaSecurityFakeCrashInfo"_q, u"Saat aktif, mengetik kode crash palsu di layar kunci "
-			u"akan menutup LuminaGram alih-alih membukanya — bagi "
-			u"siapa pun yang melihat, aplikasi tampak crash. Kode ini "
-			u"terpisah dari kode sandi kunci Anda, disimpan hanya di "
-			u"perangkat ini, dan tidak pernah dikirim ke mana pun."_q },
+		{ u"LuminaSecurityFakeCrashCodeSameAsVault"_q, u"Kode ini tidak boleh sama dengan kode rahasia brankas penyamaran."_q },
+		{ u"LuminaVaultCodeSameAsDuress"_q, u"Kode rahasia tidak boleh sama dengan kode paksaan."_q },
+		{ u"LuminaSecurityFakeCrashInfo"_q, u"Kode kedua, hanya disimpan di perangkat ini dan tidak pernah dikirim ke mana pun. Jika diketik di layar kunci, kode ini tidak pernah membuka LuminaGram - kode ini menjalankan pilihan Anda di bawah. Opsi keluar juga berlaku di mana pun brankas penyamaran menerima kode rahasianya, dan umpan tetap tampil seperti biasa. Hanya kode persis ini yang berpengaruh: kode sandi salah biasa tidak pernah memicunya."_q },
 		{ u"LuminaSecurityFakeCrashBiometricInfo"_q, u"Selama ini aktif dan kode sudah "
 			u"diatur, membuka kunci dengan Touch ID, Windows Hello, atau "
 			u"kata sandi sistem dimatikan: sidik jari membuka aplikasi "
@@ -988,19 +986,17 @@ namespace {
 		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"Kode ini kini sama dengan kode "
 			u"sandi kunci Anda, jadi tidak akan pernah berfungsi — kode "
 			u"sandi yang membuka aplikasi. Pilih kode lain."_q },
+		{ u"LuminaSecurityFakeCrashVaultClashInfo"_q, u"Kode ini sekarang sama dengan kode rahasia brankas penyamaran, jadi di layar penyamaran kode ini malah membuka LuminaGram. Pilih kode lain."_q },
 		{ u"LuminaFakeCrashModeHeader"_q, u"Saat kode ini dimasukkan"_q },
-		{ u"LuminaFakeCrashModeExit"_q, u"Langsung keluar"_q },
-		{ u"LuminaFakeCrashModeDialog"_q, u"Tampilkan peringatan crash palsu"_q },
-		{ u"LuminaFakeCrashModeExitInfo"_q, u"Langsung keluar: jendela langsung hilang, tanpa pesan "
-			u"apa pun dan tanpa meninggalkan apa pun di layar."_q },
-		{ u"LuminaFakeCrashModeDialogInfo"_q, u"Peringatan crash palsu: jendela hilang lalu muncul "
-			u"peringatan bergaya sistem “LuminaGram telah berhenti "
-			u"bekerja”; LuminaGram tertutup saat peringatan itu "
-			u"ditutup."_q },
-		{ u"LuminaFakeCrashTitle"_q, u"LuminaGram telah berhenti bekerja"_q },
-		{ u"LuminaFakeCrashText"_q, u"Sebuah masalah menyebabkan program berhenti bekerja "
-			u"dengan benar. Program akan ditutup."_q },
-		{ u"LuminaFakeCrashCloseApp"_q, u"Tutup program"_q },
+		{ u"LuminaFakeCrashModeExit"_q, u"Keluar dari aplikasi"_q },
+		{ u"LuminaDuressModeLogoutCurrent"_q, u"Keluarkan akun saat ini"_q },
+		{ u"LuminaDuressModeLogoutAll"_q, u"Keluarkan semua akun"_q },
+		{ u"LuminaFakeCrashModeExitInfo"_q, u"Keluar dari aplikasi: di layar kunci jendela langsung hilang dan tidak ada akun yang dikeluarkan. Di brankas penyamaran opsi ini tidak melakukan apa pun - di sana kode dianggap kode yang salah."_q },
+		{ u"LuminaDuressLogoutCurrentWarning"_q, u"Saat dipicu, hanya akun saat ini yang dikeluarkan. Pastikan dulu akun ini juga masuk di perangkat lain, agar Anda tetap bisa menerima kode masuk."_q },
+		{ u"LuminaDuressLogoutAllWarning"_q, u"Saat dipicu, semua akun di perangkat ini dikeluarkan. Pastikan nomor telepon setiap akun bisa menerima kode masuk lewat SMS - jika tidak, akun itu tidak bisa masuk lagi."_q },
+		{ u"LuminaDuressLocalDataWarning"_q, u"Obrolan rahasia di perangkat ini hilang selamanya, bersama draf, cache, dan pengaturan lokal yang disimpan perangkat ini untuk akun tersebut."_q },
+		{ u"LuminaDuressDeferredInfo"_q, u"Di layar kunci, LuminaGram langsung tersembunyi, keluar dari akun, lalu tertutup beberapa detik kemudian. Di brankas penyamaran - dan di layar kunci LuminaGram yang baru dijalankan, untuk «Keluarkan akun saat ini» - akun masih tersegel, jadi proses keluar diingat dan dijalankan saat akun dibuka berikutnya dengan kode asli Anda, sebelum apa pun ditampilkan."_q },
+		{ u"LuminaDuressConfirmButton"_q, u"Aktifkan"_q },
 		// login guard (D-32)
 		{ u"LuminaSessionGuardHeader"_q, u"Penjaga login"_q },
 		{ u"LuminaSessionGuard"_q, u"Peringatan login baru"_q },

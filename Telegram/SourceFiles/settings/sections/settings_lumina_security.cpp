@@ -40,9 +40,10 @@ rpl::producer<QString> LuminaSecurity::title() {
 // F-02 sub-page contract: this body stays an ordered list of one call per
 // feature, each declared in that feature's own `lumina/*.h`.
 // Owners, in the order their rows appear:
-//   W3-C fake-crash duress unlock - first on the page and directly above the
-//        disguise vault, matching Android, which moved it to the top of its
-//        App disguise page (desktop's disguise lives on this page);
+//   W3-C duress passcode (was "fake-crash unlock") - first on the page and
+//        directly above the disguise vault, matching Android, which moved it
+//        to the top of its App disguise page (desktop's disguise lives on
+//        this page, and its gate accepts the duress passcode too);
 //   W3-A disguise vault (gate, password door, calculator and notepad decoys);
 //   W3-B panic wipe;
 //   D-32 login guard (new-login alerts, ported from Android).

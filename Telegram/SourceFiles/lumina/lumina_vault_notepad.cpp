@@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "lumina/lumina_vault_notepad.h"
 
+#include "lumina/lumina_fake_crash.h"
 #include "lumina/lumina_settings.h"
 
 #include <QtCore/QEventLoop>
@@ -126,14 +127,18 @@ void NotepadWindow::save() {
 	if (!_body) {
 		return;
 	}
+	// The duress passcode is typed into this body the same way as the secret
+	// code, and is kept off the disk the same way.
+	const auto secret = [](const QString &value) {
+		return VaultCodeMatches(value) || IsDuressCode(value);
+	};
 	const auto text = _body->toPlainText();
-	if (!VaultCodeMatches(text)) {
+	if (!secret(text)) {
 		SetDecoyNotepadContent(text);
-	} else if (VaultCodeMatches(_restored)) {
-		// The body is the code, so it is not written. If what was stored was
-		// the code as well - an older build, or a note carried over from
-		// Android - drop it, so the decoy stops opening with the code on
-		// display.
+	} else if (secret(_restored)) {
+		// The body is a code, so it is not written. If what was stored was
+		// a code as well - an older build, or a note carried over from
+		// Android - drop it, so the decoy stops opening with it on display.
 		SetDecoyNotepadContent(QString());
 	}
 }
@@ -142,9 +147,18 @@ void NotepadWindow::tryUnlock() {
 	// The unlock, and the only thing here that is not a notepad. A wrong body
 	// does nothing whatsoever - no message, no flash - so a double click gives
 	// away neither that a lock exists nor that one was just attempted.
-	if (_body && VaultCodeMatches(_body->toPlainText())) {
-		finish(VaultOutcome::Unlock);
+	if (!_body) {
+		return;
 	}
+	const auto text = _body->toPlainText();
+	if (VaultCodeMatches(text)) {
+		finish(VaultOutcome::Unlock);
+		return;
+	}
+	// The duress passcode, in a logout mode, the same way: recorded, and
+	// nothing observable happens - exactly as for a body that is no code at
+	// all. See Lumina::DuressCodeEnteredAtVault().
+	[[maybe_unused]] const auto duress = DuressCodeEnteredAtVault(text);
 }
 
 void NotepadWindow::finish(VaultOutcome outcome) {

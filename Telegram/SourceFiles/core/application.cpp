@@ -55,6 +55,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_hardcoded.h"
 #include "lang/lang_instance.h"
 #include "lumina/lumina_ad_shield_manager.h"
+#include "lumina/lumina_fake_crash.h"
 #include "lumina/lumina_settings.h"
 #include "lumina/lumina_translate_send.h"
 #include "lumina/lumina_undo_send.h"
@@ -407,6 +408,12 @@ void Application::run() {
 	// with the feature off (the default) it creates nothing at all.
 	Lumina::AdShield::Start();
 
+	// LuminaGram duress passcode. Before the accounts start: a logout the
+	// passcode was entered for at the disguise vault (or on a lock screen
+	// that could not reach the accounts) is carried out the moment they are
+	// first available. With none recorded it only subscribes.
+	Lumina::SetupDuress();
+
 	DEBUG_LOG(("Application Info: inited..."));
 	LOG(("Qt version: %1 (compiled with %2)").arg(
 		QString::fromLatin1(qVersion()),
@@ -471,6 +478,12 @@ void Application::run() {
 	DEBUG_LOG(("Application Info: window created..."));
 
 	startDomain();
+
+	// LuminaGram duress passcode: when such a logout started just now, the
+	// first window waits for it, so the account is never on screen while it
+	// is being logged out. A no-op otherwise.
+	Lumina::WaitForDuressLogout();
+
 	startTray();
 
 	_lastActivePrimaryWindow->firstShow();

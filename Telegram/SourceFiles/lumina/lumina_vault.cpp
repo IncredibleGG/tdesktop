@@ -184,8 +184,8 @@ bool VaultEnabled() {
 // other three setters below. All four are read by the gate once, at the very
 // start of the NEXT launch, and the two ways this application ends without
 // draining that timer are both reachable from the screen the vault is
-// configured on: Lumina::TriggerFakeCrash() calls std::_Exit(), which runs no
-// destructor, and a real crash does the same.
+// configured on: Lumina::ExitAtOnce() (the duress passcode) calls
+// std::_Exit(), which runs no destructor, and a real crash does the same.
 //
 // Losing any of them fails open in the sense that nothing is destroyed, but
 // "fails open" is not the same as "harmless", and it is worst for the mode:

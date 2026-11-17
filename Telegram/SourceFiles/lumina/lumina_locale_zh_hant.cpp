@@ -783,19 +783,18 @@ namespace {
 			u"tdata/luminagram_private.json："
 			u"保險箱就會自動關閉，LuminaGram 也會正"
 			u"常啟動。"_q },
-		{ u"LuminaSecurityFakeCrashHeader"_q, u"假當機解鎖"_q },
-		{ u"LuminaSecurityFakeCrashEnable"_q, u"啟用假當機解鎖"_q },
-		{ u"LuminaSecurityFakeCrashCode"_q, u"假當機密碼"_q },
-		{ u"LuminaSecurityFakeCrashCodeDialogTitle"_q, u"假當機密碼"_q },
+		{ u"LuminaSecurityFakeCrashHeader"_q, u"脅迫密碼"_q },
+		{ u"LuminaSecurityFakeCrashEnable"_q, u"啟用脅迫密碼"_q },
+		{ u"LuminaSecurityFakeCrashCode"_q, u"脅迫密碼"_q },
+		{ u"LuminaSecurityFakeCrashCodeDialogTitle"_q, u"脅迫密碼"_q },
 		{ u"LuminaSecurityFakeCrashCodeHint"_q, u"密碼"_q },
 		{ u"LuminaSecurityFakeCrashCodeSet"_q, u"已設定"_q },
 		{ u"LuminaSecurityFakeCrashCodeNotSet"_q, u"未設定"_q },
 		{ u"LuminaSecurityFakeCrashCodeSameAsPasscode"_q, u"此密碼不能與你的密碼"
 			u"鎖相同。"_q },
-		{ u"LuminaSecurityFakeCrashInfo"_q, u"開啟後，在鎖定畫面輸入假當機密碼不會解鎖，而"
-			u"是關閉 LuminaGram——在旁人看來就"
-			u"是應用程式當掉了。這個密碼與你的密碼鎖互相獨"
-			u"立，只保存在本機，絕不會傳送到任何地方。"_q },
+		{ u"LuminaSecurityFakeCrashCodeSameAsVault"_q, u"此密碼不能與偽裝保險箱的秘密密碼相同。"_q },
+		{ u"LuminaVaultCodeSameAsDuress"_q, u"秘密密碼不能與脅迫密碼相同。"_q },
+		{ u"LuminaSecurityFakeCrashInfo"_q, u"第二組密碼，只保存在本機，絕不會傳送到任何地方。在密碼鎖畫面輸入它永遠不會解鎖 LuminaGram，而是執行你在下方選擇的動作。登出選項在偽裝保險箱輸入秘密密碼的地方也有效，偽裝畫面會照常顯示。只有輸入這組特定密碼才會觸發——一般的密碼打錯不會有任何影響。"_q },
 		{ u"LuminaSecurityFakeCrashBiometricInfo"_q, u"在此功能開啟且已設定密"
 			u"碼期間，使用 Touch ID、"
 			u"Windows Hello 或系統密碼解鎖會被停"
@@ -810,16 +809,17 @@ namespace {
 		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"這個密碼現在與你的密碼"
 			u"鎖相同，因此永遠不會觸發——密碼鎖會先把應用程式"
 			u"解鎖。請換一個密碼。"_q },
+		{ u"LuminaSecurityFakeCrashVaultClashInfo"_q, u"這個密碼現在與偽裝保險箱的秘密密碼相同，在偽裝畫面輸入會直接打開 LuminaGram。請換一個密碼。"_q },
 		{ u"LuminaFakeCrashModeHeader"_q, u"輸入此密碼後"_q },
-		{ u"LuminaFakeCrashModeExit"_q, u"直接退出"_q },
-		{ u"LuminaFakeCrashModeDialog"_q, u"顯示假當機提示"_q },
-		{ u"LuminaFakeCrashModeExitInfo"_q, u"直接退出：視窗立刻消失，不會有任何提示，畫面上也不會留下任何東西。"_q },
-		{ u"LuminaFakeCrashModeDialogInfo"_q, u"顯示假當機提示：視窗消失後跳出系統風格的「LuminaGram"
-			u" 已停止運作」提示，關閉提示後應用程式隨即結"
-			u"束。"_q },
-		{ u"LuminaFakeCrashTitle"_q, u"LuminaGram 已停止運作"_q },
-		{ u"LuminaFakeCrashText"_q, u"發生了一個問題，導致程式停止正常運作。程式即將關閉。"_q },
-		{ u"LuminaFakeCrashCloseApp"_q, u"關閉程式"_q },
+		{ u"LuminaFakeCrashModeExit"_q, u"直接退出 App"_q },
+		{ u"LuminaDuressModeLogoutCurrent"_q, u"登出目前帳號"_q },
+		{ u"LuminaDuressModeLogoutAll"_q, u"登出所有帳號"_q },
+		{ u"LuminaFakeCrashModeExitInfo"_q, u"直接退出 App：在密碼鎖畫面輸入時，視窗立刻消失，不會登出任何帳號。在偽裝保險箱輸入則沒有任何作用，視同密碼錯誤。"_q },
+		{ u"LuminaDuressLogoutCurrentWarning"_q, u"觸發後只登出目前帳號。請先確認這個帳號在其他裝置也有登入，才收得到登入驗證碼。"_q },
+		{ u"LuminaDuressLogoutAllWarning"_q, u"觸發後這台裝置上的所有帳號都會登出。請確認每個帳號的手機號碼都能收簡訊驗證碼，否則帳號將無法再登入。"_q },
+		{ u"LuminaDuressLocalDataWarning"_q, u"這台裝置上的私密聊天會永久消失，這台裝置為該帳號保存的草稿、快取與本機設定也會一併清除。"_q },
+		{ u"LuminaDuressDeferredInfo"_q, u"在密碼鎖畫面觸發時，LuminaGram 會立刻隱藏、完成登出，幾秒後關閉。在偽裝保險箱輸入時，以及 LuminaGram 剛啟動、還沒解鎖就在密碼鎖畫面觸發「登出目前帳號」時，帳號資料仍是加密封存的，因此會先記下，等下次用真正的密碼打開帳號時，在顯示任何內容之前完成登出。"_q },
+		{ u"LuminaDuressConfirmButton"_q, u"啟用"_q },
 		// login guard (D-32)
 		{ u"LuminaSessionGuardHeader"_q, u"登入守衛"_q },
 		{ u"LuminaSessionGuard"_q, u"新登入警示"_q },

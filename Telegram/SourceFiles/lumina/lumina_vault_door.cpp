@@ -7,6 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "lumina/lumina_vault_door.h"
 
+#include "lumina/lumina_fake_crash.h"
+
 #include <QtCore/QEventLoop>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
@@ -99,9 +101,16 @@ void DoorWindow::confirm() {
 	if (entered.isEmpty()) {
 		return;
 	}
-	finish(VaultCodeMatches(entered)
-		? VaultOutcome::Unlock
-		: VaultOutcome::Decoy);
+	if (VaultCodeMatches(entered)) {
+		finish(VaultOutcome::Unlock);
+		return;
+	}
+	// The duress passcode, in a logout mode, is recorded here and otherwise
+	// treated exactly like any wrong code: the decoy opens. The logout itself
+	// waits for the accounts, which do not exist yet at this point - see
+	// Lumina::DuressCodeEnteredAtVault().
+	[[maybe_unused]] const auto duress = DuressCodeEnteredAtVault(entered);
+	finish(VaultOutcome::Decoy);
 }
 
 void DoorWindow::finish(VaultOutcome outcome) {
