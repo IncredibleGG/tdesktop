@@ -3332,6 +3332,13 @@ if (MSVC)
             /DELAYLOAD:setupapi.dll # SetupAPI.lib
             /DELAYLOAD:winhttp.dll
         )
+
+        # LuminaGram: our first Qt 6 Windows link pulls qdnslookup_win.cpp.obj out of the
+        # static Qt6Network.lib (DnsQuery_W / DnsFree / DnsWriteQuestionToBuffer_W /
+        # DnsExtractRecordsFromMessage_W), which the shared cmake lists do not provide.
+        # Link the system Dnsapi import library, delay-loaded like the other system DLLs.
+        target_link_libraries(Telegram PRIVATE Dnsapi)
+        target_link_options(Telegram PRIVATE /DELAYLOAD:dnsapi.dll)
     endif()
 endif()
 
