@@ -128,6 +128,7 @@ private:
 	void refreshLang();
 	void showFinished();
 	void createLanguageLink();
+	void luminaApplySystemLanguage();
 	void checkUpdateStatus();
 	void setupNextButton();
 	void handleUpdates(const MTPUpdates &updates);
@@ -169,8 +170,6 @@ private:
 	// FloatDelegate
 	[[nodiscard]] auto floatPlayerDelegate()
 		-> not_null<Media::Player::FloatDelegate*>;
-	[[nodiscard]] auto floatPlayerSectionDelegate()
-		-> not_null<Media::Player::FloatSectionDelegate*>;
 	not_null<Ui::RpWidget*> floatPlayerWidget() override;
 	void floatPlayerToggleGifsPaused(bool paused) override;
 	not_null<Media::Player::FloatSectionDelegate*> floatPlayerGetSection(
@@ -217,6 +216,11 @@ private:
 
 	bool _nextShown = true;
 	Ui::Animations::Simple _nextShownAnimation;
+
+	// LuminaGram: the first-launch system language, see
+	// lumina/lumina_system_language.h.
+	bool _luminaSystemLanguageChecked = false;
+	bool _luminaSystemLanguagePending = false;
 
 	mtpRequestId _resetRequest = 0;
 

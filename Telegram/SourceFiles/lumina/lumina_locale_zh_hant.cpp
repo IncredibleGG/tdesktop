@@ -458,6 +458,11 @@ namespace {
 			u"以其他字母系統寫成的仿冒網域，Telegram Desktop 本身就會詢問。"
 			u"所有檢查都不會連線——你開啟的任何網址都不會離開這台裝置。"_q },
 		{ u"LuminaLinkSafetyRow"_q, u"連結安全檢查"_q },
+		{ u"LuminaMessageWidgetsRow"_q, u"訊息中的機器人小工具"_q },
+		{ u"LuminaMessageWidgetsInfo"_q, u"部分機器人傳送的訊息附有互動小工具：由機器人製作、在聊天中於沙盒內執行的小網頁。關閉後會在原位置顯示一則簡短提示，小工具的任何內容都不會執行或載入，訊息的其餘部分照常顯示。"_q },
+		{ u"LuminaMessageWidgetOffTitle"_q, u"機器人小工具已關閉"_q },
+		{ u"LuminaMessageWidgetOffText"_q, u"這則訊息包含互動式機器人小工具。機器人小工具已在 LuminaGram 設定中關閉。"_q },
+		{ u"LuminaMessageWidgetOffButton"_q, u"開啟設定"_q },
 		{ u"LuminaLinkSafetyTitle"_q, u"開啟外部連結？"_q },
 		{ u"LuminaFileGuardTitle"_q, u"要開啟這個檔案嗎？"_q },
 		{ u"LuminaFileGuardName"_q, u"檔案名稱"_q },

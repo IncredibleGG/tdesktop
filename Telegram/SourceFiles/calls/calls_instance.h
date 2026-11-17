@@ -134,8 +134,6 @@ public:
 		-> std::shared_ptr<tgcalls::VideoCaptureInterface>;
 	void requestPermissionsOrFail(Fn<void()> onSuccess, bool video = true);
 
-	[[nodiscard]] const ConferenceInvites &conferenceInvites(
-		CallId conferenceId) const;
 	void registerConferenceInvite(
 		CallId conferenceId,
 		not_null<UserData*> user,

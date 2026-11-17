@@ -27,7 +27,7 @@ StartWidget::StartWidget(
 : Step(parent, account, data, true) {
 	setMouseTracking(true);
 	setTitleText(rpl::single(AppName.utf16()));
-	setDescriptionText(Lumina::BrandIntroAbout());
+	setDescriptionText(Lumina::BrandIntroAboutValue());
 	show();
 }
 

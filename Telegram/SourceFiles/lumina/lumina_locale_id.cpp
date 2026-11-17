@@ -536,6 +536,11 @@ namespace {
 			u"Tidak ada pemeriksaan daring — tidak ada alamat yang Anda buka "
 			u"meninggalkan perangkat ini."_q },
 		{ u"LuminaLinkSafetyRow"_q, u"Pemeriksa keamanan tautan"_q },
+		{ u"LuminaMessageWidgetsRow"_q, u"Widget bot di pesan"_q },
+		{ u"LuminaMessageWidgetsInfo"_q, u"Beberapa bot mengirim pesan dengan widget interaktif: halaman kecil buatan bot yang berjalan di dalam chat, di lingkungan terisolasi. Matikan untuk menampilkan pemberitahuan singkat sebagai gantinya, sehingga tidak ada bagian widget yang dijalankan atau dimuat. Bagian lain pesan tetap ditampilkan."_q },
+		{ u"LuminaMessageWidgetOffTitle"_q, u"Widget bot dimatikan"_q },
+		{ u"LuminaMessageWidgetOffText"_q, u"Pesan ini berisi widget bot interaktif. Widget bot dimatikan di pengaturan LuminaGram."_q },
+		{ u"LuminaMessageWidgetOffButton"_q, u"Buka pengaturan"_q },
 		{ u"LuminaLinkSafetyTitle"_q, u"Buka tautan eksternal?"_q },
 		{ u"LuminaFileGuardTitle"_q, u"Buka berkas ini?"_q },
 		{ u"LuminaFileGuardName"_q, u"Nama berkas"_q },

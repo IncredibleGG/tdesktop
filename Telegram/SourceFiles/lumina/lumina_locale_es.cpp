@@ -567,6 +567,11 @@ namespace {
 			u"No se comprueba nada en línea: ninguna dirección que abras sale "
 			u"de este dispositivo."_q },
 		{ u"LuminaLinkSafetyRow"_q, u"Inspector de seguridad de enlaces"_q },
+		{ u"LuminaMessageWidgetsRow"_q, u"Widgets de bots en los mensajes"_q },
+		{ u"LuminaMessageWidgetsInfo"_q, u"Algunos bots envían mensajes con un widget interactivo: una pequeña página creada por el bot que se ejecuta dentro del chat, en un entorno aislado. Desactívalo para mostrar un breve aviso en su lugar, de modo que nada del widget se ejecute ni se cargue. El resto del mensaje se sigue mostrando."_q },
+		{ u"LuminaMessageWidgetOffTitle"_q, u"Widget de bot desactivado"_q },
+		{ u"LuminaMessageWidgetOffText"_q, u"Este mensaje contiene un widget interactivo de un bot. Los widgets de bots están desactivados en los ajustes de LuminaGram."_q },
+		{ u"LuminaMessageWidgetOffButton"_q, u"Abrir ajustes"_q },
 		{ u"LuminaLinkSafetyTitle"_q, u"¿Abrir enlace externo?"_q },
 		{ u"LuminaFileGuardTitle"_q, u"¿Abrir este archivo?"_q },
 		{ u"LuminaFileGuardName"_q, u"Nombre del archivo"_q },

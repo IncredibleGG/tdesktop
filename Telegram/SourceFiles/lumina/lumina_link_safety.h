@@ -29,6 +29,14 @@ namespace Lumina {
 // copyToClipboardText(), dragText() and the suspicious-link render path in
 // the web page and overview layouts, for the same user-visible result.
 //
+// One box per click. HiddenUrlClickHandler::Open (core/click_handler_types.cpp)
+// calls the gate as well, right before it would show upstream's own "Open
+// this link?" box (hidden links, hosts outside the server's
+// whitelisted_domains since 7.4, suspicious Unicode hosts). When the gate
+// takes the click over, upstream's box is skipped; when it does not, upstream
+// asks and the gate in handleUrlClick then finds the same empty warnings and
+// stays silent. Upstream's box can never be followed by this one.
+//
 // What it detects, and just as importantly what it does NOT. Android warns
 // about four things; this warns about three of them, and the fourth is left
 // to stock because stock genuinely covers it.

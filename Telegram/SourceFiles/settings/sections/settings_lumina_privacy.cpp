@@ -16,6 +16,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_file_guard_settings.h"
 #include "lumina/lumina_clipboard_guard_settings.h"
 #include "lumina/lumina_link_safety_settings.h"
+#include "lumina/lumina_message_widgets.h"
 #include "lumina/lumina_notification_control.h"
 #include "lumina/lumina_locale.h"
 #include "ui/wrap/vertical_layout.h"
@@ -61,7 +62,9 @@ rpl::producer<QString> LuminaPrivacy::title() {
 //   W3-F scam keyword warning;
 //   W4-H strip photo GPS / EXIF before upload;
 //   W4-G disable link preview by default;
-//   W6-B account registration date row.
+//   W6-B account registration date row;
+//   7.4 sync: upstream's bot HTML widgets switch (after the file guard, with
+//        the other rows about untrusted content).
 void LuminaPrivacy::setupContent(not_null<Ui::VerticalLayout*> container) {
 	Lumina::AddLinkSafetyRows(container, controller());
 	Lumina::AddCryptoGuardRows(container, controller());
@@ -70,6 +73,7 @@ void LuminaPrivacy::setupContent(not_null<Ui::VerticalLayout*> container) {
 	Lumina::AddOtpGuardRows(container, controller());
 	Lumina::AddHomoglyphWarnRows(container, controller());
 	Lumina::AddFileGuardRows(container, controller());
+	Lumina::AddMessageWidgetRows(container, controller());
 	Lumina::AddExifStripRows(container, controller());
 	Lumina::AddProfileExtraRows(container, controller());
 	Lumina::AddNotificationControlRows(container, controller());

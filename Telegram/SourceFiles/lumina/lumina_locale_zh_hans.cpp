@@ -463,6 +463,11 @@ namespace {
 			u"本身已经会询问。所有检查都在本机进行——你打开的网址不会离开"
 			u"这台设备。"_q },
 		{ u"LuminaLinkSafetyRow"_q, u"链接安全检查"_q },
+		{ u"LuminaMessageWidgetsRow"_q, u"消息中的机器人小组件"_q },
+		{ u"LuminaMessageWidgetsInfo"_q, u"部分机器人发送的消息带有互动小组件：由机器人制作、在聊天中于沙盒内运行的小网页。关闭后会在原位置显示一则简短提示，小组件的任何内容都不会运行或加载，消息的其余部分照常显示。"_q },
+		{ u"LuminaMessageWidgetOffTitle"_q, u"机器人小组件已关闭"_q },
+		{ u"LuminaMessageWidgetOffText"_q, u"这条消息包含互动式机器人小组件。机器人小组件已在 LuminaGram 设置中关闭。"_q },
+		{ u"LuminaMessageWidgetOffButton"_q, u"打开设置"_q },
 		{ u"LuminaLinkSafetyTitle"_q, u"打开外部链接？"_q },
 		{ u"LuminaFileGuardTitle"_q, u"要打开这个文件吗？"_q },
 		{ u"LuminaFileGuardName"_q, u"文件名"_q },

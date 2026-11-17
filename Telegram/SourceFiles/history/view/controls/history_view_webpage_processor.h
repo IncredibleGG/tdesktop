@@ -92,6 +92,7 @@ public:
 	// unless preview was removed in the draft or manual.
 	void apply(Data::WebPageDraft draft, bool reparse = true);
 	[[nodiscard]] Data::WebPageDraft draft() const;
+	[[nodiscard]] bool disabled() const;
 
 	// LuminaGram (W4-G): draft() as it should be *stored*, which is
 	// draft() minus any `removed` flag this processor seeded itself from

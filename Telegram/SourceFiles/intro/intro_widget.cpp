@@ -16,6 +16,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_keys.h"
 #include "lang/lang_instance.h"
 #include "lang/lang_cloud_manager.h"
+#include "lumina/lumina_system_language.h"
 #include "storage/localstorage.h"
 #include "main/main_account.h"
 #include "main/main_domain.h"
@@ -104,7 +105,10 @@ Widget::Widget(
 	_account->mtpValue(
 	) | rpl::on_next([=](not_null<MTP::Instance*> instance) {
 		_api.emplace(instance);
-		crl::on_main(this, [=] { createLanguageLink(); });
+		crl::on_main(this, [=] {
+			luminaApplySystemLanguage();
+			createLanguageLink();
+		});
 	}, lifetime());
 
 	switch (point) {
@@ -188,11 +192,6 @@ not_null<Media::Player::FloatDelegate*> Widget::floatPlayerDelegate() {
 	return static_cast<Media::Player::FloatDelegate*>(this);
 }
 
-auto Widget::floatPlayerSectionDelegate()
--> not_null<Media::Player::FloatSectionDelegate*> {
-	return static_cast<Media::Player::FloatSectionDelegate*>(this);
-}
-
 not_null<Ui::RpWidget*> Widget::floatPlayerWidget() {
 	return this;
 }
@@ -269,8 +268,35 @@ void Widget::handleUpdate(const MTPUpdate &update) {
 	}, [](const auto &) {});
 }
 
+void Widget::luminaApplySystemLanguage() {
+	// LuminaGram: a first launch starts in the system's language, as on
+	// Android, instead of in English with the server's suggestion offered
+	// below (which picks Simplified Chinese for a Traditional Chinese
+	// system). Only while no language was ever saved and nobody is logged
+	// in; the "Continue in English" link it leaves behind undoes it.
+	if (_luminaSystemLanguageChecked || !_api) {
+		return;
+	}
+	_luminaSystemLanguageChecked = true;
+	if (!Lumina::SystemLanguageMayApply()) {
+		return;
+	}
+	_luminaSystemLanguagePending = true;
+	Lumina::ResolveSystemLanguagePack(*_api, crl::guard(this, [=](
+			const Lang::Language &language) {
+		_luminaSystemLanguagePending = false;
+		if (!language.id.isEmpty() && Lumina::SystemLanguageMayApply()) {
+			Lang::CurrentCloudManager().switchToLanguage(language);
+		}
+		// After a switch this is "Continue in English"; Lang::Updated()
+		// remakes it in the new language once the pack has arrived.
+		createLanguageLink();
+	}));
+}
+
 void Widget::createLanguageLink() {
 	if (_changeLanguage
+		|| _luminaSystemLanguagePending
 		|| Core::App().domain().maybeLastOrSomeAuthedAccount()) {
 		return;
 	}
@@ -294,22 +320,40 @@ void Widget::createLanguageLink() {
 	const auto currentId = Lang::LanguageIdOrDefault(Lang::Id());
 	const auto defaultId = Lang::DefaultLanguageId();
 	const auto suggested = Lang::CurrentCloudManager().suggestedLanguage();
-	if (currentId != defaultId) {
-		createLink(
-			Lang::GetOriginalValue(tr::lng_switch_to_this.base),
-			defaultId);
-	} else if (!suggested.isEmpty() && suggested != currentId && _api) {
+	const auto offer = [=](const QString &id) {
+		if (!_api) {
+			return;
+		}
 		_api->request(MTPlangpack_GetStrings(
 			MTP_string(Lang::CloudLangPackName()),
-			MTP_string(suggested),
+			MTP_string(id),
 			MTP_vector<MTPstring>(1, MTP_string("lng_switch_to_this"))
 		)).done([=](const MTPVector<MTPLangPackString> &result) {
 			const auto strings = Lang::Instance::ParseStrings(result);
 			const auto i = strings.find(tr::lng_switch_to_this.base);
-			if (i != strings.end()) {
-				createLink(i->second, suggested);
+			if (i != strings.end() && !_changeLanguage) {
+				createLink(i->second, id);
 			}
 		}).send();
+	};
+	if (currentId != defaultId) {
+		createLink(
+			Lang::GetOriginalValue(tr::lng_switch_to_this.base),
+			defaultId);
+	} else if (_api
+		&& !Lumina::ChineseLanguagePackFor(
+			Lumina::PreferredSystemLanguage()).isEmpty()) {
+		// LuminaGram: a Chinese system is offered the pack of its own
+		// script, not the server's suggestion (Simplified for zh-Hant-MY).
+		Lumina::ResolveSystemLanguagePack(*_api, crl::guard(this, [=](
+				const Lang::Language &language) {
+			const auto id = !language.id.isEmpty() ? language.id : suggested;
+			if (!id.isEmpty() && id != currentId) {
+				offer(id);
+			}
+		}));
+	} else if (!suggested.isEmpty() && suggested != currentId && _api) {
+		offer(suggested);
 	}
 }
 

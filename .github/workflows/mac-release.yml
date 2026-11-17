@@ -26,7 +26,15 @@ jobs:
     # A cold run builds Qt twice over before it even reaches the application
     # and may come close to the six hour job limit. If it times out, run once
     # with only_cache set to fill the library cache, then run again to build.
-    runs-on: macos-latest
+    #
+    # 7.4: pinned to the macOS 26 image, not macos-latest. GitHub moves
+    # macos-latest (and the default Xcode on an image) on its own schedule,
+    # and a newer Xcode means a newer SDK, which can no longer target the
+    # macOS 10.13 that every LuminaGram release so far has supported - the
+    # same reason upstream builds its releases with a pinned Command Line
+    # Tools 26.6 / SDK 26.5. Moving to Xcode 27 has to be a deliberate edit
+    # here (and to XCODE_APP below), not something a runner update does.
+    runs-on: macos-26
 
     env:
       ONLY_CACHE: ${{ inputs.only_cache }}
@@ -50,9 +58,26 @@ jobs:
       # upstream's canary.yml does, so that adding one later cannot break the
       # build: the runner's own Xcode is the toolchain here.
       TDESKTOP_MAC_TOOLCHAIN: system
-      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+      # 7.4: the Xcode is named, not taken from /Applications/Xcode.app, which
+      # is only a symlink to whatever the image currently defaults to. 26.6
+      # (17F113) is the one every release since 7.0 was built with: SDK 26.5,
+      # macOS 10.13 minimum. The first step fails the run if it is missing.
+      XCODE_APP: /Applications/Xcode_26.6.app
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
 
     steps:
+      - name: Check the pinned Xcode.
+        # Fail here, in the first second, rather than build hours of
+        # libraries with some other toolchain: without this Xcode the oldest
+        # macOS the build supports is no longer guaranteed to be 10.13.
+        run: |
+          if [ ! -d "$XCODE_APP/Contents/Developer" ]; then
+            echo "::error::$XCODE_APP is not on this runner image. Installed:"
+            ls -d /Applications/Xcode*.app || true
+            exit 1
+          fi
+          "$XCODE_APP/Contents/Developer/usr/bin/xcodebuild" -version
+
       - name: Get repository name.
         run: echo "REPO_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
 
@@ -74,7 +99,7 @@ jobs:
           # Disable spotlight.
           sudo mdutil -a -i off
 
-          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          sudo xcode-select -s "$DEVELOPER_DIR"
 
           sudo sed -i '' '/CMAKE_${lang}_FLAGS_DEBUG_INIT/s/ -g//' /opt/homebrew/share/cmake/Modules/Compiler/GNU.cmake
 
@@ -89,6 +114,10 @@ jobs:
         # prepare.py refuses a target below the SDK's minimum anyway. The same
         # value goes to prepare.py (MACOSX_DEPLOYMENT_TARGET) and to CMake
         # (CMAKE_OSX_DEPLOYMENT_TARGET) so libraries and app agree.
+        #
+        # 7.4: with the Xcode pinned above this is always 10.13, so an SDK
+        # that cannot target it is now an error rather than a warning - a
+        # release that quietly drops older Macs is worse than a red run.
         run: |
           set -e
           SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
@@ -96,7 +125,8 @@ jobs:
           WANTED=10.13
           TARGET=$(printf '%s\n%s\n' "$WANTED" "$SDK_MINIMUM" | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)
           if [ "$TARGET" != "$WANTED" ]; then
-            echo "::warning::This SDK cannot target macOS $WANTED; building for $TARGET, which raises the oldest macOS LuminaGram supports."
+            echo "::error::This SDK ($SDKROOT) cannot target macOS $WANTED, only $TARGET and newer. Check XCODE_APP."
+            exit 1
           fi
           {
             echo "SDKROOT=$SDKROOT"
@@ -119,9 +149,9 @@ jobs:
         # later as an unrelated-looking compiler error. The iOS simulator
         # runtimes are the largest thing on the image we never touch.
         #
-        # Xcode itself is left alone on purpose: /Applications/Xcode.app is a
-        # symlink to one of the versioned bundles on this image, so deleting
-        # those would take the toolchain with them.
+        # Xcode itself is left alone on purpose, every versioned bundle of it:
+        # XCODE_APP is one of them, and /Applications/Xcode.app is a symlink
+        # to another.
         run: |
           echo "--- before ---"; df -h /
           xcrun simctl delete all || true

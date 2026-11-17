@@ -9,6 +9,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "ui/text/text_entity.h"
 
+#include <rpl/producer.h>
+
 #include <QtCore/QString>
 
 namespace Lumina {
@@ -106,6 +108,12 @@ namespace Lumina {
 // Telegram API and part of the Telegram ecosystem, which is what the Telegram
 // API terms ask an app's intro to say. It never claims to be official.
 [[nodiscard]] QString BrandIntroAbout();
+
+// BrandIntroAbout() now and again on every language change. The intro shows
+// this one: the static string stayed in the language of the moment the start
+// screen was built, so switching languages there ("Continue in ...") left the
+// line behind in the old one.
+[[nodiscard]] rpl::producer<QString> BrandIntroAboutValue();
 
 [[nodiscard]] TextWithEntities BrandAboutSummary(TextWithEntities apiLink);
 

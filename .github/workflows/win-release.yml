@@ -67,6 +67,19 @@ jobs:
         # Deliberately kept: Python and Strawberry Perl, which prepare.py and
         # the OpenSSL build run on; chocolatey, which owns the 7-Zip a later
         # step looks for; Visual Studio and the Windows SDK, obviously.
+        #
+        # 7.4: since upstream 7.3.2 Windows builds Qt 6 (plus qt6_windows7 and
+        # ANGLE) instead of Qt 5, and the first such run is cold, so the list
+        # now also carries everything upstream's own win.yml removes for its
+        # cold builds (9918118a04): docker / WSL, .NET, the image's msys64
+        # and Rust (prepare.py installs both into ThirdParty), Haskell, vcpkg,
+        # PHP, Kotlin, Apache / nginx, R tools, PyPy and the NuGet tool cache
+        # (nuget.exe itself stays on PATH). Two of upstream's entries are left
+        # out on purpose: C:\ProgramData\Microsoft\VisualStudio\Packages and
+        # C:\ProgramData\Package Cache are the Visual Studio Installer's own
+        # caches, and the "ATL for breakpad" step below may have to run that
+        # installer - upstream's Debug loop never builds dump_syms, so it can
+        # afford to lose them.
         run: |
           function Show-Space([string]$when) {
             Get-PSDrive -PSProvider FileSystem |
@@ -78,6 +91,14 @@ jobs:
           }
           Show-Space 'before'
           $before = (Get-PSDrive C).Free
+
+          # Files held open by these would survive the removal below.
+          Get-Service docker -ErrorAction SilentlyContinue |
+            Stop-Service -ErrorAction SilentlyContinue
+          try { wsl --shutdown 2> $null } catch { }
+          # The runner ends a pwsh step with "exit $LASTEXITCODE", and wsl
+          # reports failure when there is nothing to shut down.
+          $global:LASTEXITCODE = 0
 
           $junk = @(
             'C:\Android'
@@ -105,12 +126,45 @@ jobs:
             'C:\Modules'
             'C:\Miniconda'
             'C:\SeleniumWebDrivers'
+            # 7.4, from upstream's win.yml (9918118a04).
+            'C:\Program Files\dotnet'
+            'C:\msys64'
+            "$env:USERPROFILE\.cargo"
+            "$env:USERPROFILE\.rustup"
+            "$env:LOCALAPPDATA\Docker"
+            'C:\ProgramData\DockerDesktop'
+            'C:\PostgreSQL'
+            'C:\ghcup'
+            'C:\cabal'
+            'C:\vcpkg'
+            'C:\tools\kotlinc'
+            'C:\tools\php'
+            'C:\tools\Apache24'
+            'C:\selenium'
+            'C:\Program Files (x86)\R'
           )
           # Java lives under a handful of vendor-stamped names, so match it.
           $junk += (Get-ChildItem 'C:\hostedtoolcache\windows' -Directory -ErrorAction SilentlyContinue |
             Where-Object { $_.Name -like 'Java_*' } | ForEach-Object { $_.FullName })
+          # 7.4: upstream's wildcard entries, expanded here because the loop
+          # below takes every path literally.
+          $patterns = @(
+            'C:\tools\nginx-*'
+            'C:\rtools*'
+            'C:\Program Files\Google\Chrome*'
+            'C:\Program Files (x86)\Google\Chrome*'
+            'C:\Program Files\Mozilla Firefox*'
+            'C:\hostedtoolcache\windows\PyPy*'
+            'C:\hostedtoolcache\windows\NuGet*'
+          )
+          foreach ($pattern in $patterns) {
+            $junk += (Get-Item -Path $pattern -ErrorAction SilentlyContinue |
+              ForEach-Object { $_.FullName })
+          }
 
-          foreach ($path in $junk) {
+          # A pattern that matched nothing adds an empty entry, and an empty
+          # -LiteralPath is a terminating error under the runner's "stop".
+          foreach ($path in ($junk | Where-Object { $_ })) {
             if (Test-Path -LiteralPath $path) {
               Write-Host "removing $path"
               Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction SilentlyContinue
@@ -297,13 +351,17 @@ jobs:
 
       - name: Qt cache.
         id: cache-qt
+        # 7.4: "qt6" in the key. Up to 7.3 this cache held a Qt 5.15 tree, and
+        # the old restore-keys prefix would put that back next to the new
+        # Qt 6 one - several gigabytes on a cold run that is already short of
+        # disk, kept for nothing and then saved again with the new tree.
         uses: actions/cache@v6
         with:
           path: |
             ${{ env.LibrariesPath }}\[qQ]t[_-]*
             ${{ env.LibrariesPath }}\cache_keys\[qQ]t[_-]*
-          key: ${{ runner.OS }}-x64-qt-release-${{ env.CACHE_KEY }}
-          restore-keys: ${{ runner.OS }}-x64-qt-release-
+          key: ${{ runner.OS }}-x64-qt6-release-${{ env.CACHE_KEY }}
+          restore-keys: ${{ runner.OS }}-x64-qt6-release-
 
       - name: Libraries.
         # No skip-release here, and that is the whole difference from win.yml.
@@ -311,7 +369,15 @@ jobs:
         # it the Release variants of openssl, zlib, lzma, ffmpeg, Qt and the
         # rest are simply never built - and a Release LuminaGram has nothing
         # to link against. It roughly doubles this step.
+        #
+        # 7.4: no "qt5" argument, so this builds Qt 6 (upstream's Windows
+        # default since 7.3.2) - the first LuminaGram for Windows on Qt 6 is
+        # 7.4.0, which is what Spellchecker::LangIdSchemeForAppVersion() keys
+        # its settings migration on. CARGO_INCREMENTAL=0 as in upstream's
+        # win.yml: the Rust stages are built once, so incremental state is
+        # only disk the runner does not have.
         run: |
+          set CARGO_INCREMENTAL=0
           %TBUILD%\%REPO_NAME%\Telegram\build\prepare\win.bat silent
 
       - name: Read the API credentials.

@@ -1,3 +1,96 @@
+7.4.0 (17.11.26)
+
+- LuminaGram is now based on the official Telegram Desktop 7.4.4 (was
+  7.3.1). This brings HTML widgets in bot messages, quotes in replies to rich
+  messages, searching apps, channels, posts and media in the search tabs, sent
+  messages flying into their bubbles, a question before a mini app uses the
+  camera or microphone, a security fix in the network library and many crash
+  fixes; see the official entries below.
+- Bot widgets can be turned off in Settings > LuminaGram > Privacy > "Bot
+  widgets in messages". They are on by default, as in the official app. Turned
+  off, a short notice takes the place of each widget and nothing from it runs
+  or loads; the rest of the message shows as before.
+- The first launch starts in your system's language when there is a language
+  pack for it, until you choose one yourself; a language you picked is never
+  changed. Chinese follows the script of the system language rather than the
+  region: a Traditional Chinese system (for example zh-Hant in Malaysia) gets
+  Traditional Chinese instead of being offered Simplified Chinese. The welcome
+  line on the start screen now follows a language switch there.
+- Windows: LuminaGram is now built with Qt 6, like the official app. The
+  translation target, the "Do not translate" languages and the spellchecker
+  dictionaries saved by LuminaGram 7.3.x for Windows carry over unchanged. On
+  Linux, the language settings of every earlier LuminaGram carry over as they
+  are as well.
+- A link that both the link safety inspector and the app's own "Open this
+  link?" check would ask about is now asked about once, by the inspector.
+- Translate before sending and the send confirmation work with the new
+  sending animation.
+- "Telegram can't open this link" now says LuminaGram.
+- macOS builds keep supporting macOS 10.13 and later.
+
+7.4.4 (13.11.26)
+
+- Bug fixes and other minor improvements.
+
+7.4.3 (12.11.26)
+
+- Bug fixes and other minor improvements.
+
+7.4.2 (10.11.26)
+
+- Bug fixes and other minor improvements.
+
+7.4.1 (06.11.26)
+
+- Fix crash on launch on some Windows systems.
+- Bug fixes and other minor improvements.
+
+7.4 (05.11.26)
+
+- HTML widgets in bots.
+
+7.3.5 (03.11.26)
+
+- Ask for camera and microphone access in mini apps on Windows and macOS.
+- Fix custom download folder and other settings getting reset.
+- Fix maximized window jitter on Windows.
+- Fix notifications moving off screen on Windows.
+- Fix missing notifications in bots with topics.
+- Fix exports of migrated groups missing the old group history.
+- Fix code blocks losing the indentation of their first line.
+- Fix many crashes and other bugs.
+
+7.3.4 beta (29.10.26)
+
+- Search apps, channels, posts and media in the search tabs.
+- Animate sent text messages flying into their bubbles.
+- Fix code blocks losing the indentation of their first line.
+- Fix save hotkeys doing nothing in media viewer.
+- Fix several crashes when forum topics are deleted.
+- Fix several other crashes and bugs.
+
+7.3.3 (21.10.26)
+
+- Show TON DNS gift owners as links, not address groups.
+- Fix green video tint when using D3D9 backend with ANGLE on Windows.
+- Fix transparent unusable media viewer with ANGLE on Windows.
+- Fix inability to type '?' showing Shortcuts legend instead.
+- Fix text rendering ignoring system settings on Windows.
+- Fix Chinese characters not showing on older Windows.
+- Fix possible crash in context loss on Windows.
+- Fix respecting Focus Mode on Windows.
+- Fix menu translation on macOS.
+- Fix several other crashes.
+- Add DESKTOP_APP_DISABLE_PRIVATE_QT_API build option. (allows to build tdesktop without the need to rebuild on Qt updates at the price of feature degradation and KWindowSystem dependency)
+
+7.3.2 (20.10.26)
+
+- Reply with quotes to rich messages.
+- Move your unique gifts to your Money card on the TON blockchain.
+- Decorate your Money card with your unique gifts.
+- QR code design for public usernames.
+- Migrate to Qt 6 on Windows.
+
 7.3.4 (21.10.26)
 
 - Fake-crash unlock gets a second choice for what the code does: exit

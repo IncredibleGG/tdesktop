@@ -55,6 +55,7 @@ constexpr ushort kBrandedKeys[] = {
 	tr::lng_export_progress.base,
 	tr::lng_local_storage_device_telegram.base,
 	tr::lng_local_storage_device_usage.base,
+	tr::lng_open_link_unsupported.base,
 	tr::lng_passport_app_out_of_date.base,
 	tr::lng_proxy_unsupported.base,
 	tr::lng_screen_reader_bar_text.base,
@@ -96,6 +97,10 @@ QString BrandedLangValue(ushort key, QString value) {
 
 QString BrandIntroAbout() {
 	return Tr(u"LuminaBrandAboutIntro"_q);
+}
+
+rpl::producer<QString> BrandIntroAboutValue() {
+	return TrValue(u"LuminaBrandAboutIntro"_q);
 }
 
 TextWithEntities BrandAboutSummary(TextWithEntities apiLink) {
