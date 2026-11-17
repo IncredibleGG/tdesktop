@@ -37,6 +37,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_session.h"
 #include "iv/iv_cached_media.h"
 #include "iv/iv_rich_page.h"
+#include "lumina/lumina_ad_fold.h"
 #include "lumina/lumina_dual_language_line.h"
 #include "lumina/lumina_message_display.h"
 #include "lumina/lumina_message_filter.h"
@@ -2407,7 +2408,10 @@ void Element::refreshDataId() {
 bool Element::computeIsAttachToPrevious(not_null<Element*> previous) {
 	const auto mayBeAttached = [](not_null<Element*> view) {
 		const auto item = view->data();
+		// LuminaGram: a fold row of "hide repeated ads" stands alone like a
+		// service message (lumina/lumina_ad_fold.h).
 		return !item->isService()
+			&& !Lumina::AdShield::IsFoldRow(view)
 			&& !item->isEmpty()
 			&& !item->isSponsored()
 			&& !item->isPostHidingAuthor()

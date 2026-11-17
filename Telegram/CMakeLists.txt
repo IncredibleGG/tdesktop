@@ -2007,6 +2007,8 @@ PRIVATE
     settings/sections/settings_lumina_voice.cpp
     settings/sections/settings_lumina_voice.h
     lumina/ad_shield_tables.h
+    lumina/lumina_ad_fold.cpp
+    lumina/lumina_ad_fold.h
     lumina/lumina_ad_shield.cpp
     lumina/lumina_ad_shield.h
     lumina/lumina_ad_shield_account.cpp

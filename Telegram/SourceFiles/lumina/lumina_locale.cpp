@@ -947,6 +947,18 @@ struct Registration {
 		{ u"LuminaAdShieldChatOn"_q, u"On in this group"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"Off in this group"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"Folded in the last 7 days: {1}"_q },
+		{ u"LuminaAdShieldFoldMany"_q, u"{1} repeated messages folded (suspected ads) · Click to show"_q },
+		{ u"LuminaAdShieldFoldOne"_q, u"1 repeated message folded (suspected ad, appearance {1} within 7 days) · Click to show"_q },
+		{ u"LuminaAdShieldFoldReply"_q, u"{1} repeated replies to you folded (suspected ads) · Click to show"_q },
+		{ u"LuminaAdShieldFoldReplyOne"_q, u"1 repeated reply to you folded (suspected ad) · Click to show"_q },
+		{ u"LuminaAdShieldExpanded"_q, u"Repeated messages (suspected ads)"_q },
+		{ u"LuminaAdShieldCollapse"_q, u"Fold"_q },
+		{ u"LuminaAdShieldNotAd"_q, u"Not an ad"_q },
+		{ u"LuminaAdShieldShow"_q, u"Show"_q },
+		{ u"LuminaAdShieldTurnOffHere"_q, u"Turn off in this group"_q },
+		{ u"LuminaAdShieldTrialMark"_q, u"Suspected repeated ad"_q },
+		{ u"LuminaAdShieldAllFolded"_q, u"All new messages this time were repeated ads and have been folded"_q },
+		{ u"LuminaAdShieldFoldAccessibleHint"_q, u"The context menu also has “Not an ad” and “Turn off in this group”."_q },
 	};
 	return result;
 }

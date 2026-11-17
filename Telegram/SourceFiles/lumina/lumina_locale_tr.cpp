@@ -854,6 +854,18 @@ namespace {
 		{ u"LuminaAdShieldChatOn"_q, u"Bu grupta açık"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"Bu grupta kapalı"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"Son 7 günde katlanan: {1}"_q },
+		{ u"LuminaAdShieldFoldMany"_q, u"{1} tekrarlanan mesaj katlandı (şüpheli reklam) · Göstermek için tıklayın"_q },
+		{ u"LuminaAdShieldFoldOne"_q, u"1 tekrarlanan mesaj katlandı (şüpheli reklam, 7 gün içinde {1}. görülme) · Göstermek için tıklayın"_q },
+		{ u"LuminaAdShieldFoldReply"_q, u"Size gelen {1} tekrarlanan yanıt katlandı (şüpheli reklam) · Göstermek için tıklayın"_q },
+		{ u"LuminaAdShieldFoldReplyOne"_q, u"Size gelen 1 tekrarlanan yanıt katlandı (şüpheli reklam) · Göstermek için tıklayın"_q },
+		{ u"LuminaAdShieldExpanded"_q, u"Tekrarlanan mesajlar (şüpheli reklam)"_q },
+		{ u"LuminaAdShieldCollapse"_q, u"Katla"_q },
+		{ u"LuminaAdShieldNotAd"_q, u"Reklam değil"_q },
+		{ u"LuminaAdShieldShow"_q, u"Göster"_q },
+		{ u"LuminaAdShieldTurnOffHere"_q, u"Bu grupta kapat"_q },
+		{ u"LuminaAdShieldTrialMark"_q, u"Şüpheli tekrarlanan reklam"_q },
+		{ u"LuminaAdShieldAllFolded"_q, u"Bu kez gelen tüm yeni mesajlar tekrarlanan reklamdı ve katlandı"_q },
+		{ u"LuminaAdShieldFoldAccessibleHint"_q, u"Bağlam menüsünde “Reklam değil” ve “Bu grupta kapat” seçenekleri de var."_q },
 	};
 }
 

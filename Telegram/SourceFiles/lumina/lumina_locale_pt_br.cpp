@@ -1220,6 +1220,18 @@ namespace {
 		{ u"LuminaAdShieldChatOn"_q, u"Ativado neste grupo"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"Desativado neste grupo"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"Recolhidas nos últimos 7 dias: {1}"_q },
+		{ u"LuminaAdShieldFoldMany"_q, u"{1} mensagens repetidas recolhidas (possíveis anúncios) · Clique para mostrar"_q },
+		{ u"LuminaAdShieldFoldOne"_q, u"1 mensagem repetida recolhida (possível anúncio, aparição nº {1} em 7 dias) · Clique para mostrar"_q },
+		{ u"LuminaAdShieldFoldReply"_q, u"{1} respostas repetidas para você recolhidas (possíveis anúncios) · Clique para mostrar"_q },
+		{ u"LuminaAdShieldFoldReplyOne"_q, u"1 resposta repetida para você recolhida (possível anúncio) · Clique para mostrar"_q },
+		{ u"LuminaAdShieldExpanded"_q, u"Mensagens repetidas (possíveis anúncios)"_q },
+		{ u"LuminaAdShieldCollapse"_q, u"Recolher"_q },
+		{ u"LuminaAdShieldNotAd"_q, u"Não é anúncio"_q },
+		{ u"LuminaAdShieldShow"_q, u"Mostrar"_q },
+		{ u"LuminaAdShieldTurnOffHere"_q, u"Desativar neste grupo"_q },
+		{ u"LuminaAdShieldTrialMark"_q, u"Possível anúncio repetido"_q },
+		{ u"LuminaAdShieldAllFolded"_q, u"Todas as novas mensagens desta vez eram anúncios repetidos e foram recolhidas"_q },
+		{ u"LuminaAdShieldFoldAccessibleHint"_q, u"O menu de contexto também tem “Não é anúncio” e “Desativar neste grupo”."_q },
 	};
 }
 

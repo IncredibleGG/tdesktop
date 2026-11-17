@@ -167,6 +167,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "menu/menu_timecode_action.h"
 #include "mtproto/mtproto_config.h"
 #include "lang/lang_keys.h"
+#include "lumina/lumina_ad_fold.h"
 #include "lumina/lumina_ai_editor.h"
 #include "lumina/lumina_quick_replies.h"
 #include "lumina/lumina_send_pipeline.h"
@@ -3558,6 +3559,12 @@ void HistoryWidget::showHistory(
 
 	if (_peer) {
 		setHistory(_peer->owner().history(_peer));
+
+		// LuminaGram: hide repeated ads. Messages held back while they were
+		// on screen fold now, before anything is laid out, and a chat whose
+		// new messages all fold says so once (lumina/lumina_ad_fold.h).
+		Lumina::AdShield::NoteChatShown(_history, controller());
+
 		if (_migrated
 			&& !_migrated->isEmpty()
 			&& (!_history->loadedAtTop() || !_migrated->loadedAtBottom())) {
@@ -8666,6 +8673,13 @@ int HistoryWidget::countInitialScrollTop() {
 			|| IsClientMsgId(_showAtMsgId)
 			|| IsServerMsgId(-_showAtMsgId))) {
 		const auto item = getItemFromHistoryOrMigrated(_showAtMsgId);
+		// LuminaGram: jumping to a folded repeated ad shows its segment
+		// first (lumina/lumina_ad_fold.h).
+		if (item
+			&& Lumina::AdShield::RevealForJump(item)
+			&& hasPendingResizedItems()) {
+			updateListSize();
+		}
 		const auto itemTop = _list->itemTop(item);
 		if (itemTop < 0) {
 			setMsgId(ShowAtUnreadMsgId);
@@ -10775,6 +10789,9 @@ void HistoryWidget::replyToMessage(
 	if (isJoinChannel()) {
 		return;
 	}
+	// LuminaGram: replying to a folded repeated ad shows it
+	// (lumina/lumina_ad_fold.h).
+	Lumina::AdShield::RevealForReply(item);
 	fields.messageId = item->fullId();
 	_processingReplyTo = fields;
 	_processingReplyItem = item;

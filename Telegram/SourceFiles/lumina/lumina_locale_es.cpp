@@ -1263,6 +1263,18 @@ namespace {
 		{ u"LuminaAdShieldChatOn"_q, u"Activado en este grupo"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"Desactivado en este grupo"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"Plegados en los últimos 7 días: {1}"_q },
+		{ u"LuminaAdShieldFoldMany"_q, u"{1} mensajes repetidos plegados (posibles anuncios) · Haz clic para mostrar"_q },
+		{ u"LuminaAdShieldFoldOne"_q, u"1 mensaje repetido plegado (posible anuncio, aparición n.º {1} en 7 días) · Haz clic para mostrar"_q },
+		{ u"LuminaAdShieldFoldReply"_q, u"{1} respuestas repetidas dirigidas a ti plegadas (posibles anuncios) · Haz clic para mostrar"_q },
+		{ u"LuminaAdShieldFoldReplyOne"_q, u"1 respuesta repetida dirigida a ti plegada (posible anuncio) · Haz clic para mostrar"_q },
+		{ u"LuminaAdShieldExpanded"_q, u"Mensajes repetidos (posibles anuncios)"_q },
+		{ u"LuminaAdShieldCollapse"_q, u"Plegar"_q },
+		{ u"LuminaAdShieldNotAd"_q, u"No es un anuncio"_q },
+		{ u"LuminaAdShieldShow"_q, u"Mostrar"_q },
+		{ u"LuminaAdShieldTurnOffHere"_q, u"Desactivar en este grupo"_q },
+		{ u"LuminaAdShieldTrialMark"_q, u"Posible anuncio repetido"_q },
+		{ u"LuminaAdShieldAllFolded"_q, u"Todos los mensajes nuevos de esta vez eran anuncios repetidos y se han plegado"_q },
+		{ u"LuminaAdShieldFoldAccessibleHint"_q, u"El menú contextual también ofrece «No es un anuncio» y «Desactivar en este grupo»."_q },
 	};
 }
 

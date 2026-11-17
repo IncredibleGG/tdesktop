@@ -134,6 +134,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_histories.h"
 #include "data/data_changes.h"
 #include "dialogs/ui/dialogs_video_userpic.h"
+#include "lumina/lumina_ad_fold.h"
 #include "lumina/lumina_message_menu.h"
 #include "lumina/lumina_menu_customize.h"
 #include "lumina/lumina_double_tap_edit.h"
@@ -2871,6 +2872,15 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 
 	const auto link = ClickHandler::getActive();
 	if (_controller->showFrozenError()) {
+		return;
+	} else if (_dragStateItem
+		&& Lumina::AdShield::ShowFoldMenu(
+			_menu,
+			this,
+			viewByItem(_dragStateItem),
+			e->globalPos())) {
+		// LuminaGram: a fold row of "hide repeated ads" has its own menu.
+		e->accept();
 		return;
 	} else if (link
 		&& !link->property(
@@ -7224,5 +7234,13 @@ void HistoryInner::accessibilityChildActivate(quintptr identity) {
 			return;
 		}
 		applyAccessibilityFocus(index, true);
+
+		// LuminaGram: invoking a fold row of "hide repeated ads" shows the
+		// messages behind it, like a click on it does.
+		Lumina::AdShield::ActivateFoldRow(
+			viewByItem(HistoryView::AccessibilityItemAtIndex(
+				index,
+				accessibleElements(),
+				accessibilityUnreadBarIndex())));
 	});
 }

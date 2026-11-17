@@ -68,11 +68,12 @@ namespace Lumina::AdShield {
 // PanicWipe() removes the whole directory and the key.
 
 // Called once from Core::Application::run(). Only subscribes to the
-// preferences; creates nothing.
+// preferences (and the fold UI to DecisionsChanges()); creates nothing.
 void Start();
 
-// HistoryItem::createView(): the one hook in the message list. O(1) when the
-// feature is off.
+// Every view made for a non-service message (CreateView() in
+// lumina_ad_fold.h, from HistoryItem::createView()). O(1) when the feature
+// is off.
 void NoteViewCreated(
 	not_null<HistoryItem*> item,
 	not_null<HistoryView::ElementDelegate*> delegate);
@@ -153,10 +154,12 @@ struct DecisionsChange {
 };
 
 // Fires on the main thread when cached decisions, the expansion or the
-// deferral of messages change. The fold UI refreshes those messages' views.
+// deferral of messages change, and for every message that folds (or would)
+// when the trial switch changes. The fold UI (lumina_ad_fold.h) makes those
+// messages' views again.
 [[nodiscard]] rpl::producer<DecisionsChange> DecisionsChanges();
 
-// Fires when the trial switch changes: every chat's fold display changes.
+// Fires when the trial switch changes, after the DecisionsChanges() above.
 [[nodiscard]] rpl::producer<> DisplayChanges();
 
 } // namespace Lumina::AdShield

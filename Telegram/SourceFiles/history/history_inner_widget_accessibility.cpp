@@ -23,6 +23,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/history_item.h"
 #include "history/history_item_components.h"
 #include "lang/lang_keys.h"
+#include "lumina/lumina_ad_fold.h"
 #include "lumina/lumina_time_format.h"
 #include "ui/text/format_values.h"
 
@@ -32,6 +33,13 @@ QString MessageAccessibilityName(
 		not_null<const Element*> view,
 		not_null<History*> history) {
 	const auto item = view->data();
+
+	// LuminaGram: a fold row of "hide repeated ads" is read as what it shows
+	// and what can be done with it, never as the message behind it.
+	if (const auto fold = Lumina::AdShield::FoldRowAccessibleName(view);
+		!fold.isEmpty()) {
+		return fold;
+	}
 
 	if (item->isService()) {
 		const auto text = item->notificationText().text;
@@ -1102,6 +1110,10 @@ std::vector<MessageSubItem> ActiveMessageSubItems(
 		not_null<const Element*> view,
 		not_null<History*> history) {
 	auto result = std::vector<MessageSubItem>();
+	if (Lumina::AdShield::IsFoldRow(view)) {
+		// LuminaGram: nothing of a folded message is read out.
+		return result;
+	}
 	result.reserve(int(MessageSubItem::Count));
 	for (auto i = 0; i != int(MessageSubItem::Count); ++i) {
 		const auto item = MessageSubItem(i);

@@ -26,6 +26,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/history_item_components.h"
 #include "history/history_item_reply_markup.h"
 #include "history/view/history_view_element.h"
+#include "lumina/lumina_ad_fold.h"
 #include "lumina/lumina_ad_shield_worker.h"
 #include "lumina/lumina_message_filter.h"
 #include "lumina/lumina_secret_store.h"
@@ -271,6 +272,7 @@ private:
 	void dropSession(quint64 uniqueId, bool notify = true);
 	void dropChat(SessionState &state, PeerId peerId);
 	void fireWholeChat(const SessionState &state, PeerId peerId);
+	void fireAllFolding();
 
 	void refreshFlags();
 	void refreshActivation();
@@ -408,6 +410,9 @@ void Manager::start() {
 	TrialChanges(
 	) | rpl::on_next([=] {
 		_trial = TrialMode();
+		// Every message that folds (or would) is shown differently now,
+		// including the deferred and the expanded ones.
+		fireAllFolding();
 		_displayChanges.fire({});
 	}, _lifetime);
 
@@ -421,6 +426,9 @@ void Manager::start() {
 		}
 		scheduleProcess();
 	}, _lifetime);
+
+	// The fold rows: they follow every DecisionsChanges() event.
+	StartFoldUi();
 
 	if (Core::IsAppLaunched()) {
 		Core::App().appDeactivatedValue(
@@ -553,10 +561,11 @@ void Manager::subscribe(SessionState &state) {
 	};
 
 	// Session::clear() destroys every message object: from here on nothing
-	// that happens to them means anything.
+	// that happens to them means anything, and their views are not made
+	// again (that would observe them anew).
 	session->data().sessionDataAboutToBeCleared(
 	) | rpl::on_next([=] {
-		dropSession(uniqueId);
+		dropSession(uniqueId, false);
 	}, state.lifetime);
 
 	session->changes().messageUpdates(
@@ -627,6 +636,32 @@ void Manager::hookTeardown(not_null<Main::Session*> session) {
 void Manager::fireWholeChat(const SessionState &state, PeerId peerId) {
 	if (const auto history = state.session->data().historyLoaded(peerId)) {
 		_decisionsChanges.fire(DecisionsChange{ .history = history });
+	}
+}
+
+void Manager::fireAllFolding() {
+	// Collected first: the views made again while the events are handled
+	// observe their messages, which must not touch what is iterated here.
+	auto changes = std::vector<DecisionsChange>();
+	for (const auto &[uniqueId, state] : _sessions) {
+		auto byPeer = base::flat_map<PeerId, std::vector<MsgId>>();
+		for (const auto &[key, entry] : state->decisions) {
+			if (entry.decision.fold) {
+				byPeer[key.peer].push_back(key.msg);
+			}
+		}
+		for (auto &[peerId, ids] : byPeer) {
+			if (const auto history = state->session->data().historyLoaded(
+					peerId)) {
+				changes.push_back(DecisionsChange{
+					.history = history,
+					.ids = std::move(ids),
+				});
+			}
+		}
+	}
+	for (auto &change : changes) {
+		_decisionsChanges.fire(std::move(change));
 	}
 }
 
@@ -1525,7 +1560,10 @@ void Manager::flushTimerDone() {
 
 void Manager::sessionLoggingOut(not_null<Main::Session*> session) {
 	const auto uniqueId = session->uniqueId();
-	dropSession(uniqueId);
+	// The session's messages and views are destroyed right after this; a
+	// view made again now would observe its message for a forgotten
+	// account.
+	dropSession(uniqueId, false);
 	_wasActive.remove(uniqueId);
 	_inactiveSessions.remove(uniqueId);
 	forgetData(uniqueId);
@@ -1541,6 +1579,9 @@ void Manager::flushNow() {
 }
 
 void Manager::panicWipe() {
+	// Nothing is observed from here on, also not by the views the events
+	// below make again (refreshFlags() at the end reads the preferences).
+	Active = _anyActive = false;
 	auto sessions = base::take(_sessions);
 	for (const auto &[uniqueId, state] : sessions) {
 		for (const auto &[peerId, chat] : state->chats) {
@@ -1571,16 +1612,22 @@ void Manager::panicWipe() {
 
 void Manager::clearLocalData() {
 	// Every message is undecided again: no folds until it is observed anew.
+	// The decisions go first, so the views the events make again are the
+	// stock ones.
+	auto chats = std::vector<std::pair<SessionState*, PeerId>>();
 	for (const auto &[uniqueId, state] : _sessions) {
 		for (const auto &[peerId, chat] : state->chats) {
 			chat->observed.clear();
 			chat->pending.clear();
 			chat->removed.clear();
 			chat->decideDirty = false;
-			fireWholeChat(*state, peerId);
+			chats.emplace_back(state.get(), peerId);
 		}
 		state->decisions.clear();
 		state->expanded.clear();
+	}
+	for (const auto &[state, peerId] : chats) {
+		fireWholeChat(*state, peerId);
 	}
 	if (_worker || QDir(_root).exists()) {
 		if (ensureWorker(false)) {

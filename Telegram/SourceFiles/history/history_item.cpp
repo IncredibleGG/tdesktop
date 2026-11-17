@@ -44,7 +44,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "wallet/wallet_panel.h"
 #include "wallet/wallet_session.h"
 #include "wallet/wallet_ton_connect.h"
-#include "lumina/lumina_ad_shield_manager.h"
+#include "lumina/lumina_ad_fold.h"
 #include "lumina/lumina_settings.h"
 #include "window/window_controller.h"
 #include "window/window_session_controller.h"
@@ -1725,10 +1725,13 @@ std::unique_ptr<HistoryView::Element> HistoryItem::createView(
 			this,
 			replacing);
 	}
-	// LuminaGram: hide repeated ads. AdShield observes the messages of the
-	// main chat list (history and forum topics) as their views are created;
-	// one bool check while the feature is off. The view itself is unchanged.
-	Lumina::AdShield::NoteViewCreated(this, delegate);
+	// LuminaGram: hide repeated ads (lumina/lumina_ad_fold.h). Observes the
+	// messages of the main chat list (history and forum topics) as their
+	// views are created, and gives a folded one its fold row; one bool check
+	// while the feature is off.
+	if (auto view = Lumina::AdShield::CreateView(this, delegate, replacing)) {
+		return view;
+	}
 	return std::make_unique<HistoryView::Message>(delegate, this, replacing);
 }
 

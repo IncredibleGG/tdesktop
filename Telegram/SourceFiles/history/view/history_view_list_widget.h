@@ -426,6 +426,13 @@ public:
 	Lumina::SelectFromAuthorResult luminaSelectFromAuthor(
 		not_null<HistoryItem*> start);
 
+	// LuminaGram: "hide repeated ads" (lumina/lumina_ad_fold.cpp) walks its
+	// fold segments through the rows of this list, hidden rows included:
+	// the row `delta` places away from the row of `item`, or nullptr.
+	[[nodiscard]] Element *luminaAdFoldRow(
+		not_null<const HistoryItem*> item,
+		int delta) const;
+
 	void selectItemsUpTo(not_null<HistoryItem*> item);
 	[[nodiscard]] bool canSelectItemsUpTo(
 		not_null<HistoryItem*> item) const;

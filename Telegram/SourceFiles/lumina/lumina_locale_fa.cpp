@@ -840,6 +840,18 @@ namespace {
 		{ u"LuminaAdShieldChatOn"_q, u"در این گروه روشن"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"در این گروه خاموش"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"جمع‌شده در ۷ روز اخیر: {1}"_q },
+		{ u"LuminaAdShieldFoldMany"_q, u"پیام‌های تکراری جمع‌شده: {1} (احتمالاً تبلیغ) · برای نمایش کلیک کنید"_q },
+		{ u"LuminaAdShieldFoldOne"_q, u"۱ پیام تکراری جمع شد (احتمالاً تبلیغ، دفعهٔ {1} در ۷ روز اخیر) · برای نمایش کلیک کنید"_q },
+		{ u"LuminaAdShieldFoldReply"_q, u"پاسخ‌های تکراری جمع‌شده به شما: {1} (احتمالاً تبلیغ) · برای نمایش کلیک کنید"_q },
+		{ u"LuminaAdShieldFoldReplyOne"_q, u"۱ پاسخ تکراری به شما جمع شد (احتمالاً تبلیغ) · برای نمایش کلیک کنید"_q },
+		{ u"LuminaAdShieldExpanded"_q, u"پیام‌های تکراری (احتمالاً تبلیغ)"_q },
+		{ u"LuminaAdShieldCollapse"_q, u"جمع کردن"_q },
+		{ u"LuminaAdShieldNotAd"_q, u"تبلیغ نیست"_q },
+		{ u"LuminaAdShieldShow"_q, u"نمایش"_q },
+		{ u"LuminaAdShieldTurnOffHere"_q, u"خاموش کردن در این گروه"_q },
+		{ u"LuminaAdShieldTrialMark"_q, u"تبلیغ تکراری احتمالی"_q },
+		{ u"LuminaAdShieldAllFolded"_q, u"همهٔ پیام‌های جدید این بار تبلیغ تکراری بودند و جمع شدند"_q },
+		{ u"LuminaAdShieldFoldAccessibleHint"_q, u"منوی زمینه گزینه‌های «تبلیغ نیست» و «خاموش کردن در این گروه» را هم دارد."_q },
 	};
 }
 

@@ -84,6 +84,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/screen_reader_mode.h"
 #include "ui/ui_utility.h"
 #include "lang/lang_keys.h"
+#include "lumina/lumina_ad_fold.h"
 #include "lumina/lumina_select_author.h"
 #include "lumina/lumina_double_tap_edit.h"
 #include "lang/lang_tag.h"
@@ -1490,6 +1491,12 @@ bool ListWidget::showAtPositionNow(
 		Data::MessagePosition position,
 		const Window::SectionShow &params,
 		Fn<void(bool found)> done) {
+	// LuminaGram: jumping to a folded repeated ad shows its segment first
+	// (lumina/lumina_ad_fold.h); the rows are made again and laid out
+	// synchronously, so the position below is the expanded one.
+	if (position.fullId.peer && IsServerMsgId(position.fullId.msg)) {
+		Lumina::AdShield::RevealForJump(viewByPosition(position));
+	}
 	auto scrollTop = scrollTopForPosition(position);
 	if (!scrollTop.has_value()) {
 		return false;
@@ -2200,6 +2207,20 @@ bool ListWidget::luminaCanSelectFromAuthor(
 		}
 	}
 	return true;
+}
+
+Element *ListWidget::luminaAdFoldRow(
+		not_null<const HistoryItem*> item,
+		int delta) const {
+	const auto view = viewForItem(item);
+	if (!view) {
+		return nullptr;
+	}
+	const auto i = ranges::find(_items, not_null<Element*>(view));
+	const auto index = int(i - begin(_items)) + delta;
+	return (i != end(_items) && index >= 0 && index < int(_items.size()))
+		? _items[index].get()
+		: nullptr;
 }
 
 Lumina::SelectFromAuthorResult ListWidget::luminaSelectFromAuthor(
@@ -4560,6 +4581,14 @@ void ListWidget::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 
 	const auto link = ClickHandler::getActive();
 	if (controller()->showFrozenError()) {
+		return;
+	} else if (Lumina::AdShield::ShowFoldMenu(
+			_menu,
+			this,
+			_overElement,
+			e->globalPos())) {
+		// LuminaGram: a fold row of "hide repeated ads" has its own menu.
+		e->accept();
 		return;
 	} else if (link
 		&& !link->property(
@@ -7290,6 +7319,14 @@ void ListWidget::accessibilityChildActivate(quintptr identity) {
 			return;
 		}
 		applyAccessibilityFocus(index, true);
+
+		// LuminaGram: invoking a fold row of "hide repeated ads" shows the
+		// messages behind it, like a click on it does.
+		Lumina::AdShield::ActivateFoldRow(
+			viewForItem(HistoryView::AccessibilityItemAtIndex(
+				index,
+				accessibleElements(),
+				accessibilityUnreadBarIndex())));
 	});
 }
 

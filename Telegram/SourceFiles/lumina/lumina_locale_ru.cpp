@@ -1283,6 +1283,18 @@ namespace {
 		{ u"LuminaAdShieldChatOn"_q, u"Включено в этой группе"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"Выключено в этой группе"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"Свёрнуто за последние 7 дней: {1}"_q },
+		{ u"LuminaAdShieldFoldMany"_q, u"Свёрнуто повторных сообщений: {1} (похоже на рекламу) · Нажмите, чтобы показать"_q },
+		{ u"LuminaAdShieldFoldOne"_q, u"Свёрнуто 1 повторное сообщение (похоже на рекламу, появление № {1} за 7 дней) · Нажмите, чтобы показать"_q },
+		{ u"LuminaAdShieldFoldReply"_q, u"Свёрнуто повторных ответов вам: {1} (похоже на рекламу) · Нажмите, чтобы показать"_q },
+		{ u"LuminaAdShieldFoldReplyOne"_q, u"Свёрнут 1 повторный ответ вам (похоже на рекламу) · Нажмите, чтобы показать"_q },
+		{ u"LuminaAdShieldExpanded"_q, u"Повторные сообщения (похоже на рекламу)"_q },
+		{ u"LuminaAdShieldCollapse"_q, u"Свернуть"_q },
+		{ u"LuminaAdShieldNotAd"_q, u"Не реклама"_q },
+		{ u"LuminaAdShieldShow"_q, u"Показать"_q },
+		{ u"LuminaAdShieldTurnOffHere"_q, u"Выключить в этой группе"_q },
+		{ u"LuminaAdShieldTrialMark"_q, u"Возможно, повторяющаяся реклама"_q },
+		{ u"LuminaAdShieldAllFolded"_q, u"Все новые сообщения на этот раз оказались повторяющейся рекламой и свёрнуты"_q },
+		{ u"LuminaAdShieldFoldAccessibleHint"_q, u"В контекстном меню также есть «Не реклама» и «Выключить в этой группе»."_q },
 	};
 }
 

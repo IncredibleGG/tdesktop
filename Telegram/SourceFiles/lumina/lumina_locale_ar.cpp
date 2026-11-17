@@ -851,6 +851,18 @@ namespace {
 		{ u"LuminaAdShieldChatOn"_q, u"مفعّل في هذه المجموعة"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"معطّل في هذه المجموعة"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"ما طُوي خلال آخر 7 أيام: {1}"_q },
+		{ u"LuminaAdShieldFoldMany"_q, u"طُويت رسائل مكررة: {1} (يُشتبه أنها إعلانات) · انقر للعرض"_q },
+		{ u"LuminaAdShieldFoldOne"_q, u"طُويت رسالة مكررة واحدة (يُشتبه أنها إعلان، الظهور رقم {1} خلال 7 أيام) · انقر للعرض"_q },
+		{ u"LuminaAdShieldFoldReply"_q, u"طُويت ردود مكررة عليك: {1} (يُشتبه أنها إعلانات) · انقر للعرض"_q },
+		{ u"LuminaAdShieldFoldReplyOne"_q, u"طُوي رد مكرر واحد عليك (يُشتبه أنه إعلان) · انقر للعرض"_q },
+		{ u"LuminaAdShieldExpanded"_q, u"رسائل مكررة (يُشتبه أنها إعلانات)"_q },
+		{ u"LuminaAdShieldCollapse"_q, u"طيّ"_q },
+		{ u"LuminaAdShieldNotAd"_q, u"ليس إعلانًا"_q },
+		{ u"LuminaAdShieldShow"_q, u"عرض"_q },
+		{ u"LuminaAdShieldTurnOffHere"_q, u"إيقاف في هذه المجموعة"_q },
+		{ u"LuminaAdShieldTrialMark"_q, u"إعلان متكرر مشتبه به"_q },
+		{ u"LuminaAdShieldAllFolded"_q, u"كانت كل الرسائل الجديدة هذه المرة إعلانات متكررة وقد طُويت"_q },
+		{ u"LuminaAdShieldFoldAccessibleHint"_q, u"تحتوي قائمة السياق أيضًا على «ليس إعلانًا» و«إيقاف في هذه المجموعة»."_q },
 	};
 }
 

@@ -128,6 +128,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "iv/editor/iv_editor_session.h"
 #include "lang/lang_instance.h"
 #include "lang/lang_keys.h"
+#include "lumina/lumina_ad_fold.h"
 #include "lumina/lumina_send_pipeline.h"
 #include "lumina/lumina_translate_caption.h"
 #include "styles/style_chat.h"
@@ -536,6 +537,11 @@ ChatWidget::ChatWidget(
 	}, lifetime());
 
 	_scroll->setHandleTouch(false);
+
+	// LuminaGram: hide repeated ads. Messages held back while they were on
+	// screen fold now, before the list is made (lumina/lumina_ad_fold.h).
+	Lumina::AdShield::NoteChatShown(_history, nullptr);
+
 	_inner = _scroll->setOwnedWidget(object_ptr<ListWidget>(
 		this,
 		&controller->session(),
@@ -4311,6 +4317,11 @@ bool ChatWidget::confirmSendingFiles(
 }
 
 void ChatWidget::replyToMessage(FullReplyTo id) {
+	// LuminaGram: replying to a folded repeated ad shows it
+	// (lumina/lumina_ad_fold.h).
+	if (const auto item = _history->owner().message(id.messageId)) {
+		Lumina::AdShield::RevealForReply(item);
+	}
 	_composeControls->replyToMessage(std::move(id));
 	refreshTopBarActiveChat();
 }

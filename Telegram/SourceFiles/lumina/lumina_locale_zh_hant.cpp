@@ -1016,6 +1016,18 @@ namespace {
 		{ u"LuminaAdShieldChatOn"_q, u"在此群開啟"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"在此群關閉"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"最近 7 天已收合 {1} 則"_q },
+		{ u"LuminaAdShieldFoldMany"_q, u"已收合 {1} 則重複訊息（疑似廣告）· 點擊顯示"_q },
+		{ u"LuminaAdShieldFoldOne"_q, u"已收合 1 則重複訊息（疑似廣告，7 天內第 {1} 次出現）· 點擊顯示"_q },
+		{ u"LuminaAdShieldFoldReply"_q, u"已收合 {1} 則回覆你的重複訊息（疑似廣告）· 點擊顯示"_q },
+		{ u"LuminaAdShieldFoldReplyOne"_q, u"已收合 1 則回覆你的重複訊息（疑似廣告）· 點擊顯示"_q },
+		{ u"LuminaAdShieldExpanded"_q, u"重複訊息（疑似廣告）"_q },
+		{ u"LuminaAdShieldCollapse"_q, u"收合"_q },
+		{ u"LuminaAdShieldNotAd"_q, u"不是廣告"_q },
+		{ u"LuminaAdShieldShow"_q, u"顯示"_q },
+		{ u"LuminaAdShieldTurnOffHere"_q, u"在此群關閉"_q },
+		{ u"LuminaAdShieldTrialMark"_q, u"疑似重複廣告"_q },
+		{ u"LuminaAdShieldAllFolded"_q, u"這次的新訊息都是重複廣告，已收合"_q },
+		{ u"LuminaAdShieldFoldAccessibleHint"_q, u"內容選單裡還有「不是廣告」和「在此群關閉」"_q },
 	};
 }
 

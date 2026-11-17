@@ -1215,6 +1215,18 @@ namespace {
 		{ u"LuminaAdShieldChatOn"_q, u"Aktif di grup ini"_q },
 		{ u"LuminaAdShieldChatOff"_q, u"Nonaktif di grup ini"_q },
 		{ u"LuminaAdShieldChatFolded"_q, u"Dilipat dalam 7 hari terakhir: {1}"_q },
+		{ u"LuminaAdShieldFoldMany"_q, u"{1} pesan berulang dilipat (diduga iklan) · Klik untuk menampilkan"_q },
+		{ u"LuminaAdShieldFoldOne"_q, u"1 pesan berulang dilipat (diduga iklan, kemunculan ke-{1} dalam 7 hari) · Klik untuk menampilkan"_q },
+		{ u"LuminaAdShieldFoldReply"_q, u"{1} balasan berulang untuk Anda dilipat (diduga iklan) · Klik untuk menampilkan"_q },
+		{ u"LuminaAdShieldFoldReplyOne"_q, u"1 balasan berulang untuk Anda dilipat (diduga iklan) · Klik untuk menampilkan"_q },
+		{ u"LuminaAdShieldExpanded"_q, u"Pesan berulang (diduga iklan)"_q },
+		{ u"LuminaAdShieldCollapse"_q, u"Lipat"_q },
+		{ u"LuminaAdShieldNotAd"_q, u"Bukan iklan"_q },
+		{ u"LuminaAdShieldShow"_q, u"Tampilkan"_q },
+		{ u"LuminaAdShieldTurnOffHere"_q, u"Nonaktifkan di grup ini"_q },
+		{ u"LuminaAdShieldTrialMark"_q, u"Diduga iklan berulang"_q },
+		{ u"LuminaAdShieldAllFolded"_q, u"Semua pesan baru kali ini adalah iklan berulang dan sudah dilipat"_q },
+		{ u"LuminaAdShieldFoldAccessibleHint"_q, u"Menu konteks juga berisi “Bukan iklan” dan “Nonaktifkan di grup ini”."_q },
 	};
 }
 
