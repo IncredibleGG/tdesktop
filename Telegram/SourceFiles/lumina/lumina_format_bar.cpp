@@ -503,6 +503,7 @@ public:
 
 	void hostMoved();
 	void raise();
+	void setReportedArea(QRect area);
 
 private:
 	void setEnabled(bool enabled);
@@ -518,11 +519,14 @@ private:
 	[[nodiscard]] bool wanted() const;
 	[[nodiscard]] bool suppressed() const;
 	[[nodiscard]] std::optional<int> selectionCenter() const;
+	[[nodiscard]] QRect area() const;
 
 	const not_null<Ui::InputField*> _field;
 	const QPointer<Ui::RpWidget> _overlay;
 	const Fn<int()> _composeTop;
 	const Fn<bool()> _suppressed;
+	const Fn<QRect()> _area;
+	std::optional<QRect> _reportedArea;
 
 	base::unique_qptr<FormatBar> _bar;
 	base::Timer _showTimer;
@@ -548,6 +552,7 @@ BarController::BarController(FormatBarHost &&host)
 , _overlay(host.overlay.get())
 , _composeTop(std::move(host.composeTop))
 , _suppressed(std::move(host.suppressed))
+, _area(std::move(host.area))
 , _showTimer([=] { update(true); })
 , _watchTimer([=] { watch(); }) {
 	Registry().emplace(_field.get(), this);
@@ -771,6 +776,29 @@ void BarController::raise() {
 	}
 }
 
+void BarController::setReportedArea(QRect area) {
+	if (_reportedArea == area) {
+		return;
+	}
+	_reportedArea = area;
+	hostMoved();
+}
+
+// Where the pill may go, in the overlay's coordinates: the host's message
+// list viewport when it told us, else the whole overlay.
+QRect BarController::area() const {
+	if (!_overlay) {
+		return QRect();
+	}
+	const auto full = _overlay->rect();
+	if (_area) {
+		return _area().intersected(full);
+	} else if (_reportedArea) {
+		return _reportedArea->intersected(full);
+	}
+	return full;
+}
+
 // The horizontal middle of the first visible line of the selection, in the
 // overlay's coordinates.
 std::optional<int> BarController::selectionCenter() const {
@@ -814,22 +842,32 @@ bool BarController::place() {
 	if (!center) {
 		return false;
 	}
+	const auto bounds = area();
+	if (bounds.isEmpty()) {
+		return false;
+	}
 	const auto margins = _bar->shadowMargins();
 	const auto pillWidth = _bar->width() - margins.left() - margins.right();
 	const auto pillHeight = _bar->height() - margins.top() - margins.bottom();
 	const auto fieldTop = _field->mapTo(_overlay.data(), QPoint()).y();
-	const auto stackTop = _composeTop
-		? std::min(_composeTop(), fieldTop)
-		: fieldTop;
+	const auto stackTop = std::min(
+		_composeTop ? std::min(_composeTop(), fieldTop) : fieldTop,
+		bounds.y() + bounds.height());
 	const auto pillTop = stackTop - st::luminaFormatBarOffset - pillHeight;
-	if (pillTop < 0) {
+	if (pillTop < bounds.y()) {
 		return false;
 	}
+	// Inside the area with a small skip from its edges; centred in it when
+	// the skips do not fit; centred on the whole overlay only when not even
+	// the pill fits (a window narrower than any real layout).
 	const auto skip = st::luminaFormatBarSkip;
-	const auto maxLeft = _overlay->width() - skip - pillWidth;
-	const auto pillLeft = (maxLeft < skip)
-		? (_overlay->width() - pillWidth) / 2
-		: std::clamp(*center - pillWidth / 2, skip, maxLeft);
+	const auto minLeft = bounds.x() + skip;
+	const auto maxLeft = bounds.x() + bounds.width() - skip - pillWidth;
+	const auto pillLeft = (maxLeft >= minLeft)
+		? std::clamp(*center - pillWidth / 2, minLeft, maxLeft)
+		: (bounds.width() >= pillWidth)
+		? (bounds.x() + (bounds.width() - pillWidth) / 2)
+		: ((_overlay->width() - pillWidth) / 2);
 	_bar->move(pillLeft - margins.left(), pillTop - margins.top());
 	return true;
 }
@@ -859,6 +897,12 @@ void MoveFormatBar(not_null<Ui::InputField*> field) {
 void RaiseFormatBar(not_null<Ui::InputField*> field) {
 	if (const auto controller = Find(field)) {
 		controller->raise();
+	}
+}
+
+void SetFormatBarArea(not_null<Ui::InputField*> field, QRect area) {
+	if (const auto controller = Find(field)) {
+		controller->setReportedArea(area);
 	}
 }
 

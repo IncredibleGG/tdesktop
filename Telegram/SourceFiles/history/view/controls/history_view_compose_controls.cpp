@@ -1739,6 +1739,7 @@ void ComposeControls::setAutocompleteBoundingRect(QRect rect) {
 	if (_autocomplete) {
 		_autocomplete->setBoundings(rect);
 	}
+	Lumina::SetFormatBarArea(_field, rect); // LuminaGram #23
 }
 
 rpl::producer<int> ComposeControls::height() const {
@@ -3356,7 +3357,9 @@ void ComposeControls::initField() {
 
 	// LuminaGram #23: the floating formatting bar (off by default). Chats,
 	// threads, topics, scheduled, business shortcut / welcome messages - but
-	// not the story reply field, a dark overlay with its own style.
+	// not the story reply field, a dark overlay with its own style. The
+	// section's message list rect, which keeps the bar off its subsection
+	// tabs and suggest-post bar, arrives via setAutocompleteBoundingRect().
 	if (&_st != &st::storiesComposeControls) {
 		Lumina::AttachFormatBar({
 			.field = _field,

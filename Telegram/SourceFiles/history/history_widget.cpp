@@ -615,6 +615,8 @@ HistoryWidget::HistoryWidget(
 				|| (_inlineResults && !_inlineResults->isHidden())
 				|| (_attachBotsMenu && !_attachBotsMenu->isHidden());
 		},
+		// Over the message list only: not over a vertical tabs column.
+		.area = [=] { return _scroll->geometry(); },
 	});
 
 	setupFastButtonMode();
