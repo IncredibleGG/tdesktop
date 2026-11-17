@@ -127,6 +127,10 @@ void Tray::updateIconCounters() {
 	_tray.updateIcon();
 }
 
+void Tray::destroyIconForExit() {
+	_tray.destroyIcon();
+}
+
 rpl::producer<> Tray::aboutToShowRequests() const {
 	return _tray.aboutToShowRequests();
 }

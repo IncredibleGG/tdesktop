@@ -958,21 +958,19 @@ namespace {
 			u"tdata/luminagram_private.json da pasta de dados do "
 			u"LuminaGram: o cofre então se desliga sozinho e o "
 			u"LuminaGram inicia normalmente."_q },
-		{ u"LuminaSecurityFakeCrashHeader"_q, u"Desbloqueio com falha falsa"_q },
-		{ u"LuminaSecurityFakeCrashEnable"_q, u"Ativar desbloqueio com falha falsa"_q },
-		{ u"LuminaSecurityFakeCrashCode"_q, u"Código de falha falsa"_q },
-		{ u"LuminaSecurityFakeCrashCodeDialogTitle"_q, u"Código de falha falsa"_q },
+		{ u"LuminaSecurityFakeCrashHeader"_q, u"Código de coação"_q },
+		{ u"LuminaSecurityFakeCrashEnable"_q, u"Ativar código de coação"_q },
+		{ u"LuminaSecurityFakeCrashCode"_q, u"Código de coação"_q },
+		{ u"LuminaSecurityFakeCrashCodeDialogTitle"_q, u"Código de coação"_q },
 		{ u"LuminaSecurityFakeCrashCodeHint"_q, u"Código"_q },
 		{ u"LuminaSecurityFakeCrashCodeSet"_q, u"Definido"_q },
 		{ u"LuminaSecurityFakeCrashCodeNotSet"_q, u"Não definido"_q },
 		{ u"LuminaSecurityFakeCrashCodeSameAsPasscode"_q, u"Este código não pode ser igual "
 			u"à sua senha de bloqueio."_q },
-		{ u"LuminaSecurityFakeCrashInfo"_q, u"Quando isto está ativado, digitar o código de falha "
-			u"falsa na tela de bloqueio fecha o LuminaGram em vez de "
-			u"desbloqueá-lo — para quem estiver olhando, o app "
-			u"travou. O código é separado da sua senha de bloqueio, "
-			u"fica somente neste dispositivo e nunca é enviado a "
-			u"lugar algum."_q },
+		{ u"LuminaSecurityFakeCrashCodeSameAsVault"_q, u"Este código não pode ser igual ao código secreto do cofre de disfarce."_q },
+		{ u"LuminaVaultCodeSameAsDuress"_q, u"O código secreto não pode ser igual ao código de coação."_q },
+		{ u"LuminaPasscodeSameAsDuress"_q, u"A senha de bloqueio não pode ser igual ao código de coação."_q },
+		{ u"LuminaSecurityFakeCrashInfo"_q, u"Um segundo código, guardado só neste dispositivo e nunca enviado a lugar nenhum. Digitado na tela de bloqueio, ele nunca desbloqueia o LuminaGram: faz o que você escolher abaixo. As opções de sair da conta também funcionam onde o cofre de disfarce aceita o código secreto, e o disfarce continua como se nada fosse. Só este código exato faz algo: um código de acesso errado qualquer nunca o aciona."_q },
 		{ u"LuminaSecurityFakeCrashBiometricInfo"_q, u"Enquanto isto estiver ativado e "
 			u"houver um código definido, o desbloqueio com Touch ID, "
 			u"Windows Hello ou a senha do sistema fica desligado: a "
@@ -985,22 +983,18 @@ namespace {
 			u"bloqueio, então a tela de bloqueio nunca aparece e este "
 			u"código nunca é pedido. Ative primeiro a senha de bloqueio "
 			u"em Privacidade e segurança."_q },
-		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"Este código agora é igual à sua "
-			u"senha de bloqueio, então ele nunca vai funcionar — a senha "
-			u"desbloqueia o app no lugar dele. Escolha um código "
-			u"diferente."_q },
+		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"Este código agora é igual à sua senha de bloqueio. Na tela de bloqueio a senha sempre vence, então ele não faz nada ali — mas no cofre de disfarce, digitar a sua senha o acionaria. Escolha um código diferente."_q },
+		{ u"LuminaSecurityFakeCrashVaultClashInfo"_q, u"Este código agora é igual ao código secreto do cofre de disfarce, então na tela de disfarce ele abre o LuminaGram. Escolha outro código."_q },
 		{ u"LuminaFakeCrashModeHeader"_q, u"Ao digitar este código"_q },
-		{ u"LuminaFakeCrashModeExit"_q, u"Sair na hora"_q },
-		{ u"LuminaFakeCrashModeDialog"_q, u"Mostrar um aviso de falha falsa"_q },
-		{ u"LuminaFakeCrashModeExitInfo"_q, u"Sair na hora: a janela some imediatamente, sem nenhuma "
-			u"mensagem e sem deixar nada na tela."_q },
-		{ u"LuminaFakeCrashModeDialogInfo"_q, u"Aviso de falha falsa: a janela some e aparece um aviso "
-			u"no estilo do sistema “O LuminaGram parou de funcionar”; "
-			u"o LuminaGram fecha quando o aviso é dispensado."_q },
-		{ u"LuminaFakeCrashTitle"_q, u"O LuminaGram parou de funcionar"_q },
-		{ u"LuminaFakeCrashText"_q, u"Um problema fez com que o programa parasse de funcionar "
-			u"corretamente. O programa será fechado."_q },
-		{ u"LuminaFakeCrashCloseApp"_q, u"Fechar o programa"_q },
+		{ u"LuminaFakeCrashModeExit"_q, u"Sair do app"_q },
+		{ u"LuminaDuressModeLogoutCurrent"_q, u"Sair da conta atual"_q },
+		{ u"LuminaDuressModeLogoutAll"_q, u"Sair de todas as contas"_q },
+		{ u"LuminaFakeCrashModeExitInfo"_q, u"Sair do app: na tela de bloqueio a janela some na hora e nenhuma conta é desconectada. No cofre de disfarce esta opção não faz nada: lá o código conta como um código errado."_q },
+		{ u"LuminaDuressLogoutCurrentWarning"_q, u"Ao ser acionado, só a conta atual é desconectada. Antes, confirme que esta conta também está conectada em outro dispositivo, para poder receber o código de login."_q },
+		{ u"LuminaDuressLogoutAllWarning"_q, u"Ao ser acionado, todas as contas deste dispositivo são desconectadas. Confirme que o número de telefone de cada conta pode receber o código por SMS; caso contrário, essa conta não poderá entrar de novo."_q },
+		{ u"LuminaDuressLocalDataWarning"_q, u"Os chats secretos deste dispositivo são perdidos para sempre, junto com os rascunhos, o cache e as configurações locais que este dispositivo guarda para a conta."_q },
+		{ u"LuminaDuressDeferredInfo"_q, u"Na tela de bloqueio, o LuminaGram se esconde na hora, sai da conta e fecha alguns segundos depois. No cofre de disfarce, o disfarce continua como se o código estivesse errado; quando ele é fechado, o LuminaGram sai da conta em segundo plano sem mostrar nada e depois encerra (se o código real for digitado no disfarce em vez disso, a saída é feita antes de mostrar qualquer conta). Enquanto a senha de bloqueio mantiver as contas seladas, fechar o disfarce com «Sair de todas as contas» apaga em vez disso todos os dados do LuminaGram neste dispositivo, como o próprio «Sair» da tela de bloqueio; nos outros casos, a saída espera até que a sua senha de bloqueio real abra as contas da próxima vez e é feita antes de mostrar qualquer coisa."_q },
+		{ u"LuminaDuressConfirmButton"_q, u"Ativar"_q },
 		// login guard (D-32)
 		{ u"LuminaSessionGuardHeader"_q, u"Proteção de login"_q },
 		{ u"LuminaSessionGuard"_q, u"Alertas de novos logins"_q },

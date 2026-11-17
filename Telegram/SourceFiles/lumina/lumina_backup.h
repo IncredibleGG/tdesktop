@@ -26,7 +26,7 @@ namespace Lumina {
 // says which of them are not Store::Prefs, EXCEPT the translation and
 // speech-to-text API keys. Since 7.3.4 those never leave the device in a
 // backup (lumina_secret_store.h); the other private values do travel: the
-// vault and fake-crash codes, the decoy note, saved originals of outgoing
+// vault and duress codes, the decoy note, saved originals of outgoing
 // messages. Nothing else is touched: tdesktop's own settings, the accounts, the
 // message database and the caches are not part of a backup and are not
 // restored from one.
@@ -36,12 +36,19 @@ namespace Lumina {
 // provider confirmation below like any other route change, and on Windows the
 // store seals them on the way in.
 //
-// ONE EXCEPTION, in both directions: the parked ToS-grey keys (stealthOnline,
+// AN EXCEPTION, in both directions: the parked ToS-grey keys (stealthOnline,
 // stealthTyping, stealthReadReceipts). F-02 removed every row that could set
 // them but two of them still have live readers, so a file that carried them
 // would be able to switch this client into permanent always-offline mode with
 // no UI left to switch it back. Export drops them and import drops them again;
 // see RemoveParkedKeys() in the .cpp.
+//
+// A SECOND ONE, filtered the same way in both directions: the duress
+// passcode's state. Its mode travels only as "off" or "exit", so a backup can
+// never arm one of its logout modes - only the warning in settings does - and
+// restoring keeps the mode this device already has; a logout it recorded and
+// has not carried out yet never travels at all. See
+// Lumina::FilterDuressBackupPayload().
 //
 // THE CONTAINER, and why it is not Android's. LuminaBackupActivity writes
 // AES/CBC/PKCS5Padding with no authentication tag at all, so a wrong passphrase

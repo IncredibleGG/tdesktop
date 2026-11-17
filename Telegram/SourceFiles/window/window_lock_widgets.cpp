@@ -135,7 +135,7 @@ PasscodeLockWidget::PasscodeLockWidget(
 	});
 
 	using namespace rpl::mappers;
-	// LuminaGram: the fake-crash duress code is typed into the field above.
+	// LuminaGram: the duress passcode is typed into the field above.
 	// A system unlock - Touch ID, Windows Hello, an Apple Watch, the system
 	// password - never touches that field, so leaving it available would let
 	// anyone who can hold the user's finger to the sensor open the real app
@@ -274,7 +274,8 @@ void PasscodeLockWidget::suggestSystemUnlock() {
 
 void PasscodeLockWidget::systemUnlockDone(base::SystemUnlockResult result) {
 	if (result == base::SystemUnlockResult::Success) {
-		Core::App().unlockPasscode();
+		// LuminaGram: never unlocks into a duress logout still in flight.
+		Lumina::AfterDuressLogout([] { Core::App().unlockPasscode(); });
 		return;
 	}
 	_systemUnlockCooldown.callOnce(kSystemUnlockDelay);
@@ -310,14 +311,26 @@ void PasscodeLockWidget::submit() {
 	auto done = crl::guard(this, [=](bool correct) {
 		setDeriving(false);
 		if (correct) {
-			Core::App().unlockPasscode(); // Destroys this widget.
+			// LuminaGram duress passcode: a logout recorded where it could
+			// not run (the disguise vault, or this screen before the accounts
+			// were opened) starts the moment the passcode opens them, and the
+			// screen stays locked until it is over, so the account is never
+			// shown while it is being logged out. Without one in flight this
+			// unlocks at once, exactly as before.
+			if (Lumina::DuressLogoutRunning()) {
+				setDeriving(true);
+			}
+			Lumina::AfterDuressLogout([] {
+				Core::App().unlockPasscode(); // Destroys this widget.
+			});
 			return;
 		}
-		// LuminaGram fake-crash duress unlock: a SECOND, purely local code
-		// that ends the process instead of unlocking, leaving the screen as
-		// if the app had crashed. Strictly gated - it fires only when the
-		// feature is on AND a non-empty code is stored AND what was typed is
-		// exactly that code. Anything else, including an ordinary wrong
+		// LuminaGram duress passcode: a SECOND, purely local code that never
+		// unlocks - it closes the app, or logs out the current account or
+		// every account and then closes the app, whichever the user chose
+		// (lumina/lumina_fake_crash.h). Strictly gated - it fires only when
+		// the feature is on AND a non-empty code is stored AND what was typed
+		// is exactly that code. Anything else, including an ordinary wrong
 		// passcode, falls through to the bad-try handling below and behaves
 		// normally.
 		//
@@ -334,21 +347,28 @@ void PasscodeLockWidget::submit() {
 		//  * here, the passcode always wins (a correct code arrives as
 		//    correct == true and never reaches this branch), so a collision
 		//    merely stops the duress code from firing. In Android's order a
-		//    collision fires the fake crash on every correct unlock, locking
-		//    the user out of their own account permanently, with nothing but
-		//    "log out" left on the screen. Its settings screen has to refuse
-		//    the collision to stay safe; ours refuses it too, but is not
-		//    relying on that;
-		//  * nothing LuminaGram does can delay, block or break a legitimate
-		//    unlock, because by the time any of it runs the passcode has
-		//    already been checked and rejected.
+		//    collision fires the duress action on every correct unlock -
+		//    with a logout mode, logging the user out every time they open
+		//    the app. Its settings screen has to refuse the collision to stay
+		//    safe; ours refuses it too, but is not relying on that;
+		//  * nothing typed here can turn a legitimate unlock into a duress
+		//    action, because by the time any of it runs the passcode has
+		//    already been checked and rejected. (The only thing that ever
+		//    holds a correct unlock is a duress logout already recorded
+		//    earlier, above.)
 		//
 		// The flood gate still applies first (PasscodeAttempt::Flood is
 		// returned before any derivation starts), exactly as on Android, so
 		// the duress code does not work while the user is locked out for
 		// retrying too fast. Deliberately nothing is logged here.
+		//
+		// Nothing after the call may touch this widget: the logout modes hide
+		// every window and log out on the next turn of the event loop, and
+		// the last account going away unlocks - and so destroys - this
+		// screen.
 		if (Lumina::FakeCrashCodeMatches(typed)) {
-			Lumina::RunFakeCrash(); // Does not return.
+			Lumina::RunDuressFromPasscodeLock();
+			return;
 		}
 		error();
 	});

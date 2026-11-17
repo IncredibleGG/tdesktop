@@ -13,6 +13,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_keys.h"
 #include "lumina/lumina_fake_crash.h"
 #include "lumina/lumina_locale.h"
+#include "lumina/lumina_vault.h"
 #include "main/main_domain.h"
 #include "settings/settings_common.h"
 #include "storage/storage_domain.h"
@@ -37,14 +38,15 @@ namespace {
 constexpr auto kCodeMaxLength = 64;
 
 // Every label, toggle and paragraph on the block is recomputed from the store
-// on any change to it, and on any change to the local passcode - the second
-// one matters because two of the warnings below are about the passcode, and
-// the passcode is edited on a completely different page. LangChanges() is
-// merged in because every text they produce is itself a translated string.
+// on any change to it, to the local passcode and to the disguise vault - the
+// last two matter because some of the warnings below are about them, and both
+// are edited elsewhere. LangChanges() is merged in because every text they
+// produce is itself a translated string.
 [[nodiscard]] rpl::producer<> Changes() {
 	return rpl::merge(
 		FakeCrashChanges(),
 		Core::App().domain().local().localPasscodeChanged(),
+		VaultChanges(),
 		LangChanges());
 }
 
@@ -58,19 +60,16 @@ constexpr auto kCodeMaxLength = 64;
 	});
 }
 
-[[nodiscard]] rpl::producer<bool> FlagValue(Fn<bool()> compute) {
-	return rpl::single(
-		rpl::empty
-	) | rpl::then(
-		Changes()
-	) | rpl::map([compute = std::move(compute)] {
-		return compute();
-	});
-}
-
 [[nodiscard]] bool HasLocalPasscode() {
 	const auto &domain = Core::App().domain();
 	return domain.started() && domain.local().hasLocalPasscode();
+}
+
+// The duress passcode and the vault's secret code are typed into the same
+// gate; the vault's always wins there (lumina_vault_door.cpp), so equal codes
+// would silently cost the duress passcode at the vault.
+[[nodiscard]] bool SameAsVaultCode(const QString &code) {
+	return !code.isEmpty() && VaultCodeIsSet() && (code == VaultCode());
 }
 
 // Answers done(true) when `code` would unlock the app, on the main thread and
@@ -115,19 +114,81 @@ void CheckCodeIsLocalPasscode(
 		}));
 }
 
-void AddToggleRow(
-		not_null<Ui::VerticalLayout*> container,
-		rpl::producer<QString> label,
-		Fn<bool()> checked,
-		Fn<void(bool)> save) {
+[[nodiscard]] QString ModeName(DuressMode mode) {
+	switch (mode) {
+	case DuressMode::LogoutCurrent:
+		return Tr(u"LuminaDuressModeLogoutCurrent"_q);
+	case DuressMode::LogoutAll:
+		return Tr(u"LuminaDuressModeLogoutAll"_q);
+	case DuressMode::Exit:
+		break;
+	}
+	return Tr(u"LuminaFakeCrashModeExit"_q);
+}
+
+// The owner's own warning for each logout mode: what triggering it costs, and
+// what to check first so the account can be signed back into.
+[[nodiscard]] QString LogoutWarning(DuressMode mode) {
+	return Tr((mode == DuressMode::LogoutAll)
+		? u"LuminaDuressLogoutAllWarning"_q
+		: u"LuminaDuressLogoutCurrentWarning"_q);
+}
+
+// The explicit confirmation every logout mode goes through before it can be
+// armed: picking it below is the only way to arm one. Switching the feature
+// on starts at Exit, the fake-crash era's users start off, a missing or
+// unknown mode reads as off, and a restored backup never carries a logout
+// mode (FilterDuressBackupPayload()).
+//
+// `done(true)` once confirmed; `done(false)` however else the box goes away
+// (Cancel, Escape, a click outside - Ui::ConfirmBox reports all of them as a
+// cancel unless strictCancel is set, which it is not here).
+void ConfirmLogoutMode(
+		not_null<Window::SessionController*> controller,
+		DuressMode mode,
+		Fn<void(bool)> done) {
+	const auto text = LogoutWarning(mode)
+		+ u"\n\n"_q
+		+ Tr(u"LuminaDuressLocalDataWarning"_q);
+	controller->show(Ui::MakeConfirmBox({
+		.text = text,
+		.confirmed = [=](Fn<void()> close) {
+			done(true);
+			close();
+		},
+		.cancelled = [=](Fn<void()> close) {
+			done(false);
+			close();
+		},
+		.confirmText = Tr(u"LuminaDuressConfirmButton"_q),
+		.confirmStyle = &st::attentionBoxButton,
+		.title = ModeName(mode),
+	}));
+}
+
+// The feature switch. On means Exit, the one mode that destroys nothing; off
+// forgets the mode (the code is kept), so a logout mode is always chosen
+// again, through its confirmation, after the feature was off - the same as on
+// Android, where "off" is one more value of the same preference. The guard on
+// toggledChanges() keeps every programmatic flip - a restored backup, a panic
+// wipe - from being written straight back into the store.
+void AddEnableRow(not_null<Ui::VerticalLayout*> container) {
 	const auto button = container->add(object_ptr<Ui::SettingsButton>(
 		container,
-		std::move(label),
+		TrValue(u"LuminaSecurityFakeCrashEnable"_q),
 		st::settingsButtonNoIcon
-	))->toggleOn(FlagValue(std::move(checked)));
+	))->toggleOn(rpl::single(
+		rpl::empty
+	) | rpl::then(
+		Changes()
+	) | rpl::map([] {
+		return FakeCrashEnabled();
+	}));
 	button->toggledChanges(
-	) | rpl::on_next([save = std::move(save)](bool value) {
-		save(value);
+	) | rpl::filter([](bool value) {
+		return (value != FakeCrashEnabled());
+	}) | rpl::on_next([](bool value) {
+		SetFakeCrashEnabled(value);
 	}, button->lifetime());
 }
 
@@ -177,11 +238,22 @@ void EditCodeBox(not_null<Ui::GenericBox*> box) {
 		}
 		const auto entered = field->getLastText().trimmed();
 
+		// Nor the vault's secret code: at the disguise gate the vault's own
+		// code always wins, so the duress passcode would open the app it is
+		// meant to close.
+		if (SameAsVaultCode(entered)) {
+			box->uiShow()->showBox(Ui::MakeInformBox(
+				Tr(u"LuminaSecurityFakeCrashCodeSameAsVault"_q)));
+			return;
+		}
+
 		// The duress code must not be the passcode. The lock screen would
 		// still behave sanely if it were - it only consults the duress code
 		// after the passcode has already been rejected, so a collision costs
-		// the feature, not the account - but a code that silently never fires
-		// is worth refusing at the one moment we can explain why.
+		// the feature there, not the account - but the disguise vault cannot
+		// check the passcode at all, so in a logout mode typing the passcode
+		// there would log out. The passcode page refuses the same collision
+		// from its side (settings_local_passcode.cpp).
 		*checking = true;
 		CheckCodeIsLocalPasscode(entered, box, [=](bool clash) {
 			*checking = false;
@@ -202,70 +274,92 @@ void EditCodeBox(not_null<Ui::GenericBox*> box) {
 	});
 }
 
-// "When this code is entered": the two modes, as radio rows inside the block
-// that only shows while the feature is on, like Android's. Placed under the
-// code row rather than above it, so the code row is not read as a third
-// choice; Exit is listed first because it is this platform's default.
-void AddModeRows(not_null<Ui::VerticalLayout*> container) {
+// "When this code is entered": the three modes, as radio rows inside the
+// block that only shows while the feature is on. Placed under the code row
+// rather than above it, so the code row is not read as another choice; Exit
+// is listed first because switching the feature on selects it, and it is the
+// only one that destroys nothing.
+void AddModeRows(
+		not_null<Ui::VerticalLayout*> container,
+		not_null<Window::SessionController*> controller) {
 	Ui::AddSkip(container);
 	Ui::AddSubsectionTitle(
 		container,
 		TrValue(u"LuminaFakeCrashModeHeader"_q));
 	Ui::AddSkip(container, st::settingsSendTypeSkip);
 
-	const auto group = std::make_shared<Ui::RadioenumGroup<FakeCrashMode>>(
-		CurrentFakeCrashMode());
-	const auto add = [&](FakeCrashMode mode, const QString &key) {
+	const auto group = std::make_shared<Ui::RadioenumGroup<DuressMode>>(
+		CurrentDuressMode());
+	const auto add = [&](DuressMode mode) {
 		const auto row = container->add(
-			object_ptr<Ui::Radioenum<FakeCrashMode>>(
+			object_ptr<Ui::Radioenum<DuressMode>>(
 				container,
 				group,
 				mode,
-				Tr(key),
+				ModeName(mode),
 				st::settingsSendType),
 			st::settingsSendTypePadding);
 		LangChanges(
 		) | rpl::on_next([=] {
-			row->setText(Tr(key));
+			row->setText(ModeName(mode));
 		}, row->lifetime());
 	};
-	add(FakeCrashMode::Exit, u"LuminaFakeCrashModeExit"_q);
-	add(FakeCrashMode::Dialog, u"LuminaFakeCrashModeDialog"_q);
+	add(DuressMode::Exit);
+	add(DuressMode::LogoutCurrent);
+	add(DuressMode::LogoutAll);
 
 	// The preference can also move under the page - a restored backup writes
 	// every key it carries - so the rows follow the preference rather than
-	// only the clicks; `syncing` keeps that path from writing it straight
+	// only the clicks; `syncing` keeps that path, and a cancelled
+	// confirmation putting the previous row back, from writing it straight
 	// back (same shape as lumina_dialogs_style_settings.cpp).
 	const auto syncing = container->lifetime().make_state<bool>(false);
-	group->setChangedCallback([=](FakeCrashMode mode) {
-		if (*syncing) {
+	const auto sync = [=] {
+		*syncing = true;
+		group->setValue(CurrentDuressMode());
+		*syncing = false;
+	};
+	group->setChangedCallback([=](DuressMode mode) {
+		if (*syncing || (mode == CurrentDuressMode())) {
+			return;
+		} else if (!IsLogoutMode(mode)) {
+			SetDuressMode(mode);
 			return;
 		}
-		SetFakeCrashMode(mode);
+		ConfirmLogoutMode(controller, mode, crl::guard(container, [=](
+				bool confirmed) {
+			if (confirmed) {
+				SetDuressMode(mode);
+			} else {
+				sync();
+			}
+		}));
 	});
 	FakeCrashChanges(
-	) | rpl::on_next([=] {
-		*syncing = true;
-		group->setValue(CurrentFakeCrashMode());
-		*syncing = false;
-	}, container->lifetime());
+	) | rpl::on_next(sync, container->lifetime());
 
 	Ui::AddSkip(container, st::settingsSendTypeSkip);
 }
 
 // One reactive paragraph rather than a stack of conditional dividers: the
-// warnings come and go as the code, the toggle and the passcode change, and a
-// block of dividers appearing and disappearing under the rows reads far worse
-// than a paragraph that grows a sentence.
+// warnings come and go as the code, the toggle, the mode, the passcode and
+// the vault change, and a block of dividers appearing and disappearing under
+// the rows reads far worse than a paragraph that grows a sentence.
 [[nodiscard]] QString AboutText(bool codeIsPasscode) {
 	auto lines = QStringList();
 	lines.append(Tr(u"LuminaSecurityFakeCrashInfo"_q));
-	if (FakeCrashEnabled()) {
-		// What the chosen mode looks like, the way Android puts it under
-		// each of its two choices.
-		lines.append(Tr((CurrentFakeCrashMode() == FakeCrashMode::Dialog)
-			? u"LuminaFakeCrashModeDialogInfo"_q
-			: u"LuminaFakeCrashModeExitInfo"_q));
+	const auto enabled = FakeCrashEnabled();
+	const auto mode = CurrentDuressMode();
+	if (enabled) {
+		if (IsLogoutMode(mode)) {
+			// The owner's warning for the chosen mode stays in view for as
+			// long as it is armed, not only in the confirmation.
+			lines.append(LogoutWarning(mode));
+			lines.append(Tr(u"LuminaDuressLocalDataWarning"_q));
+			lines.append(Tr(u"LuminaDuressDeferredInfo"_q));
+		} else {
+			lines.append(Tr(u"LuminaFakeCrashModeExitInfo"_q));
+		}
 	}
 
 	// The decision recorded in the port plan (§6 Q3): a fingerprint opens the
@@ -275,16 +369,26 @@ void AddModeRows(not_null<Ui::VerticalLayout*> container) {
 	// on a different page entirely.
 	lines.append(Tr(u"LuminaSecurityFakeCrashBiometricInfo"_q));
 
-	if (FakeCrashEnabled() && FakeCrashCode().isEmpty()) {
+	if (enabled && FakeCrashCode().isEmpty()) {
 		lines.append(Tr(u"LuminaSecurityFakeCrashNoCodeInfo"_q));
 	}
-	if (FakeCrashEnabled() && !HasLocalPasscode()) {
+	// Nowhere to type the code: no lock screen, and - for a logout mode,
+	// which the vault also accepts - no vault either.
+	if (enabled
+		&& !HasLocalPasscode()
+		&& !(IsLogoutMode(mode) && VaultArmed())) {
 		lines.append(Tr(u"LuminaSecurityFakeCrashNoPasscodeInfo"_q));
 	}
 	if (FakeCrashArmed() && codeIsPasscode) {
-		// Only reachable by changing the passcode lock to the duress code
-		// after setting it, which the passcode page knows nothing about.
+		// This page refuses a duress code equal to the passcode, and the
+		// passcode page now refuses a passcode equal to the duress code, so
+		// this is only reachable through a restored backup or a passcode
+		// changed to the duress code before the passcode page checked it.
 		lines.append(Tr(u"LuminaSecurityFakeCrashCodeClashInfo"_q));
+	}
+	if (FakeCrashArmed() && SameAsVaultCode(FakeCrashCode())) {
+		// Only reachable through a restored backup: both editors refuse it.
+		lines.append(Tr(u"LuminaSecurityFakeCrashVaultClashInfo"_q));
 	}
 	return lines.join(u" "_q);
 }
@@ -298,11 +402,7 @@ void AddFakeCrashRows(
 	Ui::AddSubsectionTitle(
 		container,
 		TrValue(u"LuminaSecurityFakeCrashHeader"_q));
-	AddToggleRow(
-		container,
-		TrValue(u"LuminaSecurityFakeCrashEnable"_q),
-		[] { return FakeCrashEnabled(); },
-		[](bool value) { SetFakeCrashEnabled(value); });
+	AddEnableRow(container);
 
 	// Built once and toggled reactively, like the provider blocks on the
 	// translation page: switching the toggle never rebuilds the block and
@@ -312,7 +412,13 @@ void AddFakeCrashRows(
 			container,
 			object_ptr<Ui::VerticalLayout>(container))
 	)->toggleOn(
-		FlagValue([] { return FakeCrashEnabled(); })
+		rpl::single(
+			rpl::empty
+		) | rpl::then(
+			Changes()
+		) | rpl::map([] {
+			return FakeCrashEnabled();
+		})
 	)->finishAnimating()->entity();
 	AddValueRow(
 		codeBlock,
@@ -323,7 +429,7 @@ void AddFakeCrashRows(
 				: u"LuminaSecurityFakeCrashCodeSet"_q);
 		},
 		[=] { controller->show(Box(EditCodeBox)); });
-	AddModeRows(codeBlock);
+	AddModeRows(codeBlock, controller);
 
 	// The clash warning needs a passcode derivation, which since 7.3 runs on
 	// a worker (see CheckCodeIsLocalPasscode): the paragraph shows the last

@@ -91,7 +91,9 @@ constexpr auto kIconGlyphSize = 36;
 // reaches Sandbox::QuitWhenStarted() and the same QCoreApplication::exit(0)
 // (core/application.cpp:279-282, core/sandbox.cpp:230-243). Sandbox::_started
 // is already true by then; it is set at core/sandbox.cpp:180, immediately
-// before the exec() whose event loop is running us.
+// before the exec() whose event loop is running us. (With a duress logout
+// pending it does not quit there but carries on without showing a window and
+// ends the process itself once the logout is done - lumina_fake_crash.h.)
 class QuitOnLastWindowSuppression final {
 public:
 	QuitOnLastWindowSuppression()
@@ -184,8 +186,8 @@ bool VaultEnabled() {
 // other three setters below. All four are read by the gate once, at the very
 // start of the NEXT launch, and the two ways this application ends without
 // draining that timer are both reachable from the screen the vault is
-// configured on: Lumina::TriggerFakeCrash() calls std::_Exit(), which runs no
-// destructor, and a real crash does the same.
+// configured on: Lumina::ExitAtOnce() (the duress passcode) calls
+// std::_Exit(), which runs no destructor, and a real crash does the same.
 //
 // Losing any of them fails open in the sense that nothing is destroyed, but
 // "fails open" is not the same as "harmless", and it is worst for the mode:

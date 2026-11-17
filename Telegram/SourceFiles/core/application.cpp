@@ -55,6 +55,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_hardcoded.h"
 #include "lang/lang_instance.h"
 #include "lumina/lumina_ad_shield_manager.h"
+#include "lumina/lumina_fake_crash.h"
 #include "lumina/lumina_settings.h"
 #include "lumina/lumina_translate_send.h"
 #include "lumina/lumina_undo_send.h"
@@ -326,7 +327,14 @@ void Application::run() {
 	// very first statement only because ~Application() dereferences
 	// _notifications unconditionally, so quitting above this line would crash
 	// on the way out. Fails open: false means the user closed the decoy.
-	if (!Lumina::VaultGatePassed()) {
+	//
+	// LuminaGram duress passcode: a decoy closed with a duress logout pending
+	// - the duress passcode was typed into the vault, now or in a launch that
+	// was killed before it could log out - does not quit here. The app starts
+	// without ever showing a window, logs out and ends the process itself
+	// (Lumina::FinishDuressStartup() below).
+	const auto duressOnly = !Lumina::VaultGatePassed();
+	if (duressOnly && !Lumina::DuressLogoutPending()) {
 		Quit();
 		return;
 	}
@@ -407,6 +415,13 @@ void Application::run() {
 	// with the feature off (the default) it creates nothing at all.
 	Lumina::AdShield::Start();
 
+	// LuminaGram duress passcode. Before the accounts start: a logout the
+	// passcode was entered for at the disguise vault (or on a lock screen
+	// that could not reach the accounts) is carried out the moment they are
+	// first available. With none recorded it only subscribes (and drops the
+	// fake-crash era keys).
+	Lumina::SetupDuress();
+
 	DEBUG_LOG(("Application Info: inited..."));
 	LOG(("Qt version: %1 (compiled with %2)").arg(
 		QString::fromLatin1(qVersion()),
@@ -471,6 +486,16 @@ void Application::run() {
 	DEBUG_LOG(("Application Info: window created..."));
 
 	startDomain();
+
+	// LuminaGram duress passcode: when a recorded logout started just now,
+	// the first window waits for it, so the account is never on screen while
+	// it is being logged out; after a decoy closed with one pending, nothing
+	// is shown at all and the process ends once it is done. A no-op
+	// otherwise.
+	if (!Lumina::FinishDuressStartup(duressOnly)) {
+		return;
+	}
+
 	startTray();
 
 	_lastActivePrimaryWindow->firstShow();

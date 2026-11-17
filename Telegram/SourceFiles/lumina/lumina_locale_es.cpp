@@ -998,21 +998,19 @@ namespace {
 			u"tdata/luminagram.json y tdata/luminagram_private.json de "
 			u"la carpeta de datos de LuminaGram: la caja fuerte se "
 			u"desactiva sola y LuminaGram se inicia con normalidad."_q },
-		{ u"LuminaSecurityFakeCrashHeader"_q, u"Desbloqueo con fallo falso"_q },
-		{ u"LuminaSecurityFakeCrashEnable"_q, u"Activar desbloqueo con fallo falso"_q },
-		{ u"LuminaSecurityFakeCrashCode"_q, u"Código de fallo falso"_q },
-		{ u"LuminaSecurityFakeCrashCodeDialogTitle"_q, u"Código de fallo falso"_q },
+		{ u"LuminaSecurityFakeCrashHeader"_q, u"Código de coacción"_q },
+		{ u"LuminaSecurityFakeCrashEnable"_q, u"Activar código de coacción"_q },
+		{ u"LuminaSecurityFakeCrashCode"_q, u"Código de coacción"_q },
+		{ u"LuminaSecurityFakeCrashCodeDialogTitle"_q, u"Código de coacción"_q },
 		{ u"LuminaSecurityFakeCrashCodeHint"_q, u"Código"_q },
 		{ u"LuminaSecurityFakeCrashCodeSet"_q, u"Establecido"_q },
 		{ u"LuminaSecurityFakeCrashCodeNotSet"_q, u"Sin establecer"_q },
 		{ u"LuminaSecurityFakeCrashCodeSameAsPasscode"_q, u"Este código no puede ser igual "
 			u"que tu código de acceso."_q },
-		{ u"LuminaSecurityFakeCrashInfo"_q, u"Cuando esto está activado, escribir el código de fallo "
-			u"falso en la pantalla de bloqueo cierra LuminaGram en "
-			u"lugar de desbloquearlo: para quien esté mirando, la "
-			u"aplicación se ha bloqueado. El código es independiente "
-			u"de tu código de acceso, se guarda solo en este "
-			u"dispositivo y nunca se envía a ninguna parte."_q },
+		{ u"LuminaSecurityFakeCrashCodeSameAsVault"_q, u"Este código no puede ser igual al código secreto de la caja fuerte de disfraz."_q },
+		{ u"LuminaVaultCodeSameAsDuress"_q, u"El código secreto no puede ser igual al código de coacción."_q },
+		{ u"LuminaPasscodeSameAsDuress"_q, u"El código de acceso no puede ser igual al código de coacción."_q },
+		{ u"LuminaSecurityFakeCrashInfo"_q, u"Un segundo código, guardado solo en este dispositivo y nunca enviado a ningún sitio. Escrito en la pantalla de bloqueo nunca desbloquea LuminaGram: hace lo que elijas abajo. Las opciones de cerrar sesión también funcionan donde la caja fuerte de disfraz acepta su código secreto, y el señuelo sigue como si nada. Solo este código exacto hace algo: un código de acceso incorrecto cualquiera nunca lo activa."_q },
 		{ u"LuminaSecurityFakeCrashBiometricInfo"_q, u"Mientras esto esté activado y haya "
 			u"un código establecido, el desbloqueo con Touch ID, Windows "
 			u"Hello o la contraseña del sistema queda desactivado: una "
@@ -1026,22 +1024,18 @@ namespace {
 			u"acceso, así que la pantalla de bloqueo nunca aparece y "
 			u"este código nunca se pide. Activa primero el código de "
 			u"acceso en Privacidad y seguridad."_q },
-		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"Este código ahora es igual que tu "
-			u"código de acceso, así que nunca se activará: el código de "
-			u"acceso desbloquea la aplicación en su lugar. Elige un "
-			u"código diferente."_q },
+		{ u"LuminaSecurityFakeCrashCodeClashInfo"_q, u"Este código ahora es igual que tu código de acceso. En la pantalla de bloqueo siempre gana el código de acceso, así que ahí no hace nada, pero en la caja fuerte de disfraz escribir tu código de acceso lo activaría. Elige un código diferente."_q },
+		{ u"LuminaSecurityFakeCrashVaultClashInfo"_q, u"Este código ahora es igual al código secreto de la caja fuerte de disfraz, así que en la pantalla de disfraz abre LuminaGram. Elige otro código."_q },
 		{ u"LuminaFakeCrashModeHeader"_q, u"Al escribir este código"_q },
-		{ u"LuminaFakeCrashModeExit"_q, u"Salir de inmediato"_q },
-		{ u"LuminaFakeCrashModeDialog"_q, u"Mostrar un aviso de fallo falso"_q },
-		{ u"LuminaFakeCrashModeExitInfo"_q, u"Salir de inmediato: la ventana desaparece al instante, "
-			u"sin ningún mensaje y sin dejar nada en pantalla."_q },
-		{ u"LuminaFakeCrashModeDialogInfo"_q, u"Aviso de fallo falso: la ventana desaparece y aparece "
-			u"un aviso con estilo del sistema «LuminaGram dejó de "
-			u"funcionar»; LuminaGram se cierra al descartarlo."_q },
-		{ u"LuminaFakeCrashTitle"_q, u"LuminaGram dejó de funcionar"_q },
-		{ u"LuminaFakeCrashText"_q, u"Un problema hizo que el programa dejara de funcionar "
-			u"correctamente. El programa se cerrará."_q },
-		{ u"LuminaFakeCrashCloseApp"_q, u"Cerrar el programa"_q },
+		{ u"LuminaFakeCrashModeExit"_q, u"Salir de la app"_q },
+		{ u"LuminaDuressModeLogoutCurrent"_q, u"Cerrar sesión de la cuenta actual"_q },
+		{ u"LuminaDuressModeLogoutAll"_q, u"Cerrar sesión de todas las cuentas"_q },
+		{ u"LuminaFakeCrashModeExitInfo"_q, u"Salir de la app: en la pantalla de bloqueo la ventana desaparece al instante y no se cierra ninguna sesión. En la caja fuerte de disfraz esta opción no hace nada: allí el código cuenta como un código incorrecto."_q },
+		{ u"LuminaDuressLogoutCurrentWarning"_q, u"Al activarse, solo se cierra la sesión de la cuenta actual. Antes, asegúrate de que esta cuenta también tenga la sesión iniciada en otro dispositivo, para poder recibir el código de inicio de sesión."_q },
+		{ u"LuminaDuressLogoutAllWarning"_q, u"Al activarse, se cierra la sesión de todas las cuentas de este dispositivo. Asegúrate de que el número de teléfono de cada cuenta pueda recibir el código por SMS; si no, esa cuenta no podrá volver a iniciar sesión."_q },
+		{ u"LuminaDuressLocalDataWarning"_q, u"Los chats secretos de este dispositivo se pierden para siempre, junto con los borradores, la caché y los ajustes locales que este dispositivo guarda para la cuenta."_q },
+		{ u"LuminaDuressDeferredInfo"_q, u"En la pantalla de bloqueo, LuminaGram se oculta al instante, cierra la sesión y se cierra unos segundos después. En la caja fuerte de disfraz, el señuelo sigue como si el código fuera incorrecto; al cerrarlo, LuminaGram cierra la sesión en segundo plano sin mostrar nada y luego termina (si en cambio se escribe el código real en el señuelo, la sesión se cierra antes de mostrar ninguna cuenta). Mientras un código de acceso mantenga las cuentas selladas, cerrar el señuelo con «Cerrar sesión de todas las cuentas» borra en su lugar todos los datos de LuminaGram en este dispositivo, como el propio «Cerrar sesión» de la pantalla de bloqueo; en los demás casos, el cierre de sesión espera a que tu código de acceso real abra las cuentas la próxima vez y se hace antes de mostrar nada."_q },
+		{ u"LuminaDuressConfirmButton"_q, u"Activar"_q },
 		// login guard (D-32)
 		{ u"LuminaSessionGuardHeader"_q, u"Protección de inicio de sesión"_q },
 		{ u"LuminaSessionGuard"_q, u"Avisos de nuevos inicios de sesión"_q },

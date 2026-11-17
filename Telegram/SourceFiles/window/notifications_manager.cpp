@@ -42,6 +42,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_media_types.h"
 #include "lumina/lumina_stories_off.h"
 #include "lumina/lumina_notification_control.h"
+#include "lumina/lumina_fake_crash.h"
 #include "main/main_account.h"
 #include "main/main_domain.h"
 #include "main/main_session.h"
@@ -326,6 +327,13 @@ System::SkipState System::skipNotification(
 	const auto messageType = (type == Data::ItemNotificationType::Message);
 	const auto thread = item->maybeNotificationThread();
 	const auto media = item->media();
+	if (Lumina::DuressSilencesNotifications()) {
+		// LuminaGram duress passcode: nothing from any account is announced
+		// while one is being logged out under duress - the logout can take a
+		// server round trip, and the app is hidden or locked meanwhile - nor
+		// afterwards, while an app the user saw disappear waits to end.
+		return { SkipState::Skip };
+	}
 	if (Lumina::StoriesFullyOff() && media && media->storyMention()) {
 		// LuminaGram: stories are off, so nothing about one is announced.
 		//

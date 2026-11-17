@@ -17,6 +17,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "core/core_settings.h"
 #include "lang/lang_keys.h"
 #include "lottie/lottie_icon.h"
+#include "lumina/lumina_fake_crash.h"
+#include "lumina/lumina_locale.h"
 #include "main/session/session_show.h"
 #include "main/main_account.h"
 #include "main/main_domain.h"
@@ -764,6 +766,17 @@ void LocalPasscodeEnter::setupContent() {
 				reenterPasscode->selectAll();
 				error->show();
 				error->setText(tr::lng_passcode_differ(tr::now));
+			} else if (Lumina::IsDuressCode(newText)) {
+				// LuminaGram duress passcode: the passcode lock must not be
+				// the duress code. The lock screen checks the passcode first,
+				// but the disguise vault cannot check it at all, so there the
+				// user's own passcode would trigger the duress action. The
+				// duress settings refuse the same collision from their side.
+				newPasscode->setFocus();
+				newPasscode->showError();
+				newPasscode->selectAll();
+				error->show();
+				error->setText(Lumina::Tr(u"LuminaPasscodeSameAsDuress"_q));
 			} else {
 				setDeriving(true);
 				if (isCreate) {

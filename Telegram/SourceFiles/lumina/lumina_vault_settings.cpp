@@ -8,10 +8,12 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lumina/lumina_vault_settings.h"
 
 #include "lang/lang_keys.h"
+#include "lumina/lumina_fake_crash.h"
 #include "lumina/lumina_locale.h"
 #include "lumina/lumina_vault.h"
 #include "lumina/lumina_vault_calculator.h"
 #include "settings/settings_common.h"
+#include "ui/boxes/confirm_box.h"
 #include "ui/boxes/single_choice_box.h"
 #include "ui/layers/generic_box.h"
 #include "ui/vertical_list.h"
@@ -196,7 +198,16 @@ void EditCodeBox(not_null<Ui::GenericBox*> box) {
 	});
 
 	const auto submit = [=] {
-		SetVaultCode(field->getLastText().trimmed());
+		const auto entered = field->getLastText().trimmed();
+		if (!entered.isEmpty() && IsDuressCode(entered)) {
+			// The same code cannot be both: the vault's own code always wins
+			// at the gate, so the duress passcode would silently stop working
+			// there - and typing it would open the app it is meant to close.
+			box->uiShow()->showBox(Ui::MakeInformBox(
+				Tr(u"LuminaVaultCodeSameAsDuress"_q)));
+			return;
+		}
+		SetVaultCode(entered);
 		box->closeBox();
 	};
 	field->submits() | rpl::on_next(submit, field->lifetime());
@@ -241,8 +252,8 @@ void AddVaultRows(
 		[=] { ShowSkinPicker(controller); });
 
 	// The row shows only whether a code exists; the code itself is legible
-	// inside the editor box, which is the same trade the fake-crash page
-	// makes for its duress code. A vault code the owner is no longer sure of
+	// inside the editor box, which is the same trade the duress passcode
+	// block makes for its code. A vault code the owner is no longer sure of
 	// is a vault they cannot open, and anyone who can reach this page is
 	// already looking at an unlocked LuminaGram.
 	AddValueRow(

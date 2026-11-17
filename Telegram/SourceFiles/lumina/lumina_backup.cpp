@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "base/openssl_help.h"
 #include "base/random.h"
+#include "lumina/lumina_fake_crash.h"
 #include "lumina/lumina_locale.h"
 #include "lumina/lumina_settings.h"
 #include "lumina/lumina_transcribers.h"
@@ -261,6 +262,14 @@ void RemoveParkedKeys(QJsonObject &data) {
 	data.remove(u"stealthReadReceipts"_q);
 }
 
+// The duress passcode's state, filtered the same way in both directions: a
+// file must never arm "log out" - that only happens through the warning in
+// settings - nor bring a recorded logout along to run on this device the next
+// time an account is switched to. See Lumina::FilterDuressBackupPayload().
+void RemoveDuressState(QJsonObject &data) {
+	FilterDuressBackupPayload(data);
+}
+
 // The keys that decide where text and voice are sent. Each is owned elsewhere -
 // the translate* ones by lumina_translate_providers.cpp (also read by
 // lumina_explain.cpp), the stt* ones by lumina_transcribers.cpp - and is
@@ -391,6 +400,7 @@ BackupError WriteBackup(const QString &path, const QString &passphrase) {
 	// Windows the stored keys are sealed to this account anyway.
 	auto payload = Settings::Instance().exportForBackup();
 	RemoveParkedKeys(payload);
+	RemoveDuressState(payload);
 	auto plain = QJsonDocument(payload).toJson(QJsonDocument::Compact);
 	auto padded = AddPadding(plain);
 	Wipe(plain);
@@ -556,6 +566,7 @@ BackupError DecryptBackup(
 	// incapable of half-restoring anything.
 	payload = document.object();
 	RemoveParkedKeys(payload);
+	RemoveDuressState(payload);
 	return BackupError::None;
 }
 
@@ -660,7 +671,13 @@ void ApplyBackupPayload(const QJsonObject &payload) {
 	// cannot tell a flushed import from one that only reached memory. When
 	// Settings::saveNow() is changed to report whether every dirty store was
 	// written, this should return that.
-	Settings::Instance().importAll(payload);
+	//
+	// DecryptBackup() already filtered the duress state; filtered again here
+	// because this is the one door every payload goes through on its way into
+	// the store, whoever prepared it.
+	auto filtered = payload;
+	RemoveDuressState(filtered);
+	Settings::Instance().importAll(filtered);
 	Settings::Instance().saveNow();
 }
 

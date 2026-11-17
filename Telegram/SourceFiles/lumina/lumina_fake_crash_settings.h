@@ -17,12 +17,13 @@ class SessionController;
 
 namespace Lumina {
 
-// The fake-crash duress unlock block of the LuminaGram security sub-page, in
-// the F-02 sub-page shape: settings/sections/settings_lumina_security.cpp
-// holds one call to this and nothing else of ours.
+// The duress passcode block of the LuminaGram security sub-page (formerly
+// "fake-crash unlock"), in the F-02 sub-page shape:
+// settings/sections/settings_lumina_security.cpp holds one call to this and
+// nothing else of ours.
 //
-// The preferences it writes are declared in lumina/lumina_fake_crash.h; the
-// only consumer of them is the passcode lock screen.
+// The preferences it writes are declared in lumina/lumina_fake_crash.h; their
+// consumers are the passcode lock screen and the disguise vault's gate.
 void AddFakeCrashRows(
 	not_null<Ui::VerticalLayout*> container,
 	not_null<Window::SessionController*> controller);
