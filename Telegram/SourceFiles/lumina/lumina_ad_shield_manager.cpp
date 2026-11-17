@@ -1161,12 +1161,12 @@ Sender Manager::buildSender(
 	if (!user) {
 		return result;
 	}
-	// SPEC 9.1: a bot is a bot, also when it is an admin (it is exempt, not
-	// a privileged author).
-	if (user->isBot()) {
-		result.role = Role::Bot;
-		return result;
-	}
+	// SPEC 9.1: creator / admin come before bot, so a bot that is also an
+	// admin (or the creator) of the group stays an admin, as in v2: with the
+	// per-group "Also fold admins and the group's channel" off its posts keep
+	// endorsing and are never folded, exactly as before. Only real admin
+	// rights count (mgInfo->admins / ChatData::admins); a custom rank alone
+	// (memberRanks) never does.
 	const auto userId = peerToUser(user->id);
 	if (const auto channel = peer->asChannel()) {
 		const auto info = channel->mgInfo.get();
@@ -1182,8 +1182,12 @@ Sender Manager::buildSender(
 			result.role = Role::Admin;
 		}
 	}
-	if (result.role == Role::Member && user->isContact()) {
-		result.role = Role::Contact;
+	if (result.role == Role::Member) {
+		if (user->isBot()) {
+			result.role = Role::Bot;
+		} else if (user->isContact()) {
+			result.role = Role::Contact;
+		}
 	}
 	return result;
 }

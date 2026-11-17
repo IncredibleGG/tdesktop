@@ -72,9 +72,10 @@ namespace Lumina::AdShield {
 // panic wipe -> PanicWipe() removes the whole directory and the key.
 //
 // ROLES (SPEC 9.1), first match wins: self (an outgoing message, also one I
-// sent as a channel or as an anonymous admin) > bot (also a bot that is an
-// admin) > creator / admin / anonymous admin / the linked channel > contact >
-// member.
+// sent as a channel or as an anonymous admin) > creator / admin / anonymous
+// admin / the linked channel (real admin rights only, a custom rank never
+// counts) > bot > contact > member. A bot that is also an admin or the
+// creator is an admin, as in v2.
 
 // Called once from Core::Application::run(). Only subscribes to the
 // preferences (and the fold UI to DecisionsChanges()); creates nothing.
