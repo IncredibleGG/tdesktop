@@ -280,6 +280,22 @@ std::vector<QString> LinkSafetyWarnings(const QString &url) {
 }
 
 bool InterceptExternalUrl(const QString &url, const QVariant &context) {
+	return InterceptExternalUrl(url, url, context);
+}
+
+QVariant LinkSafetyInspected(const QVariant &context) {
+	if (!LinkSafetyEnabled()) {
+		return context;
+	}
+	auto my = context.value<ClickHandlerContext>();
+	my.luminaLinkSafetyApproved = true;
+	return QVariant::fromValue(my);
+}
+
+bool InterceptExternalUrl(
+		const QString &url,
+		const QString &openUrl,
+		const QVariant &context) {
 	if (!LinkSafetyEnabled()) {
 		return false;
 	}
@@ -309,7 +325,7 @@ bool InterceptExternalUrl(const QString &url, const QVariant &context) {
 	const auto open = [=] {
 		auto approved = my;
 		approved.luminaLinkSafetyApproved = true;
-		UrlClickHandler::Open(url, QVariant::fromValue(approved));
+		UrlClickHandler::Open(openUrl, QVariant::fromValue(approved));
 	};
 	auto box = Box(
 		FillBox,

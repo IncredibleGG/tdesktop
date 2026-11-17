@@ -30,12 +30,17 @@ namespace Lumina {
 // the web page and overview layouts, for the same user-visible result.
 //
 // One box per click. HiddenUrlClickHandler::Open (core/click_handler_types.cpp)
-// calls the gate as well, right before it would show upstream's own "Open
-// this link?" box (hidden links, hosts outside the server's
-// whitelisted_domains since 7.4, suspicious Unicode hosts). When the gate
-// takes the click over, upstream's box is skipped; when it does not, upstream
-// asks and the gate in handleUrlClick then finds the same empty warnings and
-// stays silent. Upstream's box can never be followed by this one.
+// calls the gate as well, before it decides whether to show upstream's own
+// "Open this link?" box (hidden links, hosts outside the server's
+// whitelisted_domains since 7.4, suspicious Unicode hosts) - and before a
+// Ctrl+click skips that box. It passes the address as written, because from
+// 7.4 on what it opens is the encoded form, in which a host written in
+// Unicode reads as punycode. When the gate takes the click over, upstream's
+// box is skipped and the gate's "Open" goes to the encoded address; when it
+// does not, the click goes on marked by LinkSafetyInspected(), so the gate in
+// handleUrlClick does not judge the encoded form again. Either way there is
+// at most one box per click, and ours wins. E-mail addresses never reach the
+// gate from either place.
 //
 // What it detects, and just as importantly what it does NOT. Android warns
 // about four things; this warns about three of them, and the fourth is left
@@ -126,5 +131,19 @@ void SetLinkSafetyEnabled(bool value);
 [[nodiscard]] bool InterceptExternalUrl(
 	const QString &url,
 	const QVariant &context);
+
+// The same gate for a caller that has normalized the address it is about to
+// open: `written` (what the user saw) is inspected and printed in the box,
+// `openUrl` is what the box's "Open" re-dispatches.
+[[nodiscard]] bool InterceptExternalUrl(
+	const QString &written,
+	const QString &openUrl,
+	const QVariant &context);
+
+// `context` with luminaLinkSafetyApproved set, for a click the gate has
+// already inspected and let through, so that it is not inspected again on
+// its way to handleUrlClick. Returns `context` unchanged while the inspector
+// is off, which keeps the click exactly as upstream builds it.
+[[nodiscard]] QVariant LinkSafetyInspected(const QVariant &context);
 
 } // namespace Lumina

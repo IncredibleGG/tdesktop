@@ -541,6 +541,9 @@ void HiddenUrlClickHandler::Open(QString url, QVariant context) {
 			}
 			return;
 		}
+		// LuminaGram: the link safety inspector judges the address as it
+		// was written, not the encoded form below (see further down).
+		const auto written = url;
 		if (!isEmail) {
 			url = QString::fromUtf8(parsedUrl.toEncoded());
 		}
@@ -561,6 +564,27 @@ void HiddenUrlClickHandler::Open(QString url, QVariant context) {
 			my.forceExternalUrlConfirmation = true;
 			openContext = QVariant::fromValue(my);
 		}
+		// LuminaGram: one confirmation per click, and the link safety
+		// inspector sees the address the way the user saw it.
+		//
+		// It runs here, once, ahead of both branches below, on the address
+		// as written: upstream now hands open() the encoded form, in which
+		// a host written in Unicode has become punycode ("xn--") - the very
+		// thing the inspector warns about when it is written that way. When
+		// it has something to say it asks instead of upstream's box (and
+		// also on a Ctrl+click, as it did before 7.4); its "Open" goes to
+		// the encoded address, as upstream's would. When it has nothing to
+		// say, open() is marked as inspected, so the gate in
+		// UiIntegration::handleUrlClick does not judge the encoded form a
+		// second time. E-mail addresses are never inspected: handleUrlClick
+		// peels them off before its gate, and QUrl::fromUserInput() would
+		// read "user@host" as userinfo in front of a host.
+		if (!isEmail) {
+			if (Lumina::InterceptExternalUrl(written, url, openContext)) {
+				return;
+			}
+			openContext = Lumina::LinkSafetyInspected(openContext);
+		}
 		const auto open = [=] {
 			UrlClickHandler::Open(url, openContext);
 		};
@@ -568,19 +592,6 @@ void HiddenUrlClickHandler::Open(QString url, QVariant context) {
 			|| (confirmAfterIvFallback && !canTryIv)
 			|| (HiddenUrlRequiresConfirmation(parsedUrl, my)
 				&& !skipConfirmation)) {
-			// LuminaGram: one confirmation per click. When the link safety
-			// inspector has something to say about this address it asks
-			// instead of this box; its "open" re-dispatches with
-			// luminaLinkSafetyApproved, which skips the inspector's own gate
-			// in UiIntegration::handleUrlClick. When it has nothing to say it
-			// returns false, this box asks, and the gate stays silent after
-			// it because it would find the same (empty) warnings. Without
-			// this, an address shown here would be asked about twice - for
-			// a Unicode host even always, since upstream now hands open() the
-			// punycode ("xn--") form the inspector warns about.
-			if (Lumina::InterceptExternalUrl(url, openContext)) {
-				return;
-			}
 			if (!my.show) {
 				Core::App().hideMediaView();
 			}

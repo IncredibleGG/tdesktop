@@ -104,6 +104,14 @@ Widget::Widget(
 
 	_account->mtpValue(
 	) | rpl::on_next([=](not_null<MTP::Instance*> instance) {
+		// LuminaGram: replacing the sender cancels a system language lookup
+		// still in flight, and its callback - the only thing that clears
+		// the pending flag - never runs. Re-arm it so the call below asks
+		// again; otherwise the intro would never get a language link.
+		if (_luminaSystemLanguagePending) {
+			_luminaSystemLanguagePending = false;
+			_luminaSystemLanguageChecked = false;
+		}
 		_api.emplace(instance);
 		crl::on_main(this, [=] {
 			luminaApplySystemLanguage();
@@ -345,9 +353,21 @@ void Widget::createLanguageLink() {
 			Lumina::PreferredSystemLanguage()).isEmpty()) {
 		// LuminaGram: a Chinese system is offered the pack of its own
 		// script, not the server's suggestion (Simplified for zh-Hant-MY).
+		// When that pack cannot be found the suggestion is a fallback only
+		// if it is not Chinese of the other script - better no link than
+		// the wrong one. A failed request is not remembered, so the next
+		// call here tries again.
+		const auto script = Lumina::ChineseLanguagePackFor(
+			Lumina::PreferredSystemLanguage());
+		const auto suggestedScript = Lumina::ChineseLanguagePackFor(
+			suggested);
+		const auto fallback = (suggestedScript.isEmpty()
+			|| suggestedScript == script)
+			? suggested
+			: QString();
 		Lumina::ResolveSystemLanguagePack(*_api, crl::guard(this, [=](
 				const Lang::Language &language) {
-			const auto id = !language.id.isEmpty() ? language.id : suggested;
+			const auto id = !language.id.isEmpty() ? language.id : fallback;
 			if (!id.isEmpty() && id != currentId) {
 				offer(id);
 			}
